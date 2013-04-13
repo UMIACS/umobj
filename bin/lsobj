@@ -1,0 +1,145 @@
+#!/usr/bin/env python
+
+import boto.s3
+from boto.s3.connection import S3Connection
+from boto.s3.connection import OrdinaryCallingFormat
+
+usage_string = """
+SYNOPSIS
+   lsobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
+         [-S/--server <server>] [-P/--port <port>] [-h/--help]
+         [bucket] [key_prefix] 
+
+   Where 
+        access_key  - Your Access Key ID.  If not supplied, boto will
+                      use the value of the environment variable
+                      OBJ_ACCESS_KEY_ID
+        secret_key  - Your Secret Access Key.  If not supplied, boto
+                      will use the value of the environment variable
+                      OBJ_SECRET_ACCESS_KEY
+        bucket_name - The name of the bucket to list the files.  If not 
+                      supplied it will just list the buckets.
+        key_prefix  - List keys only with the given prefix.
+
+"""
+
+def usage():
+    print usage_string
+    sys.exit()
+
+def sizeof_fmt(num):
+    for x in ['b ','KB','MB','GB','TB', 'XB']:
+        if num < 1024.0:
+            return "%3.1f %s" % (num, x)
+        num /= 1024.0
+    return "%3.1f %s" % (num, x)
+
+def list_bucket(b, prefix=None):
+    """List everything in a bucket"""
+    from boto.s3.prefix import Prefix
+    from boto.s3.key import Key
+    total = 0
+    query = b
+    if prefix:
+        if not prefix.endswith("/"):
+            prefix = prefix + "/"
+        query = b.list(prefix=prefix, delimiter="/")
+        print "%s" % prefix
+    num = 0
+    for k in query:
+        num += 1
+        mode = "-rwx---"
+        if isinstance(k, Prefix):
+            mode = "drwxr--"
+            size = 0
+        else:
+            size = k.size
+            for g in k.get_acl().acl.grants:
+                if g.id == None:
+                    if g.permission == "READ":
+                        mode = "-rwxr--"
+                    elif g.permission == "FULL_CONTROL":
+                        mode = "-rwxrwx"
+        if isinstance(k, Key):
+           print "%s\t%s\t%010s\t%s" % (mode, k.last_modified,
+                 sizeof_fmt(size), k.name)
+        else:
+           #If it's not a Key object, it doesn't have a last_modified time, so
+           #print nothing instead
+           print "%s\t%s\t%010s\t%s" % (mode, ' '*24,
+              sizeof_fmt(size), k.name)
+        total += size
+    print "="*80
+    print "\t\tTOTAL:  \t%010s \t%i Files" % (sizeof_fmt(total), num)
+
+def list_buckets(s3):
+    """List all the buckets"""
+    for b in s3.get_all_buckets():
+        print b.name
+
+if __name__ == "__main__":
+    import sys
+    import os
+    import getopt
+
+    try:
+       opts, args = getopt.getopt(
+                       sys.argv[1:], 'a:s:S:P:h',
+                       ['access_key=', 'secret_key=',
+                        'server=', 'port=', 'help']
+                    )
+    except getopt.GetoptError, err:
+      print str(err) # will print something like "option -a not recognized"
+      usage()
+
+    access_key = None
+    secret_key = None
+    bucket_name = None
+    server = 'obj.umiacs.umd.edu'
+    port = 443    
+
+    for o,a in opts:
+       if o in ('-h', '--help'):
+          usage()
+          sys.exit()
+       if o in ('a', '--access_key'):
+          access_key = a
+       if o in ('s', '--secret_key'):
+          secret_key = a
+       if o in ('S', '--server'):
+          server = a
+       if o in ('P', '--port'):
+          port = a
+
+    if access_key == None:
+       try:
+          access_key = os.environ['OBJ_ACCESS_KEY_ID']
+       except:
+          print " ERROR: Please provide access_key"
+          usage()
+    if secret_key == None:
+       try:
+          secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
+       except:
+          print " ERROR: Please provide secret_key"
+          usage()
+
+    obj = S3Connection(host=server,
+   		       port=port,
+    		       is_secure=True,
+		       aws_access_key_id=access_key,
+                       aws_secret_access_key=secret_key,
+		       calling_format=OrdinaryCallingFormat())
+
+    if len(args) == 0:
+        list_buckets(obj)
+    else:
+        try:
+            bucket = obj.get_bucket(args[0])
+        except boto.exception.S3ResponseError:
+            print "ERROR: bucket %s does not exist." % args[0]
+            sys.exit(1)
+        if len(args) < 2:
+            list_bucket(bucket)
+	else:
+            list_bucket(bucket, args[1])

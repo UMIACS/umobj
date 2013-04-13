@@ -1,0 +1,106 @@
+#!/usr/bin/env python
+
+import boto.s3
+from boto.s3.connection import S3Connection
+from boto.s3.connection import OrdinaryCallingFormat
+
+usage_string = """
+SYNOPSIS
+   rmobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
+         [-S/--server <server>] [-P/--port <port>]
+         [-R/--recursive] [-h/--help]
+         <bucket> [key]+
+
+   Where 
+        access_key  - Your Access Key ID.  If not supplied, boto will
+                      use the value of the environment variable
+                      OBJ_ACCESS_KEY_ID
+        secret_key  - Your Secret Access Key.  If not supplied, boto
+                      will use the value of the environment variable
+                      OBJ_SECRET_ACCESS_KEY
+        bucket_name - The name of the bucket to list the files.  If not 
+                      supplied it will just list the buckets.
+"""
+
+def usage():
+    print usage_string
+    sys.exit()
+
+if __name__ == "__main__":
+    import sys
+    import os
+    import getopt
+
+    try:
+       opts, args = getopt.getopt(
+                       sys.argv[1:], 'a:s:S:P:hR',
+                       ['access_key=', 'secret_key=',
+                        'server=', 'port=', 'recursive', 'help']
+                    )
+    except getopt.GetoptError, err:
+      print str(err) # will print something like "option -a not recognized"
+      usage()
+
+    access_key = None
+    secret_key = None
+    bucket_name = None
+    recursive = False
+    server = 'obj.umiacs.umd.edu'
+    port = 443    
+
+    for o,a in opts:
+       if o in ('-h', '--help'):
+          usage()
+          sys.exit()
+       if o in ('a', '--access_key'):
+          access_key = a
+       if o in ('s', '--secret_key'):
+          secret_key = a
+       if o in ('S', '--server'):
+          server = a
+       if o in ('P', '--port'):
+          port = a
+       if o in ('R', '--recursive'):
+          recursive = True
+
+    if access_key == None:
+       try:
+          access_key = os.environ['OBJ_ACCESS_KEY_ID']
+       except:
+          print " ERROR: Please provide access_key"
+          usage()
+    if secret_key == None:
+       try:
+          secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
+       except:
+          print " ERROR: Please provide secret_key"
+          usage()
+
+    obj = S3Connection(host=server,
+   		       port=port,
+    		       is_secure=True,
+		       aws_access_key_id=access_key,
+                       aws_secret_access_key=secret_key,
+		       calling_format=OrdinaryCallingFormat())
+
+    if len(args) == 0:
+        usage()
+    try:
+        bucket = obj.get_bucket(args[0]) 
+    except boto.exception.S3ResponseError:
+        print "ERROR: Bucket %s does not exist." % args[0]
+        sys.exit(1)
+    if len(args) < 2:
+        if recursive:
+            ans = raw_input(' Are you sure you want to remove all the contents of the bucket %s [yes/no] : ' % bucket.name).lower()
+            if ans == 'yes':
+                 for key in bucket.list():
+                     bucket.delete_key(key.name)
+                 obj.delete_bucket(bucket.name)
+            else:
+                 print " Aborting..."
+        else:
+            print "ERROR: To remove the bucket %s you must enable -R/--recursive" % bucket_name
+    else:
+        for key in args[1:]:
+            bucket.delete_key(key)

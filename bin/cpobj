@@ -1,0 +1,235 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import math
+import logging
+import boto.s3
+from boto.s3.connection import S3Connection
+from boto.s3.connection import OrdinaryCallingFormat
+import progressbar
+import mimetypes
+from multiprocessing import Pool
+from filechunkio import FileChunkIO
+
+pbar = None
+
+usage_string = """
+SYNOPSIS
+   cpobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
+         [-S/--server <server>] [-P/--port <port>] 
+         [-m/--multipart] [-r/--recursive] [-h/--help]
+         <bucket> <file/directory>+
+
+   Where 
+        access_key  - Your Access Key ID.  If not supplied, boto will
+                      use the value of the environment variable
+                      OBJ_ACCESS_KEY_ID
+        secret_key  - Your Secret Access Key.  If not supplied, boto
+                      will use the value of the environment variable
+                      OBJ_SECRET_ACCESS_KEY
+        bucket_name - The name of the bucket to list the files.  If not 
+                      supplied it will just list the buckets.
+
+        bucket      - Bucket to upload to
+        file/dir    - File(s) or Directories(s) to be uploaded.  You will
+                      need to specify the recursive flag to upload 
+                      directories.
+"""
+
+def usage():
+    print usage_string
+    sys.exit()
+
+def transfer_stats(trans_bytes,total_bytes):
+    #print '%d bytes transferred / %d bytes total' % (trans_bytes, total_bytes)
+    #sys.stdout.write('\r[{0}] {1}%'.format('#'*(progress/10), progress))
+    try:
+        pbar.update(trans_bytes)
+    except AssertionError, e:
+        print e
+
+def upload_file(key,filename):
+
+    global pbar 
+
+    file_size = os.stat(filename).st_size
+    print "INFO: Uploading %s with %d bytes" % (filename,file_size)
+    pbar = progressbar.ProgressBar(maxval=file_size)
+    pbar.start()
+    try:
+        key.set_contents_from_filename(filename,cb=transfer_stats,num_cb=100)
+    except IOError, e:
+        print e
+        return 0
+    pbar.finish()
+    return file_size
+
+class MultiPart:
+
+    ### code adapted from https://gist.github.com/fabiant7t/924094
+    def __init__(self,access_key,secret_key,server='obj.umiacs.umd.edu',
+                 port=443,secure=True):
+        self.access_key = access_key
+        self.secret_key = secret_key
+        self.server = server
+        self.port = port
+        self.secure = secure
+
+    def _connect(self):
+        return S3Connection(host=self.server,
+                            port=self.port,
+                            is_secure=self.secure,
+                            aws_access_key_id=self.access_key,
+                            aws_secret_access_key=self.secret_key,
+                            calling_format=OrdinaryCallingFormat())
+    def _upload_part(self,bucketname,multipart_id,part_num,filename,offset,bytes,retries=10):
+        try:
+           obj = self._connect()  
+           bucket = obj.get_bucket(bucketname)
+           for mp in bucket.get_all_multipart_uploads():
+               print "mp id %s" %  mp.id
+               if mp.id == multipart_id:
+                   print "Uploading chunk %d" % multipart_id
+                   with FileChunkIO(source_path, 'r', offset=offset,
+                        bytes=bytes) as fp:
+                        mp.upload_part_from_file(fp=fp, part_num=part_num)
+                   break
+        except Exception, exc:
+            if retries:
+                self._upload_part(bucketname,multipart_id,part_num,filename,
+                                  offset,bytes,retries=retries-1)
+            else:
+                logging.info('Failed uploading part %d' % part_num)
+                raise exc
+        else:
+            logging.info('Uploaded part %d' % part_num)
+    
+    def start(self,bucketname,keyname,filename,threads=4,acl='private'):
+        headers = {}
+        obj = self._connect()
+        bucket = obj.get_bucket(bucketname)
+        mtype = mimetypes.guess_type(keyname)[0] or 'application/octet-stream'
+        headers.update({'Content-Type': mtype}) 
+        mp = bucket.initiate_multipart_upload(keyname, headers=headers) 
+        source_size = os.stat(filename).st_size
+        bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(source_size)),
+                              5242880)
+        chunk_amount = int(math.ceil(source_size / float(bytes_per_chunk)))
+        pool = Pool(processes=threads)
+        print "Starting a pool with %d threads." % threads
+        for i in range(chunk_amount):
+            offset = i * bytes_per_chunk
+            remaining_bytes = source_size - offset
+            bytes = min([bytes_per_chunk, remaining_bytes])
+            part_num = i + 1
+            print "starting part %d.." % part_num
+            self._upload_part(bucketname,mp.id,part_num,filename,offset,bytes)
+            #pool.apply_async(self._upload_part, [bucketname, mp.id,
+            #                 part_num, filename, offset, bytes])
+        pool.close()
+        pool.join()     
+ 
+        if len(mp.get_all_parts()) == chunk_amount:
+            mp.complete_upload()
+            key = bucket.get_key(keyname)
+            key.set_acl(self.acl)
+        else:
+            print "Canceling upload..."
+            mp.cancel_upload()
+
+if __name__ == "__main__":
+    import getopt
+
+    try:
+       opts, args = getopt.getopt(
+                       sys.argv[1:], 'a:b:s:S:P:hmr',
+                       ['access_key=', 'secret_key=','server=', 'port=',
+                       'multipart', 'help', 'recursive']
+                    )
+    except getopt.GetoptError, err:
+      print str(err) # will print something like "option -a not recognized"
+      usage()
+ 
+
+    multi = False
+    access_key = None
+    secret_key = None
+    bucket_name = None
+    server = 'obj.umiacs.umd.edu'
+    port = 443    
+    recursive = False
+
+    for o,a in opts:
+       if o in ('-h', '--help'):
+          usage()
+          sys.exit()
+       if o in ('a', '--access_key'):
+          access_key = a
+       if o in ('s', '--secret_key'):
+          secret_key = a
+       if o in ('b', '--bucket'):
+          bucket_name = a
+       if o in ('S', '--server'):
+          server = a
+       if o in ('P', '--port'):
+          port = a
+       if o in ('m', '--multipart'):
+          multi = True
+       if o in ('r', '--recursive'):
+          recursive = True
+
+    if access_key == None:
+       try:
+          access_key = os.environ['OBJ_ACCESS_KEY_ID']
+       except:
+          print " ERROR: Please provide access_key"
+          usage()
+    if secret_key == None:
+       try:
+          secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
+       except:
+          print " ERROR: Please provide secret_key"
+          usage()
+
+    obj = S3Connection(host=server,
+   		       port=port,
+    		       is_secure=True,
+		       aws_access_key_id=access_key,
+                       aws_secret_access_key=secret_key,
+		       calling_format=OrdinaryCallingFormat())
+
+    if len(args) < 2:
+        usage() 
+
+    bucket_name = args[0]
+    try:
+        bucket = obj.get_bucket(bucket_name)
+    except boto.exception.S3ResponseError:
+        print "ERROR: bucket %s not found." % bucket_name
+        sys.exit()
+    
+    if recursive:
+        for d in args[1:]:
+            if not os.path.isdir(d):
+                print "ERROR: %s is not a directory to syncronize." % d
+                continue
+            for root, dirs, files in os.walk(d.rstrip(os.sep)):
+                for f in files:    
+                    filename = root + os.sep + f
+                    keyname = filename.lstrip(os.sep)
+                    key = bucket.new_key(keyname)
+                    upload_file(key,filename)
+    else:
+        for f in args[1:]:
+            if not os.path.isfile(f):
+                print "ERROR: file %s does not exist." % f
+                continue
+            key_name = f.lstrip('.').lstrip('/').rstrip('/')
+            if multi:
+                print "Uploading with multipart is disabled pending bug in our object store."
+                m = MultiPart(access_key,secret_key)
+                m.start(bucket_name,key_name,f)
+            else:
+                key = bucket.new_key(key_name)
+                upload_file(key,f)
