@@ -41,7 +41,10 @@ if __name__ == "__main__":
 
     access_key = None
     secret_key = None
-    server = 'obj.umiacs.umd.edu'
+    try:
+        server = os.environ['OBJ_SERVER']
+    except:
+        server = 'obj.umiacs.umd.edu'
     port = 443    
 
     for o,a in opts:
