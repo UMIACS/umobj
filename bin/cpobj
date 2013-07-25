@@ -83,21 +83,25 @@ class MultiPart:
                             aws_access_key_id=self.access_key,
                             aws_secret_access_key=self.secret_key,
                             calling_format=OrdinaryCallingFormat())
-    def _upload_part(self,bucketname,multipart_id,part_num,filename,offset,bytes,retries=10):
+
+    def _upload_part(self, bucketname, multipart_id, part_num, filename,
+                     offset, bytes, retries=10):
         try:
            obj = self._connect()  
            bucket = obj.get_bucket(bucketname)
+           print multipart_id
            for mp in bucket.get_all_multipart_uploads():
-               print "mp id %s" %  mp.id
                if mp.id == multipart_id:
-                   print "Uploading chunk %d" % multipart_id
-                   with FileChunkIO(source_path, 'r', offset=offset,
+                   print "Uploading chunk (%d) %s" % (retries,
+                                                      str(multipart_id))
+                   with FileChunkIO(filename, 'r', offset=offset,
                         bytes=bytes) as fp:
                         mp.upload_part_from_file(fp=fp, part_num=part_num)
                    break
         except Exception, exc:
+            print exc
             if retries:
-                self._upload_part(bucketname,multipart_id,part_num,filename,
+                self._upload_part(bucketname, multipart_id, part_num, filename,
                                   offset,bytes,retries=retries-1)
             else:
                 logging.info('Failed uploading part %d' % part_num)
@@ -115,15 +119,15 @@ class MultiPart:
         source_size = os.stat(filename).st_size
         bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(source_size)),
                               5242880)
+        print "Size: %20d Chunk Size: %20d" % (source_size, bytes_per_chunk) 
         chunk_amount = int(math.ceil(source_size / float(bytes_per_chunk)))
         pool = Pool(processes=threads)
-        print "Starting a pool with %d threads." % threads
+        print "Starting a pool for %s with %d threads." % (mp.id, threads)
         for i in range(chunk_amount):
             offset = i * bytes_per_chunk
             remaining_bytes = source_size - offset
             bytes = min([bytes_per_chunk, remaining_bytes])
             part_num = i + 1
-            print "starting part %d.." % part_num
             self._upload_part(bucketname,mp.id,part_num,filename,offset,bytes)
             #pool.apply_async(self._upload_part, [bucketname, mp.id,
             #                 part_num, filename, offset, bytes])
@@ -231,7 +235,7 @@ if __name__ == "__main__":
             key_name = f.lstrip('.').lstrip('/').rstrip('/')
             if multi:
                 print "Uploading with multipart is disabled pending bug in our object store."
-                m = MultiPart(access_key,secret_key)
+                m = MultiPart(access_key,secret_key,server,port)
                 m.start(bucket_name,key_name,f)
             else:
                 key = bucket.new_key(key_name)
