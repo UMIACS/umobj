@@ -3,6 +3,7 @@
 import os
 import sys
 import math
+import re
 import logging
 import boto.s3
 from boto.s3.connection import S3Connection
@@ -17,30 +18,45 @@ from filechunkio import FileChunkIO
 
 pbar = None
 
-usage_string = """
-SYNOPSIS
-   cpobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
-         [-S/--server <server>] [-P/--port <port>] 
-         [-m/--multipart] [-r/--recursive] [-h/--help]
-         <bucket> <file/directory>+
-
-   Where 
-        access_key  - Your Access Key ID.  If not supplied, boto will
-                      use the value of the environment variable
-                      OBJ_ACCESS_KEY_ID
-        secret_key  - Your Secret Access Key.  If not supplied, boto
-                      will use the value of the environment variable
-                      OBJ_SECRET_ACCESS_KEY
-        bucket_name - The name of the bucket to list the files.  If not 
-                      supplied it will just list the buckets.
-
-        bucket      - Bucket to upload to
-        file/dir    - File(s) or Directories(s) to be uploaded.  You will
-                      need to specify the recursive flag to upload 
-                      directories.
-"""
-
 def usage():
+    prog_name = os.path.basename(sys.argv[0])
+    usage_string = """
+NAME
+    %s - Copy files to a S3 compatiable object store
+
+SYNOPSIS
+    %s [OPTION]... SRC BUCKET[:DEST]
+
+    %s [OPTION]... BUCKET[:SRC] DEST
+
+OPTIONS SUMMARY
+
+    -a, --access_key <access_key>  Object store access key
+    -s, --secret_key <secret_key>  Object store secret key
+    -S, --server <server>          Object store server name
+    -P, --port <port>              Object store server port [Default: 443]
+    -m, --multipart                Instantiate multipart uploads [Default: no]
+    -r, --recursive                Copy files recursively [Default: no]
+    -f, --force                    Force overwrite files in download mode
+    -h, --help
+
+OPTIONS
+    access_key  - Your Access Key ID.  If not supplied, boto will
+                  use the value of the environment variable OBJ_ACCESS_KEY_ID.
+    secret_key  - Your Secret Access Key.  If not supplied, will use the value
+                  of the environment variable OBJ_SECRET_ACCESS_KEY.
+    server      - The object storage server you want to connect to.  This can
+                  be overridden by the OBJ_SERVER environment variable.
+    BUCKET      - The bucket that is to be used for this copy operation.  This
+                  is necessary on one and only one of the SRC and DEST
+                  arguments.
+    SRC         - Local file system directory/file or object store key.  A
+                  directory is allowed for uploads if recursive is turned on,
+                  and is allowed for download.
+    DEST        - Local file system directory/file or object store key.  A
+                  directory is allowed for downloads. 
+        
+""" % (prog_name, prog_name, prog_name)
     print usage_string
     sys.exit()
 
@@ -53,21 +69,30 @@ def transfer_stats(trans_bytes,total_bytes):
         print e
 
 def upload_file(key,filename):
-
     global pbar 
-
     file_size = os.stat(filename).st_size
-    print "INFO: Uploading %s with %d bytes" % (filename,file_size)
+    print "INFO: Uploading %s with %d bytes." % (filename,file_size)
     pbar = progressbar.ProgressBar(maxval=file_size)
     pbar.start()
     try:
-        key.set_contents_from_filename(filename,cb=transfer_stats,num_cb=100)
+        key.set_contents_from_filename(filename, cb=transfer_stats, num_cb=100)
     except IOError, e:
         print e
         return 0
     pbar.finish()
     return file_size
 
+def download_file(key, filename):
+    global pbar
+    print "INFO: Downloading %s with %d bytes." % (filename, key.size)
+    pbar = progressbar.ProgressBar(maxval=key.size)
+    pbar.start()
+    if os.path.isdir(filename):
+        filename = filename + os.sep + key.name
+    f = open(filename, 'w')
+    key.get_contents_to_file(f, cb=transfer_stats, num_cb=100)
+    f.close()
+    pbar.finish()
 
 class UploadThread(threading.Thread):
     def __init__(self, mp, queue):
@@ -182,15 +207,15 @@ if __name__ == "__main__":
 
     try:
        opts, args = getopt.getopt(
-                       sys.argv[1:], 'a:b:s:S:P:hmr',
+                       sys.argv[1:], 'a:b:s:S:P:hmrf',
                        ['access_key=', 'secret_key=','server=', 'port=',
-                       'multipart', 'help', 'recursive']
+                       'multipart', 'help', 'recursive', 'force']
                     )
     except getopt.GetoptError, err:
       print str(err) # will print something like "option -a not recognized"
       usage()
  
-
+    force = False
     multi = False
     access_key = None
     secret_key = None
@@ -203,74 +228,113 @@ if __name__ == "__main__":
     recursive = False
 
     for o,a in opts:
-       if o in ('-h', '--help'):
-          usage()
-          sys.exit()
-       if o in ('a', '--access_key'):
-          access_key = a
-       if o in ('s', '--secret_key'):
-          secret_key = a
-       if o in ('b', '--bucket'):
-          bucket_name = a
-       if o in ('S', '--server'):
-          server = a
-       if o in ('P', '--port'):
-          port = a
-       if o in ('m', '--multipart'):
-          multi = True
-       if o in ('r', '--recursive'):
-          recursive = True
+        if o in ('-h', '--help'):
+            usage()
+            sys.exit()
+        if o in ('a', '--access_key'):
+            access_key = a
+        if o in ('s', '--secret_key'):
+            secret_key = a
+        if o in ('b', '--bucket'):
+            bucket_name = a
+        if o in ('S', '--server'):
+            server = a
+        if o in ('P', '--port'):
+            port = a
+        if o in ('m', '--multipart'):
+            multi = True
+        if o in ('r', '--recursive'):
+            recursive = True
+        if o in ('f', '--force'):
+            force = True
 
     if access_key == None:
-       try:
-          access_key = os.environ['OBJ_ACCESS_KEY_ID']
-       except:
-          print " ERROR: Please provide access_key"
-          usage()
+        try:
+            access_key = os.environ['OBJ_ACCESS_KEY_ID']
+        except:
+            print " ERROR: Please provide access_key"
+            usage()
     if secret_key == None:
-       try:
-          secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
-       except:
-          print " ERROR: Please provide secret_key"
-          usage()
+        try:
+            secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
+        except:
+            print " ERROR: Please provide secret_key"
+            usage()
 
-    obj = S3Connection(host=server,
-   		       port=port,
-    		       is_secure=True,
-		       aws_access_key_id=access_key,
+    obj = S3Connection(host=server, port=port, is_secure=True,
+		               aws_access_key_id=access_key,
                        aws_secret_access_key=secret_key,
-		       calling_format=OrdinaryCallingFormat())
+		               calling_format=OrdinaryCallingFormat())
 
     if len(args) < 2:
         usage() 
+   
+    src = args[0] 
+    dest = args[1]
+    upload = False
+    download = False
+    src_match = re.match('(\w+):([\w\.\-\/]+)', src) 
+    dest_match = re.match('(\w+):([\w\.\-\/]+)', dest) 
 
-    bucket_name = args[0]
+    if src_match:
+        if dest_match:
+            print "ERROR: Can not copy from a bucket to a bucket."
+            usage()
+        else:
+            bucket_name = src_match.group(1)
+            key_name = src_match.group(2)
+            download = True
+    else:
+        if dest_match:
+            bucket_name = dest_match.group(1)
+            key_name = dest_match.group(2)
+            upload = True
+        else:
+            print "ERROR: You need to provide a bucket in either the SRC or DEST."
+            usage()
+
     try:
         bucket = obj.get_bucket(bucket_name)
     except boto.exception.S3ResponseError:
         print "ERROR: bucket %s not found." % bucket_name
         sys.exit()
-    
-    if recursive:
-        for d in args[1:]:
-            if not os.path.isdir(d):
-                print "ERROR: %s is not a directory to syncronize." % d
-                continue
-            for root, dirs, files in os.walk(d.rstrip(os.sep)):
-                for f in files:    
-                    filename = root + os.sep + f
-                    keyname = filename.lstrip(os.sep)
-                    key = bucket.new_key(keyname)
-                    upload_file(key,filename)
-    else:
-        for f in args[1:]:
-            if not os.path.isfile(f):
-                print "ERROR: file %s does not exist." % f
-                continue
-            key_name = f.lstrip('.').lstrip('/').rstrip('/')
+
+    if upload:  
+        if recursive:
+            if not os.path.isdir(src):
+                print "ERROR: SRC %s is not a directory." % src
+            else:
+                for root, dirs, files in os.walk(src.rstrip(os.sep)):
+                    for f in files:    
+                        filename = root + os.sep + f
+                        keyname = filename.lstrip(os.sep)
+                        key = bucket.new_key(keyname)
+                        upload_file(key,filename)
+        else:
+            if not os.path.isfile(src):
+                print "ERROR: file %s does not exist." % src
+                sys.exit(1)
+            key_name = src.lstrip('.').lstrip('/').rstrip('/')
             if multi:
                 m = MultiPart(access_key,secret_key,server,port)
                 m.start(bucket_name,key_name,f)
             else:
                 key = bucket.new_key(key_name)
                 upload_file(key,f)
+    if download:
+        if recursive:
+            if not os.path.isdir(dest):
+                print "ERROR: DEST %s is not a directory." % dest
+            else:
+                pass
+        else:
+            if os.path.isfile(dest) and not force:
+                print "ERROR: file %s already exists please use -f or --force to overwrite." % dest
+                usage()
+            else:
+                if multi:
+                    pass
+                else:
+                    key = bucket.get_key(key_name)
+                    download_file(key, dest)
+
