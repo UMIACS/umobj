@@ -131,7 +131,41 @@ class UploadThread(threading.Thread):
                 raise exc
         else:
             logging.info('Uploaded part %d' % part_num)
- 
+
+class DownloadThread(threading.Thread):
+    def __init__(self, mp, queue):
+        threading.Thread.__init__(self)
+        self.mp = mp
+        self.queue = queue 
+        self.obj = self.mp.connect()
+    
+    def run(self):
+        while True:
+            try:
+                start_byte, end_byte = self.queue.get(True, 2)
+                logging.info('Starting download bytes %d - %d.' % (start_byte, end_byte))
+            except Queue.Empty:
+                return
+            self._download_part(start_byte, end_byte)
+            self.queue.task_done()
+
+    def _download_part(self, start_byte, end_byte):
+        try:
+            key_range = self.obj.make_request('GET',
+                          bucket=self.mp.bucketname,
+                          key=self.mp.keyname,
+                          headers={'Range':"bytes=%d-%d" % (start_byte, end_byte)})
+            fd = os.open(self.mp.filename, os.O_WRONLY)
+            logging.info("Opening file descriptor %d, seeking to %d" % (fd, start_byte))
+            os.lseek(fd, start_byte, os.SEEK_SET)
+            chunk_size = min((end_byte-start_byte), 32 * 1024 * 1024)
+            while True:
+                data = key_range.read(chunk_size)
+                if data == "":
+                    break
+                os.write(fd, data)
+        except Exception, exc:
+            print exc
 
 class MultiPart:
 
@@ -146,6 +180,7 @@ class MultiPart:
         self.mp_id = None
         self.bucketname = None
         self.filename = None
+        self.keyname = None
 
     def connect(self):
         return S3Connection(host=self.server,
@@ -155,7 +190,38 @@ class MultiPart:
                             aws_secret_access_key=self.secret_key,
                             calling_format=OrdinaryCallingFormat())
 
-    def start(self,bucketname,keyname,filename,threads=4,acl='private'):
+    def start_download(self, bucketname, keyname, filename, threads=4):
+        self.bucketname = bucketname
+        self.filename = filename
+        obj = self.connect()             
+        bucket = obj.get_bucket(self.bucketname)
+        key = bucket.get_key(keyname)
+        size = key.size
+        if size < 5 * 1024 * 1024:
+            # don't multipart < 5MB files
+            download_file(key, filename)
+            return
+        else:
+            # create the file 
+            fd = os.open(self.filename, os.O_CREAT)
+            os.close(fd)
+            bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(size)),
+                              5242880)
+            chunk_amount = int(math.ceil(size / float(bytes_per_chunk)))
+            queue = Queue.Queue()
+            for i in range(chunk_amount):
+                offset = i * bytes_per_chunk
+                remaining_bytes = size - offset
+                bytes = min([bytes_per_chunk, remaining_bytes])
+                queue.put((offset, offset + bytes - 1))
+            for i in range(threads):
+                t = DownloadThread(self, queue)
+                t.setDaemon(True)
+                t.start()
+            queue.join()
+
+    def start_upload(self, bucketname, keyname, filename, threads=4,
+                     acl='private'):
         self.bucketname = bucketname
         self.filename = filename
         headers = {}
@@ -317,7 +383,7 @@ if __name__ == "__main__":
             key_name = src.lstrip('.').lstrip('/').rstrip('/')
             if multi:
                 m = MultiPart(access_key,secret_key,server,port)
-                m.start(bucket_name,key_name,f)
+                m.start_upload(bucket_name,key_name,f)
             else:
                 key = bucket.new_key(key_name)
                 upload_file(key,f)
@@ -333,7 +399,8 @@ if __name__ == "__main__":
                 usage()
             else:
                 if multi:
-                    pass
+                    m = MultiPart(access_key, secret_key, server, port)
+                    m.start_download(bucket_name, key_name, dest)
                 else:
                     key = bucket.get_key(key_name)
                     download_file(key, dest)
