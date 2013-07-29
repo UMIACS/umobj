@@ -22,7 +22,7 @@ def usage():
     prog_name = os.path.basename(sys.argv[0])
     usage_string = """
 NAME
-    %s - Copy files to a S3 compatiable object store
+    %s - Copy files to and from a S3 compatiable object store
 
 SYNOPSIS
     %s [OPTION]... SRC BUCKET[:DEST]
@@ -339,8 +339,8 @@ if __name__ == "__main__":
     dest = args[1]
     upload = False
     download = False
-    src_match = re.match('(\w+):([\w\.\-\/]+)', src) 
-    dest_match = re.match('(\w+):([\w\.\-\/]+)', dest) 
+    src_match = re.match('(\w+):([\w\.\-\/]*)', src) 
+    dest_match = re.match('(\w+):([\w\.\-\/]*)', dest) 
 
     if src_match:
         if dest_match:
@@ -372,7 +372,7 @@ if __name__ == "__main__":
             else:
                 for root, dirs, files in os.walk(src.rstrip(os.sep)):
                     for f in files:    
-                        filename = root + os.sep + f
+                        filename = root + os.sep + src
                         keyname = filename.lstrip(os.sep)
                         key = bucket.new_key(keyname)
                         upload_file(key,filename)
@@ -386,7 +386,7 @@ if __name__ == "__main__":
                 m.start_upload(bucket_name,key_name,f)
             else:
                 key = bucket.new_key(key_name)
-                upload_file(key,f)
+                upload_file(key,src)
     if download:
         if recursive:
             if not os.path.isdir(dest):

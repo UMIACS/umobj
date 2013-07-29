@@ -5,26 +5,34 @@ from boto.s3.connection import S3Connection
 from boto.s3.connection import OrdinaryCallingFormat
 
 usage_string = """
+NAME
+    %s - List objects in a s3 object store
+
 SYNOPSIS
-   lsobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
-         [-S/--server <server>] [-P/--port <port>] [-h/--help]
-         [bucket] [key_prefix] 
+    %s [OPTION]... [BUCKET][:KEY_PREFIX]
 
-   Where 
-        access_key  - Your Access Key ID.  If not supplied, boto will
-                      use the value of the environment variable
-                      OBJ_ACCESS_KEY_ID
-        secret_key  - Your Secret Access Key.  If not supplied, boto
-                      will use the value of the environment variable
-                      OBJ_SECRET_ACCESS_KEY
-        bucket_name - The name of the bucket to list the files.  If not 
-                      supplied it will just list the buckets.
-        key_prefix  - List keys only with the given prefix.
+OPTIONS SUMMARY
+    -a, --access_key <access_key>  Object store access key
+    -s, --secret_key <secret_key>  Object store secret key
+    -S, --server <server>          Object store server name
+    -P, --port <port>              Object store server port [Default: 443]
+    -h, --help  
 
+OPTIONS
+    access_key  - Your Access Key ID.  If not supplied, boto will
+                  use the value of the environment variable OBJ_ACCESS_KEY_ID.
+    secret_key  - Your Secret Access Key.  If not supplied, will use the value
+                  of the environment variable OBJ_SECRET_ACCESS_KEY.
+    server      - The object storage server you want to connect to.  This can
+                  be overridden by the OBJ_SERVER environment variable.
+    BUCKET      - The bucket that is to be listed.  If no bucket is given it
+                  will list all the buckets the user has access to.
+    KEY_PREFIX  - Can be specified to exclusively list the sub folder given.
 """
 
 def usage():
-    print usage_string
+    prog_name = os.path.basename(sys.argv[0])
+    print usage_string % (prog_name, prog_name)
     sys.exit()
 
 def sizeof_fmt(num):
@@ -138,11 +146,12 @@ if __name__ == "__main__":
         list_buckets(obj)
     else:
         try:
-            bucket = obj.get_bucket(args[0])
+            bucket_parts = args[0].split(':', 1)
+            bucket = obj.get_bucket(bucket_parts[0])
         except boto.exception.S3ResponseError:
             print "ERROR: bucket %s does not exist." % args[0]
             sys.exit(1)
-        if len(args) < 2:
+        if len(bucket_parts) < 2:
             list_bucket(bucket)
-	else:
-            list_bucket(bucket, args[1])
+        else:
+            list_bucket(bucket, bucket_parts[1])
