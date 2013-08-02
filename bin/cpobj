@@ -13,10 +13,10 @@ import mimetypes
 import threading
 import Queue
 import time
-from multiprocessing import Pool
 from filechunkio import FileChunkIO
 
 pbar = None
+
 
 def usage():
     prog_name = os.path.basename(sys.argv[0])
@@ -54,24 +54,24 @@ OPTIONS
                   directory is allowed for uploads if recursive is turned on,
                   and is allowed for download.
     DEST        - Local file system directory/file or object store key.  A
-                  directory is allowed for downloads. 
-        
+                  directory is allowed for downloads.
+
 """ % (prog_name, prog_name, prog_name)
     print usage_string
     sys.exit()
 
-def transfer_stats(trans_bytes,total_bytes):
-    #print '%d bytes transferred / %d bytes total' % (trans_bytes, total_bytes)
-    #sys.stdout.write('\r[{0}] {1}%'.format('#'*(progress/10), progress))
+
+def transfer_stats(trans_bytes, total_bytes):
     try:
         pbar.update(trans_bytes)
     except AssertionError, e:
         print e
 
-def upload_file(key,filename):
-    global pbar 
+
+def upload_file(key, filename):
+    global pbar
     file_size = os.stat(filename).st_size
-    print "INFO: Uploading %s with %d bytes." % (filename,file_size)
+    print "INFO: Uploading %s with %d bytes." % (filename, file_size)
     pbar = progressbar.ProgressBar(maxval=file_size)
     pbar.start()
     try:
@@ -81,6 +81,7 @@ def upload_file(key,filename):
         return 0
     pbar.finish()
     return file_size
+
 
 def download_file(key, filename):
     global pbar
@@ -94,6 +95,7 @@ def download_file(key, filename):
     f.close()
     pbar.finish()
 
+
 class UploadThread(threading.Thread):
     def __init__(self, mp, queue):
         threading.Thread.__init__(self)
@@ -105,7 +107,8 @@ class UploadThread(threading.Thread):
         while True:
             try:
                 part_num, offset, bytes = self.queue.get(True, 2)
-                logging.info('Starting part %d on offset %d with %d bytes.' % (part_num, offset, bytes))
+                logging.info('Starting part %d on offset %d with %d bytes.' %
+                             (part_num, offset, bytes))
             except Queue.Empty:
                 return
             self._upload_part(part_num, offset, bytes)
@@ -116,9 +119,10 @@ class UploadThread(threading.Thread):
             bucket = self.obj.get_bucket(self.mp.bucketname)
             for mp in bucket.get_all_multipart_uploads():
                 if mp.id == self.mp.mp_id:
-                    logging.info('Uploading chunk (%d) %s' % (retries, part_num))
+                    logging.info('Uploading chunk (%d) %s' %
+                                 (retries, part_num))
                     with FileChunkIO(self.mp.filename, 'r', offset=offset,
-                        bytes=bytes) as fp:
+                                     bytes=bytes) as fp:
                         mp.upload_part_from_file(fp=fp, part_num=part_num)
                         break
         except Exception, exc:
@@ -132,18 +136,20 @@ class UploadThread(threading.Thread):
         else:
             logging.info('Uploaded part %d' % part_num)
 
+
 class DownloadThread(threading.Thread):
     def __init__(self, mp, queue):
         threading.Thread.__init__(self)
         self.mp = mp
-        self.queue = queue 
+        self.queue = queue
         self.obj = self.mp.connect()
-    
+
     def run(self):
         while True:
             try:
                 start_byte, end_byte = self.queue.get(True, 2)
-                logging.info('Starting download bytes %d - %d.' % (start_byte, end_byte))
+                logging.info('Starting download bytes %d - %d.' %
+                             (start_byte, end_byte))
             except Queue.Empty:
                 return
             self._download_part(start_byte, end_byte)
@@ -152,11 +158,13 @@ class DownloadThread(threading.Thread):
     def _download_part(self, start_byte, end_byte):
         try:
             key_range = self.obj.make_request('GET',
-                          bucket=self.mp.bucketname,
-                          key=self.mp.keyname,
-                          headers={'Range':"bytes=%d-%d" % (start_byte, end_byte)})
+                                              bucket=self.mp.bucketname,
+                                              key=self.mp.keyname,
+                                              headers={'Range': "bytes=%d-%d" %
+                                              (start_byte, end_byte)})
             fd = os.open(self.mp.filename, os.O_WRONLY)
-            logging.info("Opening file descriptor %d, seeking to %d" % (fd, start_byte))
+            logging.info("Opening file descriptor %d, seeking to %d" %
+                         (fd, start_byte))
             os.lseek(fd, start_byte, os.SEEK_SET)
             chunk_size = min((end_byte-start_byte), 32 * 1024 * 1024)
             while True:
@@ -167,11 +175,12 @@ class DownloadThread(threading.Thread):
         except Exception, exc:
             print exc
 
+
 class MultiPart:
 
     ### code adapted from https://gist.github.com/fabiant7t/924094
-    def __init__(self,access_key,secret_key,server='obj.umiacs.umd.edu',
-                 port=443,secure=True):
+    def __init__(self, access_key, secret_key, server='obj.umiacs.umd.edu',
+                 port=443, secure=True):
         self.access_key = access_key
         self.secret_key = secret_key
         self.server = server
@@ -193,7 +202,7 @@ class MultiPart:
     def start_download(self, bucketname, keyname, filename, threads=4):
         self.bucketname = bucketname
         self.filename = filename
-        obj = self.connect()             
+        obj = self.connect()
         bucket = obj.get_bucket(self.bucketname)
         key = bucket.get_key(keyname)
         size = key.size
@@ -202,11 +211,11 @@ class MultiPart:
             download_file(key, filename)
             return
         else:
-            # create the file 
+            # create the file
             fd = os.open(self.filename, os.O_CREAT)
             os.close(fd)
             bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(size)),
-                              5242880)
+                                  5242880)
             chunk_amount = int(math.ceil(size / float(bytes_per_chunk)))
             queue = Queue.Queue()
             for i in range(chunk_amount):
@@ -228,14 +237,15 @@ class MultiPart:
         obj = self.connect()
         bucket = obj.get_bucket(self.bucketname)
         mtype = mimetypes.guess_type(keyname)[0] or 'application/octet-stream'
-        headers.update({'Content-Type': mtype}) 
-        mp = bucket.initiate_multipart_upload(keyname, headers=headers) 
+        headers.update({'Content-Type': mtype})
+        mp = bucket.initiate_multipart_upload(keyname, headers=headers)
         self.mp_id = mp.id
         source_size = os.stat(filename).st_size
         bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(source_size)),
                               5242880)
         chunk_amount = int(math.ceil(source_size / float(bytes_per_chunk)))
-        #print "Size: %16d   Chunk Size: %16d   Number Chunks: %8d" % (source_size, bytes_per_chunk, chunk_amount) 
+        #print "Size: %16d   Chunk Size: %16d   Number Chunks: %8d" %
+        #        (source_size, bytes_per_chunk, chunk_amount)
         queue = Queue.Queue()
         #print "Starting a pool for %s with %d threads." % (mp.id, threads)
 
@@ -259,7 +269,7 @@ class MultiPart:
             time.sleep(1)
         pbar.finish()
         queue.join()
- 
+
         if len(mp.get_all_parts()) == chunk_amount:
             mp.complete_upload()
             key = bucket.get_key(keyname)
@@ -272,28 +282,28 @@ if __name__ == "__main__":
     import getopt
 
     try:
-       opts, args = getopt.getopt(
-                       sys.argv[1:], 'a:b:s:S:P:hmrf',
-                       ['access_key=', 'secret_key=','server=', 'port=',
-                       'multipart', 'help', 'recursive', 'force']
-                    )
+        opts, args = getopt.getopt(sys.argv[1:],
+                                   'a:b:s:S:P:hmrf',
+                                   ['access_key=', 'secret_key=',
+                                   'server=', 'port=', 'multipart',
+                                   'help', 'recursive', 'force'])
     except getopt.GetoptError, err:
-      print str(err) # will print something like "option -a not recognized"
-      usage()
- 
+        print str(err)  # will print something like "option -a not recognized"
+        usage()
+
     force = False
     multi = False
     access_key = None
     secret_key = None
     bucket_name = None
     try:
-       server = os.environ['OBJ_SERVER']    
+        server = os.environ['OBJ_SERVER']
     except:
-       server = 'obj.umiacs.umd.edu'
-    port = 443    
+        server = 'obj.umiacs.umd.edu'
+    port = 443
     recursive = False
 
-    for o,a in opts:
+    for o, a in opts:
         if o in ('-h', '--help'):
             usage()
             sys.exit()
@@ -314,13 +324,13 @@ if __name__ == "__main__":
         if o in ('f', '--force'):
             force = True
 
-    if access_key == None:
+    if access_key is None:
         try:
             access_key = os.environ['OBJ_ACCESS_KEY_ID']
         except:
             print " ERROR: Please provide access_key"
             usage()
-    if secret_key == None:
+    if secret_key is None:
         try:
             secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
         except:
@@ -328,19 +338,19 @@ if __name__ == "__main__":
             usage()
 
     obj = S3Connection(host=server, port=port, is_secure=True,
-		               aws_access_key_id=access_key,
+                       aws_access_key_id=access_key,
                        aws_secret_access_key=secret_key,
-		               calling_format=OrdinaryCallingFormat())
+                       calling_format=OrdinaryCallingFormat())
 
     if len(args) < 2:
-        usage() 
-   
-    src = args[0] 
+        usage()
+
+    src = args[0]
     dest = args[1]
     upload = False
     download = False
-    src_match = re.match('(\w+):([\w\.\-\/]*)', src) 
-    dest_match = re.match('(\w+):([\w\.\-\/]*)', dest) 
+    src_match = re.match('(\w+):([\w\.\-\/]*)', src)
+    dest_match = re.match('(\w+):([\w\.\-\/]*)', dest)
 
     if src_match:
         if dest_match:
@@ -356,7 +366,7 @@ if __name__ == "__main__":
             key_name = dest_match.group(2)
             upload = True
         else:
-            print "ERROR: You need to provide a bucket in either the SRC or DEST."
+            print "ERROR: You need to provide a bucket in either SRC or DEST."
             usage()
 
     try:
@@ -365,28 +375,28 @@ if __name__ == "__main__":
         print "ERROR: bucket %s not found." % bucket_name
         sys.exit()
 
-    if upload:  
+    if upload:
         if recursive:
             if not os.path.isdir(src):
                 print "ERROR: SRC %s is not a directory." % src
             else:
                 for root, dirs, files in os.walk(src.rstrip(os.sep)):
-                    for f in files:    
+                    for f in files:
                         filename = root + os.sep + src
                         keyname = filename.lstrip(os.sep)
                         key = bucket.new_key(keyname)
-                        upload_file(key,filename)
+                        upload_file(key, filename)
         else:
             if not os.path.isfile(src):
                 print "ERROR: file %s does not exist." % src
                 sys.exit(1)
             key_name = src.lstrip('.').lstrip('/').rstrip('/')
             if multi:
-                m = MultiPart(access_key,secret_key,server,port)
-                m.start_upload(bucket_name,key_name,f)
+                m = MultiPart(access_key, secret_key, server, port)
+                m.start_upload(bucket_name, key_name, f)
             else:
                 key = bucket.new_key(key_name)
-                upload_file(key,src)
+                upload_file(key, src)
     if download:
         if recursive:
             if not os.path.isdir(dest):
@@ -395,7 +405,7 @@ if __name__ == "__main__":
                 pass
         else:
             if os.path.isfile(dest) and not force:
-                print "ERROR: file %s already exists please use -f or --force to overwrite." % dest
+                print "ERROR: file %s already exists please force flag to overwrite." % dest
                 usage()
             else:
                 if multi:
@@ -404,4 +414,3 @@ if __name__ == "__main__":
                 else:
                     key = bucket.get_key(key_name)
                     download_file(key, dest)
-
