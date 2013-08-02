@@ -405,7 +405,8 @@ if __name__ == "__main__":
                 pass
         else:
             if os.path.isfile(dest) and not force:
-                print "ERROR: file %s already exists please force flag to overwrite." % dest
+                print "ERROR: file %s already exists " % dest + \
+		      "please force flag to overwrite."
                 usage()
             else:
                 if multi:
