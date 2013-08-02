@@ -16,7 +16,7 @@ OPTIONS SUMMARY
     -s, --secret_key <secret_key>  Object store secret key
     -S, --server <server>          Object store server name
     -P, --port <port>              Object store server port [Default: 443]
-    -h, --help  
+    -h, --help
 
 OPTIONS
     access_key  - Your Access Key ID.  If not supplied, boto will
@@ -30,17 +30,20 @@ OPTIONS
     KEY_PREFIX  - Can be specified to exclusively list the sub folder given.
 """
 
+
 def usage():
     prog_name = os.path.basename(sys.argv[0])
     print usage_string % (prog_name, prog_name)
     sys.exit()
 
+
 def sizeof_fmt(num):
-    for x in ['b ','KB','MB','GB','TB', 'XB']:
+    for x in ['b ', 'KB', 'MB', 'GB', 'TB', 'XB']:
         if num < 1024.0:
             return "%3.1f %s" % (num, x)
         num /= 1024.0
     return "%3.1f %s" % (num, x)
+
 
 def list_bucket(b, prefix=None):
     """List everything in a bucket"""
@@ -63,27 +66,29 @@ def list_bucket(b, prefix=None):
         else:
             size = k.size
             for g in k.get_acl().acl.grants:
-                if g.id == None:
+                if g.id is None:
                     if g.permission == "READ":
                         mode = "-rwxr--"
                     elif g.permission == "FULL_CONTROL":
                         mode = "-rwxrwx"
         if isinstance(k, Key):
-           print "%s\t%s\t%010s\t%s" % (mode, k.last_modified,
-                 sizeof_fmt(size), k.name)
+            print "%s\t%s\t%010s\t%s" % (mode, k.last_modified,
+                                         sizeof_fmt(size), k.name)
         else:
-           #If it's not a Key object, it doesn't have a last_modified time, so
-           #print nothing instead
-           print "%s\t%s\t%010s\t%s" % (mode, ' '*24,
-              sizeof_fmt(size), k.name)
+            #If it's not a Key object, it doesn't have a last_modified time, so
+            #print nothing instead
+            print "%s\t%s\t%010s\t%s" % (mode, ' '*24,
+                                         sizeof_fmt(size), k.name)
         total += size
     print "="*80
     print "\t\tTOTAL:  \t%010s \t%i Files" % (sizeof_fmt(total), num)
+
 
 def list_buckets(s3):
     """List all the buckets"""
     for b in s3.get_all_buckets():
         print b.name
+
 
 if __name__ == "__main__":
     import sys
@@ -91,56 +96,55 @@ if __name__ == "__main__":
     import getopt
 
     try:
-       opts, args = getopt.getopt(
-                       sys.argv[1:], 'a:s:S:P:h',
-                       ['access_key=', 'secret_key=',
-                        'server=', 'port=', 'help']
-                    )
+        opts, args = getopt.getopt(sys.argv[1:],
+                                   'a:s:S:P:h',
+                                   ['access_key=', 'secret_key=',
+                                    'server=', 'port=', 'help'])
     except getopt.GetoptError, err:
-      print str(err) # will print something like "option -a not recognized"
-      usage()
+        print str(err)  # will print something like "option -a not recognized"
+        usage()
 
     access_key = None
     secret_key = None
     bucket_name = None
     try:
-       server = os.environ['OBJ_SERVER']
+        server = os.environ['OBJ_SERVER']
     except:
-       server = 'obj.umiacs.umd.edu'
-    port = 443    
+        server = 'obj.umiacs.umd.edu'
+    port = 443
 
-    for o,a in opts:
-       if o in ('-h', '--help'):
-          usage()
-          sys.exit()
-       if o in ('a', '--access_key'):
-          access_key = a
-       if o in ('s', '--secret_key'):
-          secret_key = a
-       if o in ('S', '--server'):
-          server = a
-       if o in ('P', '--port'):
-          port = a
+    for o, a in opts:
+        if o in ('-h', '--help'):
+            usage()
+            sys.exit()
+        if o in ('a', '--access_key'):
+            access_key = a
+        if o in ('s', '--secret_key'):
+            secret_key = a
+        if o in ('S', '--server'):
+            server = a
+        if o in ('P', '--port'):
+            port = a
 
-    if access_key == None:
-       try:
-          access_key = os.environ['OBJ_ACCESS_KEY_ID']
-       except:
-          print " ERROR: Please provide access_key"
-          usage()
-    if secret_key == None:
-       try:
-          secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
-       except:
-          print " ERROR: Please provide secret_key"
-          usage()
+    if access_key is None:
+        try:
+            access_key = os.environ['OBJ_ACCESS_KEY_ID']
+        except:
+            print " ERROR: Please provide access_key"
+            usage()
+    if secret_key is None:
+        try:
+            secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
+        except:
+            print " ERROR: Please provide secret_key"
+            usage()
 
     obj = S3Connection(host=server,
-   		       port=port,
-    		       is_secure=True,
-		       aws_access_key_id=access_key,
+                       port=port,
+                       is_secure=True,
+                       aws_access_key_id=access_key,
                        aws_secret_access_key=secret_key,
-		       calling_format=OrdinaryCallingFormat())
+                       calling_format=OrdinaryCallingFormat())
 
     if len(args) == 0:
         list_buckets(obj)

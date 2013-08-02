@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import boto.s3
 from boto.s3.connection import S3Connection
 from boto.s3.connection import OrdinaryCallingFormat
 
@@ -10,7 +9,7 @@ SYNOPSIS
          [-S/--server <server>] [-P/--port <port>] [-h/--help]
          <bucket>+
 
-   Where 
+   Where
         access_key  - Your Access Key ID.  If not supplied, boto will
                       use the value of the environment variable
                       OBJ_ACCESS_KEY_ID
@@ -20,9 +19,11 @@ SYNOPSIS
         bucket      - The name of the bucket(s) to create.
 """
 
+
 def usage():
     print usage_string
     sys.exit()
+
 
 if __name__ == "__main__":
     import sys
@@ -30,14 +31,13 @@ if __name__ == "__main__":
     import getopt
 
     try:
-       opts, args = getopt.getopt(
-                       sys.argv[1:], 'a:s:S:P:hR',
-                       ['access_key=', 'secret_key=',
-                        'server=', 'port=', 'help']
-                    )
+        opts, args = getopt.getopt(sys.argv[1:],
+                                   'a:s:S:P:hR',
+                                   ['access_key=', 'secret_key=',
+                                    'server=', 'port=', 'help'])
     except getopt.GetoptError, err:
-      print str(err) # will print something like "option -a not recognized"
-      usage()
+        print str(err)  # will print something like "option -a not recognized"
+        usage()
 
     access_key = None
     secret_key = None
@@ -45,42 +45,42 @@ if __name__ == "__main__":
         server = os.environ['OBJ_SERVER']
     except:
         server = 'obj.umiacs.umd.edu'
-    port = 443    
+    port = 443
 
-    for o,a in opts:
-       if o in ('-h', '--help'):
-          usage()
-          sys.exit()
-       if o in ('a', '--access_key'):
-          access_key = a
-       if o in ('s', '--secret_key'):
-          secret_key = a
-       if o in ('S', '--server'):
-          server = a
-       if o in ('P', '--port'):
-          port = a
+    for o, a in opts:
+        if o in ('-h', '--help'):
+            usage()
+            sys.exit()
+        if o in ('a', '--access_key'):
+            access_key = a
+        if o in ('s', '--secret_key'):
+            secret_key = a
+        if o in ('S', '--server'):
+            server = a
+        if o in ('P', '--port'):
+            port = a
 
-    if access_key == None:
-       try:
-          access_key = os.environ['OBJ_ACCESS_KEY_ID']
-       except:
-          print " ERROR: Please provide access_key"
-          usage()
-    if secret_key == None:
-       try:
-          secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
-       except:
-          print " ERROR: Please provide secret_key"
-          usage()
+    if access_key is None:
+        try:
+            access_key = os.environ['OBJ_ACCESS_KEY_ID']
+        except:
+            print " ERROR: Please provide access_key"
+            usage()
+    if secret_key is None:
+        try:
+            secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
+        except:
+            print " ERROR: Please provide secret_key"
+            usage()
 
     obj = S3Connection(host=server,
-   		       port=port,
-    		       is_secure=True,
-		       aws_access_key_id=access_key,
+                       port=port,
+                       is_secure=True,
+                       aws_access_key_id=access_key,
                        aws_secret_access_key=secret_key,
-		       calling_format=OrdinaryCallingFormat())
+                       calling_format=OrdinaryCallingFormat())
 
     if len(args) == 0:
         usage()
     for bucket_name in args:
-        bucket = obj.create_bucket(args[0]) 
+        bucket = obj.create_bucket(args[0])
