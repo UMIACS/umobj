@@ -157,11 +157,11 @@ class DownloadThread(threading.Thread):
 
     def _download_part(self, start_byte, end_byte):
         try:
-            key_range = self.obj.make_request('GET',
-                                              bucket=self.mp.bucketname,
-                                              key=self.mp.keyname,
-                                              headers={'Range': "bytes=%d-%d" %
-                                              (start_byte, end_byte)})
+            key_range = self.obj.make_request(
+                'GET',
+                bucket=self.mp.bucketname,
+                key=self.mp.keyname,
+                headers={'Range': "bytes=%d-%d" % (start_byte, end_byte)})
             fd = os.open(self.mp.filename, os.O_WRONLY)
             logging.info("Opening file descriptor %d, seeking to %d" %
                          (fd, start_byte))
@@ -285,8 +285,8 @@ if __name__ == "__main__":
         opts, args = getopt.getopt(sys.argv[1:],
                                    'a:b:s:S:P:hmrf',
                                    ['access_key=', 'secret_key=',
-                                   'server=', 'port=', 'multipart',
-                                   'help', 'recursive', 'force'])
+                                    'server=', 'port=', 'multipart',
+                                    'help', 'recursive', 'force'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
         usage()
