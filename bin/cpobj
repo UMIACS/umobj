@@ -85,11 +85,11 @@ def upload_file(key, filename):
 
 def download_file(key, filename):
     global pbar
-    print "INFO: Downloading %s with %d bytes." % (filename, key.size)
     pbar = progressbar.ProgressBar(maxval=key.size)
     pbar.start()
     if os.path.isdir(filename):
-        filename = filename + os.sep + key.name
+        filename = filename + os.sep + os.path.basename(key.name)
+    print "INFO: Downloading %s with %d bytes." % (filename, key.size)
     f = open(filename, 'w')
     key.get_contents_to_file(f, cb=transfer_stats, num_cb=100)
     f.close()
