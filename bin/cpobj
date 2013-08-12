@@ -15,6 +15,7 @@ import Queue
 import time
 from filechunkio import FileChunkIO
 
+logging.basicConfig(filename='example.log', level=logging.INFO)
 pbar = None
 
 
@@ -162,7 +163,8 @@ class DownloadThread(threading.Thread):
                 bucket=self.mp.bucketname,
                 key=self.mp.keyname,
                 headers={'Range': "bytes=%d-%d" % (start_byte, end_byte)})
-            fd = os.open(self.mp.filename, os.O_WRONLY)
+            filename = self.mp.filename
+            fd = os.open(filename, os.O_WRONLY)
             logging.info("Opening file descriptor %d, seeking to %d" %
                          (fd, start_byte))
             os.lseek(fd, start_byte, os.SEEK_SET)
@@ -201,7 +203,11 @@ class MultiPart:
 
     def start_download(self, bucketname, keyname, filename, threads=4):
         self.bucketname = bucketname
-        self.filename = filename
+        if os.path.isdir(filename):
+             self.filename = filename + os.sep + os.path.basename(keyname)
+        else:
+             self.filename = filename
+        self.keyname = keyname
         obj = self.connect()
         bucket = obj.get_bucket(self.bucketname)
         key = bucket.get_key(keyname)
