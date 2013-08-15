@@ -51,13 +51,13 @@ if __name__ == "__main__":
         if o in ('-h', '--help'):
             usage()
             sys.exit()
-        if o in ('a', '--access_key'):
+        if o in ('-a', '--access_key'):
             access_key = a
-        if o in ('s', '--secret_key'):
+        if o in ('-s', '--secret_key'):
             secret_key = a
-        if o in ('S', '--server'):
+        if o in ('-S', '--server'):
             server = a
-        if o in ('P', '--port'):
+        if o in ('-P', '--port'):
             port = a
 
     if access_key is None:

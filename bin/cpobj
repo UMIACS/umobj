@@ -15,9 +15,7 @@ import Queue
 import time
 from filechunkio import FileChunkIO
 
-logging.basicConfig(filename='example.log', level=logging.INFO)
 pbar = None
-
 
 def usage():
     prog_name = os.path.basename(sys.argv[0])
@@ -204,9 +202,9 @@ class MultiPart:
     def start_download(self, bucketname, keyname, filename, threads=4):
         self.bucketname = bucketname
         if os.path.isdir(filename):
-             self.filename = filename + os.sep + os.path.basename(keyname)
+            self.filename = filename + os.sep + os.path.basename(keyname)
         else:
-             self.filename = filename
+            self.filename = filename
         self.keyname = keyname
         obj = self.connect()
         bucket = obj.get_bucket(self.bucketname)
@@ -313,22 +311,27 @@ if __name__ == "__main__":
         if o in ('-h', '--help'):
             usage()
             sys.exit()
-        if o in ('a', '--access_key'):
+        if o in ('-a', '--access_key'):
             access_key = a
-        if o in ('s', '--secret_key'):
+        if o in ('-s', '--secret_key'):
             secret_key = a
-        if o in ('b', '--bucket'):
+        if o in ('-b', '--bucket'):
             bucket_name = a
-        if o in ('S', '--server'):
+        if o in ('-S', '--server'):
             server = a
-        if o in ('P', '--port'):
+        if o in ('-P', '--port'):
             port = a
-        if o in ('m', '--multipart'):
+        if o in ('-m', '--multipart'):
             multi = True
-        if o in ('r', '--recursive'):
+        if o in ('-r', '--recursive'):
             recursive = True
-        if o in ('f', '--force'):
+        if o in ('-f', '--force'):
             force = True
+
+    ## logging setup
+    home_directory = os.path.expanduser("~")
+    log_file = home_directory + os.sep + ".umobj.log"
+    logging.basicConfig(filename=log_file, level=logging.INFO)
 
     if access_key is None:
         try:
