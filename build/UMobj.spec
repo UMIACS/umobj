@@ -1,5 +1,5 @@
 Name: UMobj
-Summary: LDAP Administration Scripts
+Summary: Command Line Utilties for UMIACS Object Storage Services
 Version: =VERSION=
 Release: 1
 Group: UMIACS
@@ -7,7 +7,7 @@ License: unknown
 URL: http://www.umiacs.umd.edu
 Source0: %{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}
-Requires: python, python-boto
+Requires: python, python-boto, python-progressbar, python-filechunkio
 BuildArch: noarch
 
 %description
