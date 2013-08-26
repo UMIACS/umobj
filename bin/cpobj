@@ -18,6 +18,7 @@ from filechunkio import FileChunkIO
 ## Load our local library functions
 sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
 from umobj_utils import umobj_logging
+from umobj_key import create_directory
 
 pbar = None
 
@@ -90,18 +91,6 @@ def upload_file(key, filename):
         return 0
     pbar.finish()
     return file_size
-
-
-def create_directory(key):
-    """
-        Create a directry (key will always end in a /)
-    """
-    try:
-        key.set_contents_from_string('')
-        return True
-    except IOError, e:
-        print e
-        return False
 
 
 def download_file(key, filename):
@@ -409,8 +398,9 @@ if __name__ == "__main__":
 
     try:
         bucket = obj.get_bucket(bucket_name)
-    except boto.exception.S3ResponseError:
-        logging.error("Bucket %s not found." % bucket_name)
+    except boto.exception.S3ResponseError, e:
+        logging.error("Unable to access bucket %s, %s." % 
+                      (bucket_name, e.error_code))
         sys.exit()
 
     if upload:

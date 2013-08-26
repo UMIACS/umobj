@@ -1,13 +1,23 @@
 #!/usr/bin/env python
 
+import boto
 from boto.s3.connection import S3Connection
 from boto.s3.connection import OrdinaryCallingFormat
+import sys
+import os
+import logging
+
+## Load our local library functions
+sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
+from umobj_utils import umobj_logging
+from umobj_key import create_directory
 
 usage_string = """
 SYNOPSIS
    mkobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
          [-S/--server <server>] [-P/--port <port>] [-h/--help]
-         <bucket>+
+         [-V/--verbose] [-D/--debug]
+         bucket[:PATH]+
 
    Where
         access_key  - Your Access Key ID.  If not supplied, boto will
@@ -17,6 +27,7 @@ SYNOPSIS
                       will use the value of the environment variable
                       OBJ_SECRET_ACCESS_KEY
         bucket      - The name of the bucket(s) to create.
+        PATH        - Optional directory path to create
 """
 
 
@@ -26,21 +37,21 @@ def usage():
 
 
 if __name__ == "__main__":
-    import sys
-    import os
     import getopt
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-                                   'a:s:S:P:hR',
+                                   'a:s:S:P:hRDV',
                                    ['access_key=', 'secret_key=',
-                                    'server=', 'port=', 'help'])
+                                    'server=', 'port=', 'help',
+                                    'debug', 'verbose'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
         usage()
 
     access_key = None
     secret_key = None
+    level = logging.WARNING
     try:
         server = os.environ['OBJ_SERVER']
     except:
@@ -59,18 +70,24 @@ if __name__ == "__main__":
             server = a
         if o in ('-P', '--port'):
             port = a
+        if o in ('-V', '--verbose'):
+            level = logging.INFO
+        if o in ('-D', '--debug'):
+            level = logging.DEBUG
+
+    umobj_logging(level)
 
     if access_key is None:
         try:
             access_key = os.environ['OBJ_ACCESS_KEY_ID']
         except:
-            print " ERROR: Please provide access_key"
+            logging.error("Please provide access_key")
             usage()
     if secret_key is None:
         try:
             secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
         except:
-            print " ERROR: Please provide secret_key"
+            logging.error("Please provide secret_key")
             usage()
 
     obj = S3Connection(host=server,
@@ -83,4 +100,24 @@ if __name__ == "__main__":
     if len(args) == 0:
         usage()
     for bucket_name in args:
-        bucket = obj.create_bucket(args[0])
+        bucket_parts = bucket_name.split(':', 1)
+        if len(bucket_parts) > 1:
+            logging.info("Creating directory %s in bucket %s" %
+                         (bucket_parts[1], bucket_parts[0]))
+            try:
+                bucket = obj.get_bucket(bucket_parts[0])
+            except boto.exception.S3ResponseError, e:
+                logging.error("Can not access bucket %s, %s." %
+                              (bucket_parts[0], e.error_code))
+                sys.exit(1)
+            current_path = ''
+            for dir_part in bucket_parts[1].lstrip(os.sep).split(os.sep):
+                current_path = current_path + dir_part + '/'
+                key = bucket.new_key(current_path)
+                create_directory(key)
+        else:
+            try:
+                bucket = obj.create_bucket(bucket_parts[0])
+            except boto.exception.S3CreateError, e:
+                logging.error("Cannont create bucket %s, %s.",
+                              bucket_parts[0], e.error_code)
