@@ -3,28 +3,35 @@ SED = /bin/sed
 BINS = bin
 ETCS = etc
 LIBS = lib
-PATH = opt/UMobj
+SHARE = share
+BASEPATH = opt/UMobj
 NAME = UMobj
+TEMPDIR := $(shell mktemp -d)
 
 all:
 
 install: all
 	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)
-	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)/$(PATH)
-	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)/$(PATH)/$(BINS)
-	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)/$(PATH)/$(ETCS)
-	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)/$(PATH)/$(LIBS)
+	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)/$(BASEPATH)
+	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(BINS)
+	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(ETCS)
+	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(LIBS)
 	for bin in `/bin/ls $(BINS)`; do \
-		$(INSTALL) $(BINS)/$$bin $(DESTDIR)/$(PATH)/$(BINS)/$$bin; \
+		$(INSTALL) $(BINS)/$$bin $(DESTDIR)/$(BASEPATH)/$(BINS)/$$bin; \
 	done
 	for etc in `/bin/ls $(ETCS)`; do \
-		$(INSTALL) $(ETCS)/$$etc $(DESTDIR)/$(PATH)/$(ETCS)/$$etc; \
+		$(INSTALL) $(ETCS)/$$etc $(DESTDIR)/$(BASEPATH)/$(ETCS)/$$etc; \
 	done
 	for lib in `/bin/ls $(LIBS)/*.py`; do \
-		$(INSTALL) $$lib $(DESTDIR)/$(PATH)/$$lib; \
+		$(INSTALL) $$lib $(DESTDIR)/$(BASEPATH)/$$lib; \
 	done
+	$(INSTALL) README.md $(DESTDIR)/$(BASEPATH)/$(SHARE)/doc/README.md
 
 RPM:
-	/bin/tar -C .. --exclude .git -czf $(BUILDROOT)/SOURCES/$(NAME)-$(VERSION).tar.gz $(NAME)
+	mkdir -p $(TEMPDIR)/$(NAME)-$(VERSION)
+	git clone ./ $(TEMPDIR)/$(NAME)-$(VERSION)
+	git --git-dir=$(TEMPDIR)/$(NAME)-$(VERSION)/.git checkout $(VERSION)
+	/bin/tar -C $(TEMPDIR) --exclude .git -czf $(BUILDROOT)/SOURCES/$(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION)
 	sed "s/=VERSION=/$(VERSION)/" build/$(NAME).spec > $(BUILDROOT)/SPECS/$(NAME)-$(VERSION).spec
-	rpmbuild -bb $(BUILDROOT)/SPECS/$(NAME)-$(VERSION).SPEC
+	rpmbuild -bb $(BUILDROOT)/SPECS/$(NAME)-$(VERSION).spec
+	rm -rf $(TEMPDIR)
