@@ -2,14 +2,21 @@
 
 import boto.s3
 import re
+import sys
+import os
+import logging
 from boto.s3.connection import S3Connection
 from boto.s3.connection import OrdinaryCallingFormat
+
+## Load our local library functions
+sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
+from umobj_utils import umobj_logging
 
 usage_string = """
 SYNOPSIS
    rmobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
          [-S/--server <server>] [-P/--port <port>]
-         [-R/--recursive] [-h/--help]
+         [-R/--recursive] [-V/--verbose] [-D/--debug] [-h/--help]
          bucket:[key]
 
    Where
@@ -36,13 +43,15 @@ if __name__ == "__main__":
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-                                   'a:s:S:P:hR',
+                                   'a:s:S:P:hRVD',
                                    ['access_key=', 'secret_key=',
-                                    'server=', 'port=', 'recursive', 'help'])
+                                    'server=', 'port=', 'recursive', 'help'
+                                    'verbose', 'debug'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
         usage()
 
+    level = logging.WARNING
     access_key = None
     secret_key = None
     bucket_name = None
@@ -67,18 +76,26 @@ if __name__ == "__main__":
             port = a
         if o in ('-R', '--recursive'):
             recursive = True
+        if o in ('-V', '--verbose'):
+            level = logging.INFO
+        if o in ('-D', '--debug'):
+            level = logging.DEBUG
+
+    umobj_logging(level)
+
+    logging.info("Using server %s" % server)
 
     if access_key is None:
         try:
             access_key = os.environ['OBJ_ACCESS_KEY_ID']
         except:
-            print " ERROR: Please provide access_key"
+            logging.error("Please provide access_key")
             usage()
     if secret_key is None:
         try:
             secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
         except:
-            print " ERROR: Please provide secret_key"
+            logging.error("Please provide secret_key")
             usage()
 
     obj = S3Connection(host=server,
@@ -99,7 +116,7 @@ if __name__ == "__main__":
         try:
             bucket = obj.get_bucket(bucket_name)
         except boto.exception.S3ResponseError:
-            print "ERROR: Bucket %s does not exist." % args[0]
+            logging.error("Bucket %s does not exist." % args[0])
             sys.exit(1)
 
         if recursive:
@@ -111,6 +128,7 @@ if __name__ == "__main__":
                     bucket.delete_key(key.name)
                 obj.delete_bucket(bucket.name)
             else:
-                print " Aborting..."
+                logging.info("Aborting recursive deletion of %s" % bucket_name)
         else:
+            logging.info("Deleting key %s" % key_name)
             bucket.delete_key(key_name)
