@@ -11,11 +11,11 @@ TEMPDIR := $(shell mktemp -d)
 all:
 
 install: all
-	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)
-	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)/$(BASEPATH)
-	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(BINS)
-	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(ETCS)
-	$(INSTALL) -o root -g root -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(LIBS)
+	$(INSTALL) -m 0755 -d $(DESTDIR)
+	$(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)
+	$(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(BINS)
+	$(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(ETCS)
+	$(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(LIBS)
 	for bin in `/bin/ls $(BINS)`; do \
 		$(INSTALL) $(BINS)/$$bin $(DESTDIR)/$(BASEPATH)/$(BINS)/$$bin; \
 	done
