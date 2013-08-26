@@ -17,6 +17,7 @@ install: all
 	$(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(ETCS)
 	$(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(LIBS)
 	$(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(SHARE)
+	$(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(SHARE)/doc
 	for bin in `/bin/ls $(BINS)`; do \
 		$(INSTALL) $(BINS)/$$bin $(DESTDIR)/$(BASEPATH)/$(BINS)/$$bin; \
 	done
