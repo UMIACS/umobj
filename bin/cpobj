@@ -15,7 +15,12 @@ import Queue
 import time
 from filechunkio import FileChunkIO
 
+## Load our local library functions
+sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
+from umobj_utils import umobj_logging
+
 pbar = None
+
 
 def usage():
     prog_name = os.path.basename(sys.argv[0])
@@ -37,6 +42,8 @@ OPTIONS SUMMARY
     -m, --multipart                Instantiate multipart uploads [Default: no]
     -r, --recursive                Copy files recursively [Default: no]
     -f, --force                    Force overwrite files in download mode
+    -V, --verbose                  Verbose mode
+    -D, --debug                    Debug mode
     -h, --help
 
 OPTIONS
@@ -70,7 +77,10 @@ def transfer_stats(trans_bytes, total_bytes):
 def upload_file(key, filename):
     global pbar
     file_size = os.stat(filename).st_size
-    print "INFO: Uploading %s with %d bytes." % (filename, file_size)
+    logging.info("Uploading %s with %d bytes." % (filename, file_size))
+    if file_size is 0:
+        key.set_contents_from_filename(filename)
+        return 0
     pbar = progressbar.ProgressBar(maxval=file_size)
     pbar.start()
     try:
@@ -81,8 +91,9 @@ def upload_file(key, filename):
     pbar.finish()
     return file_size
 
+
 def create_directory(key):
-    """ 
+    """
         Create a directry (key will always end in a /)
     """
     try:
@@ -92,13 +103,14 @@ def create_directory(key):
         print e
         return False
 
+
 def download_file(key, filename):
     global pbar
     pbar = progressbar.ProgressBar(maxval=key.size)
     pbar.start()
     if os.path.isdir(filename):
         filename = filename + os.sep + os.path.basename(key.name)
-    print "INFO: Downloading %s with %d bytes." % (filename, key.size)
+    logging.info("INFO: Downloading %s with %d bytes." % (filename, key.size))
     f = open(filename, 'w')
     key.get_contents_to_file(f, cb=transfer_stats, num_cb=100)
     f.close()
@@ -128,7 +140,7 @@ class UploadThread(threading.Thread):
             bucket = self.obj.get_bucket(self.mp.bucketname)
             for mp in bucket.get_all_multipart_uploads():
                 if mp.id == self.mp.mp_id:
-                    logging.info('Uploading chunk (%d) %s' %
+                    logging.debug('Uploading chunk (%d) %s' %
                                  (retries, part_num))
                     with FileChunkIO(self.mp.filename, 'r', offset=offset,
                                      bytes=bytes) as fp:
@@ -140,7 +152,7 @@ class UploadThread(threading.Thread):
                 self._upload_part(part_num, offset,
                                   bytes, retries=retries-1)
             else:
-                logging.info('Failed uploading part %d' % part_num)
+                logging.error('Failed uploading part %d' % part_num)
                 raise exc
         else:
             logging.info('Uploaded part %d' % part_num)
@@ -173,7 +185,7 @@ class DownloadThread(threading.Thread):
                 headers={'Range': "bytes=%d-%d" % (start_byte, end_byte)})
             filename = self.mp.filename
             fd = os.open(filename, os.O_WRONLY)
-            logging.info("Opening file descriptor %d, seeking to %d" %
+            logging.debug("Opening file descriptor %d, seeking to %d" %
                          (fd, start_byte))
             os.lseek(fd, start_byte, os.SEEK_SET)
             chunk_size = min((end_byte-start_byte), 32 * 1024 * 1024)
@@ -258,10 +270,11 @@ class MultiPart:
         bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(source_size)),
                               5242880)
         chunk_amount = int(math.ceil(source_size / float(bytes_per_chunk)))
-        #print "Size: %16d   Chunk Size: %16d   Number Chunks: %8d" %
-        #        (source_size, bytes_per_chunk, chunk_amount)
+        logging.info("Size: %16d   Chunk Size: %16d   Number Chunks: %8d" %
+                     (source_size, bytes_per_chunk, chunk_amount))
         queue = Queue.Queue()
-        #print "Starting a pool for %s with %d threads." % (mp.id, threads)
+        logging.info("Starting a pool for %s with %d threads." %
+                     (mp.id, threads))
 
         ### putting all the tasks together in a queue
         for i in range(chunk_amount):
@@ -289,7 +302,7 @@ class MultiPart:
             key = bucket.get_key(keyname)
             key.set_acl('private')
         else:
-            print "Canceling upload..."
+            logging.warning("Canceling upload (%d)" % mp.id)
             mp.cancel_upload()
 
 if __name__ == "__main__":
@@ -297,16 +310,18 @@ if __name__ == "__main__":
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-                                   'a:b:s:S:P:hmrf',
+                                   'a:b:s:S:P:hmrfVD',
                                    ['access_key=', 'secret_key=',
                                     'server=', 'port=', 'multipart',
-                                    'help', 'recursive', 'force'])
+                                    'help', 'recursive', 'force',
+                                    'verbose', 'debug'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
         usage()
 
     force = False
     multi = False
+    level = logging.WARNING
     access_key = None
     secret_key = None
     bucket_name = None
@@ -337,23 +352,24 @@ if __name__ == "__main__":
             recursive = True
         if o in ('-f', '--force'):
             force = True
+        if o in ('-V', '--verbose'):
+            level = logging.INFO
+        if o in ('-D', '--debug'):
+            level = logging.DEBUG
 
-    ## logging setup
-    home_directory = os.path.expanduser("~")
-    log_file = home_directory + os.sep + ".umobj.log"
-    logging.basicConfig(filename=log_file, level=logging.INFO)
+    umobj_logging(level)
 
     if access_key is None:
         try:
             access_key = os.environ['OBJ_ACCESS_KEY_ID']
         except:
-            print " ERROR: Please provide access_key"
+            logging.error("Please provide access_key")
             usage()
     if secret_key is None:
         try:
             secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
         except:
-            print " ERROR: Please provide secret_key"
+            logging.error("Please provide secret_key")
             usage()
 
     obj = S3Connection(host=server, port=port, is_secure=True,
@@ -373,7 +389,7 @@ if __name__ == "__main__":
 
     if src_match:
         if dest_match:
-            print "ERROR: Can not copy from a bucket to a bucket."
+            logging.error("Can not copy from a bucket to a bucket.")
             usage()
         else:
             bucket_name = src_match.group(1)
@@ -385,29 +401,40 @@ if __name__ == "__main__":
             dest_name = dest_match.group(2)
             upload = True
         else:
-            print "ERROR: You need to provide a bucket in either SRC or DEST."
+            logging.error("You need to provide a bucket in either SRC " +
+                          "or DEST.")
             usage()
 
     try:
         bucket = obj.get_bucket(bucket_name)
     except boto.exception.S3ResponseError:
-        print "ERROR: bucket %s not found." % bucket_name
+        logging.error("Bucket %s not found." % bucket_name)
         sys.exit()
 
     if upload:
         if recursive:
             if not os.path.isdir(src):
-                print "ERROR: SRC %s is not a directory." % src
+                logging.error("SRC %s is not a directory." % src)
             else:
                 for root, dirs, files in os.walk(src.rstrip(os.sep)):
+                    file_root = root.replace(src, '').lstrip(os.sep)
+                    if src != root:
+                        logging.info("Create directory %s" % file_root)
+                        dir_key = bucket.new_key(file_root + '/')
+                        create_directory(dir_key)
                     for f in files:
-                        filename = root + os.sep + src
-                        keyname = filename.lstrip(os.sep)
+                        filename = root + os.sep + f
+                        if file_root != '':
+                            keyname = file_root + '/' + f
+                        else:
+                            keyname = f
                         key = bucket.new_key(keyname)
+                        logging.info("Upload key %s from file %s" %
+                                     (keyname, filename))
                         upload_file(key, filename)
         else:
             if not os.path.isfile(src):
-                print "ERROR: file %s does not exist." % src
+                logging.erorr("File %s does not exist." % src)
                 sys.exit(1)
             if dest_name:
                 current_path = ''
@@ -427,13 +454,13 @@ if __name__ == "__main__":
     if download:
         if recursive:
             if not os.path.isdir(dest):
-                print "ERROR: DEST %s is not a directory." % dest
+                logging.error("DEST %s is not a directory." % dest)
             else:
                 pass
         else:
             if os.path.isfile(dest) and not force:
-                print "ERROR: file %s already exists " % dest + \
-                      "please force flag to overwrite."
+                logging.error("File %s already exists " % dest +
+                              "please force flag to overwrite.")
                 usage()
             else:
                 if multi:
