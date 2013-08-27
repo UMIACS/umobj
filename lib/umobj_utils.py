@@ -10,16 +10,16 @@ def umobj_logging(level, filename=None):
         log_file = home_directory + os.sep + ".umobj.log"
     else:
         log_file = filename
-    logger = logging.getLogger()
-    fileHandler = logging.FileHandler(log_file)
-    file_fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
-    if level is logging.INFO or level is logging.DEBUG:
-        logging.basicConfig(level=level,
-                            format='%(levelname)s: %(message)s')
-        fileHandler.setLevel(level=level)
-    else:
-        logging.basicConfig(level=logging.WARNING,
-                            format='%(levelname)s: %(message)s')
-        fileHandler.setLevel(level=logging.INFO)
-    fileHandler.setFormatter(file_fmt)
-    logger.addHandler(fileHandler)
+    console_fmt = '%(levelname)s: %(message)s'
+    file_fmt = '%(asctime)s %(levelname)s: %(message)s'
+    logging.basicConfig(level=logging.DEBUG,
+                        format=file_fmt,
+                        datefmt='%m-%d %H:%M',
+                        filename=log_file,
+                        filemode='w')
+    console = logging.StreamHandler()
+    console.setLevel(level)
+    formatter = logging.Formatter(console_fmt)
+    console.setFormatter(formatter)
+    logging.getLogger('').addHandler(console)
+    logging.info('Finished setting up logging.')
