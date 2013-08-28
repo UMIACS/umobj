@@ -18,6 +18,7 @@ UMIACS Object Storage command line utilties.
 %build
 %install
 make install DESTDIR=%{buildroot}
+find %{buildroot}/opt/UMobj/bin -type f | xargs sed -i '1s|^#!python|#!python26|'
 
 %clean
 rm -rf %{buildroot}

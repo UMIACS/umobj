@@ -7,11 +7,7 @@ License: unknown
 URL: http://www.umiacs.umd.edu
 Source0: %{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}
-%if 0%{?rhel} && 0%{?rhel} <= 5
-Requires: python26, python26-boto, python26-progressbar, python26-filechunkio
-%else
 Requires: python, python-boto, python-progressbar, python-filechunkio
-%endif
 BuildArch: noarch
 
 %description
@@ -22,9 +18,6 @@ UMIACS Object Storage command line utilties.
 %build
 %install
 make install DESTDIR=%{buildroot}
-%if 0%{?rhel} && 0%{?rhel} <= 5
-find %{buildroot}/opt/UMobj/bin -type f | xargs sed -i '1s|^#!python|#!python26|'
-%endif
 
 %clean
 rm -rf %{buildroot}
