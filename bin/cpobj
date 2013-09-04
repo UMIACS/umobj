@@ -244,8 +244,7 @@ class MultiPart:
                 t.start()
             queue.join()
 
-    def start_upload(self, bucketname, keyname, filename, threads=4,
-                     acl='private'):
+    def start_upload(self, bucketname, keyname, filename, policy, threads=4):
         self.bucketname = bucketname
         self.filename = filename
         headers = {}
@@ -289,7 +288,8 @@ class MultiPart:
         if len(mp.get_all_parts()) == chunk_amount:
             mp.complete_upload()
             key = bucket.get_key(keyname)
-            key.set_acl('private')
+            logging.debug("Applying bucket policy %s" % policy)
+            key.set_acl(policy)
         else:
             logging.warning("Canceling upload (%d)" % mp.id)
             mp.cancel_upload()
@@ -399,11 +399,13 @@ if __name__ == "__main__":
     try:
         bucket = obj.get_bucket(bucket_name)
     except boto.exception.S3ResponseError, e:
-        logging.error("Unable to access bucket %s, %s." % 
+        logging.error("Unable to access bucket %s, %s." %
                       (bucket_name, e.error_code))
         sys.exit()
 
     if upload:
+        ## we will use the bucket ACL as the default on the new key
+        policy = bucket.get_acl()
         if recursive:
             if not os.path.isdir(src):
                 logging.error("SRC %s is not a directory." % src)
@@ -414,6 +416,8 @@ if __name__ == "__main__":
                         logging.info("Create directory %s" % file_root)
                         dir_key = bucket.new_key(file_root + '/')
                         create_directory(dir_key)
+                        logging.debug("Applying bucket policy %s" % policy)
+                        dir_key.set_acl(policy)
                     for f in files:
                         filename = root + os.sep + f
                         if file_root != '':
@@ -424,6 +428,8 @@ if __name__ == "__main__":
                         logging.info("Upload key %s from file %s" %
                                      (keyname, filename))
                         upload_file(key, filename)
+                        logging.debug("Applying bucket policy %s" % policy)
+                        key.set_acl(policy)
         else:
             if not os.path.isfile(src):
                 logging.erorr("File %s does not exist." % src)
@@ -434,15 +440,19 @@ if __name__ == "__main__":
                     current_path = current_path + dir_part + '/'
                     key = bucket.new_key(current_path)
                     create_directory(key)
+                    logging.debug("Applying bucket policy %s" % policy)
+                    key.set_acl(policy)
                 key_name = current_path + os.path.basename(src)
             else:
                 key_name = os.path.basename(src)
             if multi:
                 m = MultiPart(access_key, secret_key, server, port)
-                m.start_upload(bucket_name, key_name, src)
+                m.start_upload(bucket_name, key_name, src, policy)
             else:
                 key = bucket.new_key(key_name)
                 upload_file(key, src)
+                logging.debug("Applying bucket policy %s" % policy)
+                key.set_acl(policy)
     if download:
         if recursive:
             if not os.path.isdir(dest):
