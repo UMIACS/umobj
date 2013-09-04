@@ -4,6 +4,8 @@ import boto.s3
 from boto.s3.connection import S3Connection
 from boto.s3.connection import OrdinaryCallingFormat
 
+all_users = 'http://acs.amazonaws.com/groups/global/AllUsers'
+
 usage_string = """
 NAME
     %s - List objects in a s3 object store
@@ -16,6 +18,7 @@ OPTIONS SUMMARY
     -s, --secret_key <secret_key>  Object store secret key
     -S, --server <server>          Object store server name
     -P, --port <port>              Object store server port [Default: 443]
+    -p, --public                   Show public URLs for the files if available.
     -h, --help
 
 OPTIONS
@@ -45,10 +48,11 @@ def sizeof_fmt(num):
     return "%3.1f %s" % (num, x)
 
 
-def list_bucket(b, prefix=None):
+def list_bucket(b, prefix=None, public=False):
     """List everything in a bucket"""
     from boto.s3.prefix import Prefix
     from boto.s3.key import Key
+    from boto.exception import S3ResponseError
     total = 0
     query = b
     if prefix:
@@ -65,12 +69,15 @@ def list_bucket(b, prefix=None):
             size = 0
         else:
             size = k.size
-            for g in k.get_acl().acl.grants:
-                if g.id is None:
-                    if g.permission == "READ":
-                        mode = "-rwxr--"
-                    elif g.permission == "FULL_CONTROL":
-                        mode = "-rwxrwx"
+            try:
+                for g in k.get_acl().acl.grants:
+                    if g.id is None:
+                        if g.permission == "READ":
+                            mode = "-rwxr--"
+                        elif g.permission == "FULL_CONTROL":
+                            mode = "-rwxrwx"
+            except S3ResponseError:
+                mode = "-------"
         if isinstance(k, Key):
             print "%s\t%s\t%010s\t%s" % (mode, k.last_modified,
                                          sizeof_fmt(size), k.name)
@@ -79,6 +86,15 @@ def list_bucket(b, prefix=None):
             #print nothing instead
             print "%s\t%s\t%010s\t%s" % (mode, ' '*24,
                                          sizeof_fmt(size), k.name)
+        if public:
+            try:
+                for grant in k.get_acl().acl.grants:
+                    if grant.permission == 'READ':
+                        if grant.uri == all_users:
+                            print "  %s" % k.generate_url(expires_in=0,
+                                                          query_auth=False)
+            except S3ResponseError:
+                pass
         total += size
     print "="*80
     print "\t\tTOTAL:  \t%010s \t%i Files" % (sizeof_fmt(total), num)
@@ -97,9 +113,9 @@ if __name__ == "__main__":
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-                                   "a:s:S:P:h",
+                                   "a:s:S:P:hp",
                                    ['access_key=', 'secret_key=',
-                                    'server=', 'port=', 'help'])
+                                    'server=', 'port=', 'help', 'public'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
         usage()
@@ -107,6 +123,7 @@ if __name__ == "__main__":
     access_key = None
     secret_key = None
     bucket_name = None
+    public = False
     try:
         server = os.environ['OBJ_SERVER']
     except:
@@ -125,6 +142,8 @@ if __name__ == "__main__":
             server = a
         if o in ('-P', '--port'):
             port = a
+        if o in ('-p', '--public'):
+            public = True
 
     if access_key is None:
         try:
@@ -156,6 +175,6 @@ if __name__ == "__main__":
             print "ERROR: bucket %s does not exist." % args[0]
             sys.exit(1)
         if len(bucket_parts) < 2:
-            list_bucket(bucket)
+            list_bucket(bucket, public=public)
         else:
-            list_bucket(bucket, bucket_parts[1])
+            list_bucket(bucket, bucket_parts[1], public=public)
