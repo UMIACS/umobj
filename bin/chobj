@@ -1,0 +1,151 @@
+#!/usr/bin/env python
+
+import boto
+from boto.s3.connection import S3Connection
+from boto.s3.connection import OrdinaryCallingFormat
+from boto.s3.acl import ACL
+import sys
+import os
+import logging
+
+## Load our local library functions
+sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
+from umobj_utils import umobj_logging
+from umobj_acl import CANNED_ACLS
+
+usage_string = """
+SYNOPSIS
+   chobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
+         [-S/--server <server>] [-P/--port <port>] [-h/--help]
+         [-p/--policy <policy>]+ [-V/--verbose] [-D/--debug]
+         bucket[:key]+
+
+   Where
+        access_key  - Your Access Key ID.  If not supplied, boto will
+                      use the value of the environment variable
+                      OBJ_ACCESS_KEY_ID
+        secret_key  - Your Secret Access Key.  If not supplied, boto
+                      will use the value of the environment variable
+                      OBJ_SECRET_ACCESS_KEY
+        bucket      - The name of the bucket to operate on.
+        key         - Optional key or key prefix to use.
+        policy      - username:permission where permission is one of 
+                      FULL_CONTROL, READ, WRITE, READ_ACL, WRITE_ACL
+"""
+
+
+def usage():
+    print usage_string
+    sys.exit()
+
+
+if __name__ == "__main__":
+    import getopt
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:],
+                                   'a:s:S:P:hDV',
+                                   ['access_key=', 'secret_key=',
+                                    'server=', 'port=', 'help',
+                                    'policy=', 'debug', 'verbose'])
+    except getopt.GetoptError, err:
+        print str(err)  # will print something like "option -a not recognized"
+        usage()
+
+    access_key = None
+    secret_key = None
+    level = logging.WARNING
+    policies = []
+    try:
+        server = os.environ['OBJ_SERVER']
+    except:
+        server = 'obj.umiacs.umd.edu'
+    port = 443
+
+    for o, a in opts:
+        if o in ('-h', '--help'):
+            usage()
+            sys.exit()
+        if o in ('-a', '--access_key'):
+            access_key = a
+        if o in ('-s', '--secret_key'):
+            secret_key = a
+        if o in ('-S', '--server'):
+            server = a
+        if o in ('-P', '--port'):
+            port = a
+        if o in ('-V', '--verbose'):
+            level = logging.INFO
+        if o in ('-D', '--debug'):
+            level = logging.DEBUG
+        if o in ('-p', '--policy'):
+            p = a.split(':', 1)
+            if len(p) is not 2:
+                print "ERROR: %s policy is not in the right format" % a
+                sys.exit(1)
+            if p[1] not in CANNED_ACLS:
+                print "ERROR: %s is not a supported canned acl" % p[1]
+                print "       Supported: %s" % ', '.join(CANNED_ACLS)
+                sys.exit(1)
+            policies.append(tuple(p))
+
+    umobj_logging(level)
+
+    if access_key is None:
+        try:
+            access_key = os.environ['OBJ_ACCESS_KEY_ID']
+        except:
+            logging.error("Please provide access_key")
+            usage()
+    if secret_key is None:
+        try:
+            secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
+        except:
+            logging.error("Please provide secret_key")
+            usage()
+
+    obj = S3Connection(host=server,
+                       port=port,
+                       is_secure=True,
+                       aws_access_key_id=access_key,
+                       aws_secret_access_key=secret_key,
+                       calling_format=OrdinaryCallingFormat())
+   
+    ## construct the ACL
+    acl = ACL()
+    for u,g in policies:
+        acl.add_user_grant(g, u)
+
+    if len(args) == 0:
+        usage()
+    for bucket_name in args:
+        bucket_parts = bucket_name.split(':', 1)
+        try:
+            bucket = obj.get_bucket(bucket_parts[0])
+        except boto.exception.S3ResponseError, e:
+            logging.error("Can not access bucket %s, %s." %
+                          (bucket_parts[0], e.error_code))
+            sys.exit(1)
+
+        ## we use the bucket policy as a starting point
+        policy = bucket.get_acl()
+        policy.acl = acl 
+        logging.info("Policy: %s" % policy)
+             
+        if len(bucket_parts) > 1:
+            logging.info("Working on %s in bucket %s" %
+                         (bucket_parts[1], bucket_parts[0]))
+            for key in bucket.list(prefix=bucket_parts[1]):
+                try:
+                    logging.info("Working on key %s" % key)
+                    key.set_acl(policy)
+                except boto.exception.S3ResponseError:
+                    pass
+        else:
+            logging.info("Working on bucket %s" % bucket_parts[0])
+            for key in bucket.get_all_keys():
+                try: 
+                    logging.info("Working on key %s" % key)
+                    key.set_acl(policy)
+                except boto.exception.S3ResponseError:
+                    pass
