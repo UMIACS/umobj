@@ -48,7 +48,7 @@ def sizeof_fmt(num):
     return "%3.1f %s" % (num, x)
 
 
-def list_bucket(b, prefix=None, public=False):
+def list_bucket(b, prefix=None, public=False, long_list=False):
     """List everything in a bucket"""
     from boto.s3.prefix import Prefix
     from boto.s3.key import Key
@@ -81,20 +81,26 @@ def list_bucket(b, prefix=None, public=False):
         if isinstance(k, Key):
             print "%s\t%s\t%010s\t%s" % (mode, k.last_modified,
                                          sizeof_fmt(size), k.name)
+            if long_list:
+                try:
+                    for grant in k.get_acl().acl.grants:
+                        print "        %s %s" % (grant.permission, grant.id)
+                except S3ResponseError:
+                    pass
+            if public:
+                try:
+                    for grant in k.get_acl().acl.grants:
+                        if grant.permission == 'READ':
+                            if grant.uri == all_users:
+                                print "  %s" % k.generate_url(expires_in=0,
+                                                              query_auth=False)
+                except S3ResponseError:
+                    pass
         else:
             #If it's not a Key object, it doesn't have a last_modified time, so
             #print nothing instead
             print "%s\t%s\t%010s\t%s" % (mode, ' '*24,
                                          sizeof_fmt(size), k.name)
-        if public:
-            try:
-                for grant in k.get_acl().acl.grants:
-                    if grant.permission == 'READ':
-                        if grant.uri == all_users:
-                            print "  %s" % k.generate_url(expires_in=0,
-                                                          query_auth=False)
-            except S3ResponseError:
-                pass
         total += size
     print "="*80
     print "\t\tTOTAL:  \t%010s \t%i Files" % (sizeof_fmt(total), num)
@@ -113,8 +119,8 @@ if __name__ == "__main__":
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-                                   "a:s:S:P:hp",
-                                   ['access_key=', 'secret_key=',
+                                   "a:s:S:P:hpl",
+                                   ['access_key=', 'secret_key=', 'long',
                                     'server=', 'port=', 'help', 'public'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
@@ -124,6 +130,7 @@ if __name__ == "__main__":
     secret_key = None
     bucket_name = None
     public = False
+    long_list = False
     try:
         server = os.environ['OBJ_SERVER']
     except:
@@ -144,6 +151,8 @@ if __name__ == "__main__":
             port = a
         if o in ('-p', '--public'):
             public = True
+        if o in ('-l', '--long'):
+            long_list = True
 
     if access_key is None:
         try:
@@ -175,6 +184,7 @@ if __name__ == "__main__":
             print "ERROR: bucket %s does not exist." % args[0]
             sys.exit(1)
         if len(bucket_parts) < 2:
-            list_bucket(bucket, public=public)
+            list_bucket(bucket, public=public, long_list=long_list)
         else:
-            list_bucket(bucket, bucket_parts[1], public=public)
+            list_bucket(bucket, bucket_parts[1], public=public,
+                        long_list=long_list)
