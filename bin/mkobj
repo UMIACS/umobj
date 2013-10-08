@@ -118,6 +118,7 @@ if __name__ == "__main__":
         else:
             try:
                 bucket = obj.create_bucket(bucket_parts[0])
+                print "Created bucket %s." % bucket_parts[0]
             except boto.exception.S3CreateError, e:
                 logging.error("Cannont create bucket %s, %s.",
                               bucket_parts[0], e.error_code)
