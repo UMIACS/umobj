@@ -452,7 +452,7 @@ if __name__ == "__main__":
                         key.set_acl(policy)
         else:
             if not os.path.isfile(src):
-                logging.erorr("File %s does not exist." % src)
+                logging.error("File %s does not exist." % src)
                 sys.exit(1)
             if dest_name:
                 current_path = ''
