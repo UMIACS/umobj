@@ -16,7 +16,7 @@ usage_string = """
 SYNOPSIS
    rmobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
          [-S/--server <server>] [-P/--port <port>]
-         [-R/--recursive] [-V/--verbose] [-D/--debug] [-h/--help]
+         [-r/--recursive] [-V/--verbose] [-D/--debug] [-h/--help]
          bucket:[key]
 
    Where
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-                                   'a:s:S:P:hRVD',
+                                   'a:s:S:P:hrVD',
                                    ['access_key=', 'secret_key=',
                                     'server=', 'port=', 'recursive', 'help'
                                     'verbose', 'debug'])
@@ -74,7 +74,7 @@ if __name__ == "__main__":
             server = a
         if o in ('-P', '--port'):
             port = a
-        if o in ('-R', '--recursive'):
+        if o in ('-r', '--recursive'):
             recursive = True
         if o in ('-V', '--verbose'):
             level = logging.INFO
@@ -109,9 +109,12 @@ if __name__ == "__main__":
         usage()
 
     for bucket in args:
-        bucket_match = re.match('(\w+):([\w\.\-\/]*)', bucket)
+        bucket_match = re.match('(\w+):?([\w\.\-\/]*)', bucket)
         bucket_name = bucket_match.group(1)
-        key_name = bucket_match.group(2)
+        try:
+            key_name = bucket_match.group(2)
+        except AttributeError:
+            key_name = None
 
         try:
             bucket = obj.get_bucket(bucket_name)
@@ -119,16 +122,30 @@ if __name__ == "__main__":
             logging.error("Bucket %s does not exist." % args[0])
             sys.exit(1)
 
+        logging.info("Working on bucket %s" % bucket_name)
+
         if recursive:
             ans = raw_input(' Are you sure you want to remove all the ' +
                             'contents of the bucket %s [yes/no] : ' %
                             bucket.name).lower()
             if ans == 'yes':
                 for key in bucket.list():
+                    logging.info("Deleting key %s" % key.name)
                     bucket.delete_key(key.name)
-                obj.delete_bucket(bucket.name)
             else:
                 logging.info("Aborting recursive deletion of %s" % bucket_name)
+                sys.exit(0)
+            ans = raw_input(' Do you want to remove the bucket %s [yes/no] : ' %
+                            bucket.name).lower()
+            if ans == 'yes':
+                obj.delete_bucket(bucket.name)
+            else:
+                logging.info("Not deleting the bucket %s" % bucket_name)
+                sys.exit(0)
         else:
+            if key_name is None or key_name is '':
+                logging.error("Can not delete bucket %s, please use recursive option." %
+                              bucket.name)
+                sys.exit(1)
             logging.info("Deleting key %s" % key_name)
             bucket.delete_key(key_name)
