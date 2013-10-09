@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-                                   'a:s:S:P:hDV',
+                                   'a:s:S:P:hDVp:',
                                    ['access_key=', 'secret_key=',
                                     'server=', 'port=', 'help',
                                     'policy=', 'debug', 'verbose'])
