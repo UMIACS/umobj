@@ -81,7 +81,7 @@ def upload_file(key, filename):
     logging.info("Uploading %s with %d bytes." % (filename, file_size))
     if file_size is 0:
         pbar = progressbar.ProgressBar(maxval=100)
-        pbar.start()  
+        pbar.start()
         key.set_contents_from_filename(filename)
         pbar.update(100)
         pbar.finish()
@@ -108,7 +108,8 @@ def download_file(key, filename):
                 logging.info("Creating directory %s." % filename)
                 os.makedirs(filename)
             else:
-                logging.info("Directory %s already exists, skipping." % filename)
+                logging.info("Directory %s already exists, skipping." %
+                             filename)
         else:
             key.get_contents_to_filename(filename)
         pbar.update(100)
@@ -438,8 +439,10 @@ if __name__ == "__main__":
                 else:
                     prefix = ''
                 for root, dirs, files in os.walk(src.rstrip(os.sep)):
-                    file_root = prefix + root.replace(src.rstrip(os.sep), '').lstrip(os.sep)
-                    logging.info("src: %s root: %s file_root: %s" % (src, root, file_root))
+                    file_root = prefix + root.replace(src.rstrip(os.sep),
+                                                      '').lstrip(os.sep)
+                    logging.info("src: %s root: %s file_root: %s" %
+                                 (src, root, file_root))
                     if src.rstrip(os.sep) != root:
                         logging.info("Create directory %s" % file_root)
                         dir_key = bucket.new_key(file_root + '/')
@@ -483,7 +486,7 @@ if __name__ == "__main__":
                 key.set_acl(policy)
     if download:
         if recursive:
-            logging.info("Starting recursive download of %s to %s with prefix %s" %
+            logging.info("Starting recursive download %s to %s prefix %s" %
                          (bucket.name, dest, key_name))
             if not os.path.isdir(dest):
                 logging.error("DEST %s is not a directory." % dest)
