@@ -80,7 +80,11 @@ def upload_file(key, filename):
     file_size = os.stat(filename).st_size
     logging.info("Uploading %s with %d bytes." % (filename, file_size))
     if file_size is 0:
+        pbar = progressbar.ProgressBar(maxval=100)
+        pbar.start()  
         key.set_contents_from_filename(filename)
+        pbar.update(100)
+        pbar.finish()
         return 0
     pbar = progressbar.ProgressBar(maxval=file_size)
     pbar.start()
@@ -94,19 +98,22 @@ def upload_file(key, filename):
 
 
 def download_file(key, filename):
-    if key.size is 0 and filename.endswith('/'):
-        if not os.path.isdir(filename):
-            logging.info("Creating directory %s." % filename)
-            os.makedirs(filename)
-        else:
-            logging.info("Directory %s already exists, skipping." % filename)
-        return
     logging.info("Downloading %s with %d bytes." % (filename, key.size))
-    if key.size is 0:
-        key.get_contents_to_file(filename)
-        return
-    ### otherwise use the progressbar
     global pbar
+    if key.size is 0:
+        pbar = progressbar.ProgressBar(maxval=100)
+        pbar.start()
+        if filename.endswith('/'):
+            if not os.path.isdir(filename):
+                logging.info("Creating directory %s." % filename)
+                os.makedirs(filename)
+            else:
+                logging.info("Directory %s already exists, skipping." % filename)
+        else:
+            key.get_contents_to_file(filename)
+        pbar.update(100)
+        pbar.finish()
+        return
     pbar = progressbar.ProgressBar(maxval=key.size)
     pbar.start()
     if os.path.isdir(filename):
