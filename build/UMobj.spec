@@ -19,9 +19,9 @@ UMIACS Object Storage command line utilties.
 %install
 make install DESTDIR=%{buildroot}
 ## install the profile.d support
-install -Dp -m0644 etc/profile.d/UMobj.csh \
+install -Dp -m0644 ext/profile.d/UMobj.csh \
     %{buildroot}%{_sysconfdir}/profile.d/UMobj.csh
-install -Dp -m0644 etc/profile.d/UMobj.sh \
+install -Dp -m0644 ext/profile.d/UMobj.sh \
     %{buildroot}%{_sysconfdir}/profile.d/UMobj.sh
 
 %clean
@@ -33,5 +33,7 @@ rm -rf %{buildroot}
 # by default, bin, man, data, and doc directories are included
 %dir /opt/UMobj
 /opt/UMobj/*
+/etc/profile.d/UMobj.csh
+/etc/profile.d/UMobj.sh
 
 %changelog
