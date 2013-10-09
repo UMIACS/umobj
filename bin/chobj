@@ -29,7 +29,7 @@ SYNOPSIS
                       OBJ_SECRET_ACCESS_KEY
         bucket      - The name of the bucket to operate on.
         key         - Optional key or key prefix to use.
-        policy      - username:permission where permission is one of 
+        policy      - username:permission where permission is one of
                       FULL_CONTROL, READ, WRITE, READ_ACL, WRITE_ACL
 """
 
@@ -110,10 +110,10 @@ if __name__ == "__main__":
                        aws_access_key_id=access_key,
                        aws_secret_access_key=secret_key,
                        calling_format=OrdinaryCallingFormat())
-   
+
     ## construct the ACL
     acl = ACL()
-    for u,g in policies:
+    for u, g in policies:
         acl.add_user_grant(g, u)
 
     if len(args) == 0:
@@ -129,9 +129,9 @@ if __name__ == "__main__":
 
         ## we use the bucket policy as a starting point
         policy = bucket.get_acl()
-        policy.acl = acl 
+        policy.acl = acl
         logging.info("Policy: %s" % policy)
-             
+
         if len(bucket_parts) > 1:
             logging.info("Working on %s in bucket %s" %
                          (bucket_parts[1], bucket_parts[0]))
@@ -144,7 +144,7 @@ if __name__ == "__main__":
         else:
             logging.info("Working on bucket %s" % bucket_parts[0])
             for key in bucket.get_all_keys():
-                try: 
+                try:
                     logging.info("Working on key %s" % key)
                     key.set_acl(policy)
                 except boto.exception.S3ResponseError:

@@ -97,7 +97,7 @@ def download_file(key, filename):
     if key.size is 0 and filename.endswith('/'):
         if not os.path.isdir(filename):
             logging.info("Creating directory %s." % filename)
-            os.makedirs(filename) 
+            os.makedirs(filename)
         else:
             logging.info("Directory %s already exists, skipping." % filename)
         return
@@ -481,7 +481,7 @@ if __name__ == "__main__":
             else:
                 for key in bucket.list(prefix=key_name):
                     logging.info("Downloading key %s" % key)
-                    download_file(key, dest.rstrip(os.sep) + os.sep + key.name) 
+                    download_file(key, dest.rstrip(os.sep) + os.sep + key.name)
         else:
             if os.path.isfile(dest) and not force:
                 logging.error("File %s already exists " % dest +

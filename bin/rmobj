@@ -135,8 +135,8 @@ if __name__ == "__main__":
             else:
                 logging.info("Aborting recursive deletion of %s" % bucket_name)
                 sys.exit(0)
-            ans = raw_input(' Do you want to remove the bucket %s [yes/no] : ' %
-                            bucket.name).lower()
+            ans = raw_input(' Do you want to remove the bucket %s' %
+                            bucket.name + '[yes/no] : ').lower()
             if ans == 'yes':
                 obj.delete_bucket(bucket.name)
             else:
@@ -144,8 +144,8 @@ if __name__ == "__main__":
                 sys.exit(0)
         else:
             if key_name is None or key_name is '':
-                logging.error("Can not delete bucket %s, please use recursive option." %
-                              bucket.name)
+                logging.error('Can not delete bucket %s, ' % bucket.name +
+                              'please use recursive option.')
                 sys.exit(1)
             logging.info("Deleting key %s" % key_name)
             bucket.delete_key(key_name)
