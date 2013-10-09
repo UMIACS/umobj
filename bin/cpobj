@@ -483,7 +483,8 @@ if __name__ == "__main__":
                 key.set_acl(policy)
     if download:
         if recursive:
-            logging.info("Starting recursive download of %s to %s" % (bucket.name, dest))
+            logging.info("Starting recursive download of %s to %s with prefix %s" %
+                         (bucket.name, dest, key_name))
             if not os.path.isdir(dest):
                 logging.error("DEST %s is not a directory." % dest)
                 usage()
