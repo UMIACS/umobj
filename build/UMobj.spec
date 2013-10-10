@@ -21,11 +21,6 @@ make install DESTDIR=%{buildroot}
 ## install the environment-modules support
 install -Dp -m0644 ext/modulefiles/UMobj \
     %{buildroot}%{_sysconfdir}/modulefiles/UMobj
-## install the profile.d support
-install -Dp -m0644 ext/profile.d/UMobj.csh \
-    %{buildroot}%{_sysconfdir}/profile.d/UMobj.csh
-install -Dp -m0644 ext/profile.d/UMobj.sh \
-    %{buildroot}%{_sysconfdir}/profile.d/UMobj.sh
 
 %clean
 rm -rf %{buildroot}
@@ -37,7 +32,5 @@ rm -rf %{buildroot}
 %dir /opt/UMobj
 /opt/UMobj/*
 /etc/modulefiles/UMobj
-/etc/profile.d/UMobj.csh
-/etc/profile.d/UMobj.sh
 
 %changelog
