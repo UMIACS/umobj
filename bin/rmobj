@@ -15,7 +15,7 @@ from umobj_utils import umobj_logging
 usage_string = """
 SYNOPSIS
    rmobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
-         [-S/--server <server>] [-P/--port <port>]
+         [-S/--server <server>] [-P/--port <port>] [-f/--force]
          [-r/--recursive] [-V/--verbose] [-D/--debug] [-h/--help]
          bucket[:key]+
 
@@ -43,9 +43,9 @@ if __name__ == "__main__":
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-                                   'a:s:S:P:hrVD',
+                                   'a:s:S:P:hrfVD',
                                    ['access_key=', 'secret_key=',
-                                    'server=', 'port=', 'recursive', 'help'
+                                    'server=', 'port=', 'help', 'recursive', 'force'
                                     'verbose', 'debug'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
@@ -56,6 +56,7 @@ if __name__ == "__main__":
     secret_key = None
     bucket_name = None
     recursive = False
+    force = False
     try:
         server = os.environ['OBJ_SERVER']
     except:
@@ -76,6 +77,8 @@ if __name__ == "__main__":
             port = a
         if o in ('-r', '--recursive'):
             recursive = True
+        if o in ('-f', '--force'):
+            force = True
         if o in ('-V', '--verbose'):
             level = logging.INFO
         if o in ('-D', '--debug'):
@@ -125,16 +128,33 @@ if __name__ == "__main__":
         logging.info("Working on bucket %s" % bucket_name)
 
         if recursive:
-            ans = raw_input(' Are you sure you want to remove all the ' +
-                            'contents of the bucket %s [yes/no] : ' %
-                            bucket.name).lower()
-            if ans == 'yes':
-                for key in bucket.list():
+            # removing content inside bucket
+            ans = None
+            if not force:
+                if key_name:
+                    ans = raw_input(' Are you sure you want to remove all the contents ' +
+                                    'of bucket \'%s\' with key prefix \'%s\'? [yes/no] : ' %
+                                    (bucket.name, key_name)).lower()
+                else: # asking to delete entire bucket since no key specified
+                    ans = raw_input(' Are you sure you want to remove all the ' +
+                                    'contents of the bucket %s [yes/no] : ' %
+                                    bucket.name).lower()
+            if ans == 'yes' or force:
+                for key in bucket.list(prefix=key_name):
+                    if not force:
+                        del_key_ans = raw_input('rmobj: delete \'%s\'? [y/n] ' %
+                                                key.name).lower()
+                        if del_key_ans != 'y':
+                            continue
                     logging.info("Deleting key %s" % key.name)
                     bucket.delete_key(key.name)
             else:
                 logging.info("Aborting recursive deletion of %s" % bucket_name)
                 sys.exit(0)
+
+            # removing the bucket itself
+            if key_name:     # if passed a key name, then there are probably still files in
+                sys.exit(0)  # the bucket
             ans = raw_input(' Do you want to remove the bucket %s' %
                             bucket.name + ' [yes/no] : ').lower()
             if ans == 'yes':
@@ -142,10 +162,12 @@ if __name__ == "__main__":
             else:
                 logging.info("Not deleting the bucket %s" % bucket_name)
                 sys.exit(0)
-        else:
+        else:  # non-recursive
             if key_name is None or key_name is '':
-                logging.error('Can not delete bucket %s, ' % bucket.name +
+                logging.error('Can not delete bucket %s.  ' % bucket.name +
                               'please use recursive option.')
                 sys.exit(1)
+            elif key_name.endswith('/'):
+                logging.error('Please use the recursive option to delete a directory')
             logging.info("Deleting key %s" % key_name)
             bucket.delete_key(key_name)
