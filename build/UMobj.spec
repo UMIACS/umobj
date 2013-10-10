@@ -7,7 +7,7 @@ License: unknown
 URL: http://www.umiacs.umd.edu
 Source0: %{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}
-Requires: python, python-boto, python-progressbar, python-filechunkio
+Requires: python, python-boto, python-progressbar, python-filechunkio, environment-modules
 BuildArch: noarch
 
 %description
@@ -18,6 +18,9 @@ UMIACS Object Storage command line utilties.
 %build
 %install
 make install DESTDIR=%{buildroot}
+## install the environment-modules support
+install -Dp -m0644 ext/profile.d/UMobj \
+    %{buildroot}%{_sysconfdir}/modulefiles/UMobj
 ## install the profile.d support
 install -Dp -m0644 ext/profile.d/UMobj.csh \
     %{buildroot}%{_sysconfdir}/profile.d/UMobj.csh

@@ -19,6 +19,9 @@ UMIACS Object Storage command line utilties.
 %install
 make install DESTDIR=%{buildroot}
 find %{buildroot}/opt/UMobj/bin -type f | xargs sed -i '1,1s/python/python26/'
+## install the environment-modules support
+install -Dp -m0644 ext/profile.d/UMobj \
+    %{buildroot}%{_sysconfdir}/modulefiles/UMobj
 ## install the profile.d support
 install -Dp -m0644 ext/profile.d/UMobj.csh \
     %{buildroot}%{_sysconfdir}/profile.d/UMobj.csh
