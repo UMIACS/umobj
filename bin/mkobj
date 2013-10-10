@@ -9,7 +9,7 @@ import logging
 
 ## Load our local library functions
 sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
-from umobj_utils import umobj_logging
+from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt
 from umobj_key import create_directory
 
 usage_string = """
@@ -38,6 +38,8 @@ def usage():
 
 if __name__ == "__main__":
     import getopt
+
+    umobj_init_keyboard_interrupt()
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
