@@ -1,0 +1,7 @@
+#%Module 1.0
+#
+#  UMobj modulefile
+#
+
+prepend-path        PATH        /opt/UMobj/bin
+prepend-path        MANPATH     /opt/UMobj/share/man
