@@ -45,8 +45,8 @@ if __name__ == "__main__":
         opts, args = getopt.getopt(sys.argv[1:],
                                    'a:s:S:P:hrfVD',
                                    ['access_key=', 'secret_key=',
-                                    'server=', 'port=', 'help', 'recursive', 'force'
-                                    'verbose', 'debug'])
+                                    'server=', 'port=', 'help', 'recursive',
+                                    'force', 'verbose', 'debug'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
         usage()
@@ -138,7 +138,8 @@ if __name__ == "__main__":
                         logging.info("Deleting key %s" % key.name)
                         bucket.delete_key(key.name)
                 else:
-                    logging.info("Aborting recursive deletion of %s" % bucket_name)
+                    logging.info("Aborting recursive deletion of bucket %s" %
+                                 bucket_name)
                     sys.exit(0)
 
                 # removing the bucket itself
@@ -171,6 +172,7 @@ if __name__ == "__main__":
                               'please use recursive option.')
                 sys.exit(1)
             elif key_name.endswith('/'):
-                logging.error('Please use the recursive option to delete a directory')
+                logging.error('Please use the recursive option to delete a ' +
+                              'directory.')
             logging.info("Deleting key %s" % key_name)
             bucket.delete_key(key_name)
