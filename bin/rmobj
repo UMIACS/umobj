@@ -128,40 +128,43 @@ if __name__ == "__main__":
         logging.info("Working on bucket %s" % bucket_name)
 
         if recursive:
-            # removing content inside bucket
-            ans = None
-            if not force:
-                if key_name:
-                    ans = raw_input(' Are you sure you want to remove all the contents ' +
-                                    'of bucket \'%s\' with key prefix \'%s\'? [yes/no] : ' %
-                                    (bucket.name, key_name)).lower()
-                else: # asking to delete entire bucket since no key specified
-                    ans = raw_input(' Are you sure you want to remove all the ' +
-                                    'contents of the bucket %s [yes/no] : ' %
-                                    bucket.name).lower()
-            if ans == 'yes' or force:
+            # removing all content inside bucket
+            if not key_name:
+                ans = raw_input(' Are you sure you want to remove all the ' +
+                                'contents of the bucket \'%s\'? [yes/no] ' %
+                                bucket.name).lower()
+                if ans == 'yes':
+                    for key in bucket.list():
+                        logging.info("Deleting key %s" % key.name)
+                        bucket.delete_key(key.name)
+                else:
+                    logging.info("Aborting recursive deletion of %s" % bucket_name)
+                    sys.exit(0)
+
+                # removing the bucket itself
+                ans = raw_input(' Do you want to remove the bucket \'%s\'?' %
+                                bucket.name + ' [yes/no] ').lower()
+                if ans == 'yes':
+                    obj.delete_bucket(bucket.name)
+                    logging.info("Deleting the bucket %s" % bucket_name)
+                else:
+                    logging.info("Not deleting the bucket %s" % bucket_name)
+                sys.exit(0)
+
+            # removing a directory
+            if force:
                 for key in bucket.list(prefix=key_name):
-                    if not force:
-                        del_key_ans = raw_input('rmobj: delete \'%s\'? [y/n] ' %
-                                                key.name).lower()
-                        if del_key_ans != 'y':
-                            continue
                     logging.info("Deleting key %s" % key.name)
                     bucket.delete_key(key.name)
             else:
-                logging.info("Aborting recursive deletion of %s" % bucket_name)
-                sys.exit(0)
+                for key in bucket.list(prefix=key_name):
+                    del_key_ans = raw_input('rmobj: delete \'%s\'? [y/n] ' %
+                                            key.name).lower()
+                    if del_key_ans != 'y':
+                        continue
+                    logging.info("Deleting key %s" % key.name)
+                    bucket.delete_key(key.name)
 
-            # removing the bucket itself
-            if key_name:     # if passed a key name, then there are probably still files in
-                sys.exit(0)  # the bucket
-            ans = raw_input(' Do you want to remove the bucket %s' %
-                            bucket.name + ' [yes/no] : ').lower()
-            if ans == 'yes':
-                obj.delete_bucket(bucket.name)
-            else:
-                logging.info("Not deleting the bucket %s" % bucket_name)
-                sys.exit(0)
         else:  # non-recursive
             if key_name is None or key_name is '':
                 logging.error('Can not delete bucket %s.  ' % bucket.name +
