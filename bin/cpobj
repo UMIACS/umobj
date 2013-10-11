@@ -30,7 +30,7 @@ NAME
     %s - Copy files to and from a S3 compatiable object store
 
 SYNOPSIS
-    %s [OPTION]... SRC BUCKET[:DEST]
+    %s [OPTION]... SRC [SRC]+ BUCKET[:DEST]
 
     %s [OPTION]... BUCKET[:SRC] DEST
 
@@ -75,29 +75,40 @@ def transfer_stats(trans_bytes, total_bytes):
         print e
 
 
-def upload_file(key, filename):
+def upload_file(key, filename, progress=True):
     global pbar
+    if os.path.islink(filename):
+        logging.info('Skipping symlink %s.' % filename)
+        return
     file_size = os.stat(filename).st_size
     logging.info("Uploading %s with %d bytes." % (filename, file_size))
     if file_size is 0:
-        pbar = progressbar.ProgressBar(maxval=100)
-        pbar.start()
+        if progress:
+            pbar = progressbar.ProgressBar(maxval=100)
+            pbar.start()
         key.set_contents_from_filename(filename)
-        pbar.update(100)
-        pbar.finish()
+        if progress:
+            pbar.update(100)
+            pbar.finish()
         return 0
-    pbar = progressbar.ProgressBar(maxval=file_size)
-    pbar.start()
+    if progress:
+        pbar = progressbar.ProgressBar(maxval=file_size)
+        pbar.start()
     try:
-        key.set_contents_from_filename(filename, cb=transfer_stats, num_cb=100)
+        if progress:
+            key.set_contents_from_filename(filename, cb=transfer_stats,
+                                           num_cb=100)
+        else:
+            key.set_contents_from_filename(filename)
     except IOError, e:
         print e
         return 0
-    pbar.finish()
+    if progress:
+        pbar.finish()
     return file_size
 
 
-def download_file(key, filename):
+def download_file(key, filename, progress=True):
     logging.info("Downloading %s with %d bytes." % (filename, key.size))
     global pbar
     if key.size is 0:
@@ -313,6 +324,95 @@ class MultiPart:
             logging.warning("Canceling upload (%d)" % mp.id)
             mp.cancel_upload()
 
+
+def cpobj_download(bucket, dest, key_name, recursive=False, multi=False):
+    if recursive:
+        logging.info("Starting recursive download %s to %s prefix %s" %
+                     (bucket.name, dest, key_name))
+        if not os.path.isdir(dest):
+            logging.error("DEST %s is not a directory." % dest)
+            usage()
+        else:
+            for key in bucket.list(prefix=key_name):
+                logging.info("Downloading key %s" % key)
+                download_file(key, dest.rstrip(os.sep) + os.sep + key.name)
+    else:
+        if os.path.isfile(dest) and not force:
+            logging.error("File %s already exists " % dest +
+                          "please force flag to overwrite.")
+            usage()
+        else:
+            if multi:
+                m = MultiPart(access_key, secret_key, server, port)
+                m.start_download(bucket_name, key_name, dest)
+            else:
+                key = bucket.get_key(key_name)
+                download_file(key, dest)
+
+
+def cpobj_upload(bucket, src, dest_name, recursive=False, multi=False):
+    policy = bucket.get_acl()
+    if recursive and os.path.isdir(src):
+        if dest_name:
+            prefix = dest_name.rstrip(os.sep) + '/'
+            logging.info("Create directory %s" % prefix)
+            dir_key = bucket.new_key(prefix)
+            create_directory(dir_key)
+            logging.debug("Applying bucket policy %s" % policy)
+            dir_key.set_acl(policy)
+        else:
+            prefix = ''
+        for root, dirs, files in os.walk(src.rstrip(os.sep)):
+            file_root = prefix + root.replace(src.rstrip(os.sep),
+                                              '').lstrip(os.sep)
+            logging.info("src: %s root: %s file_root: %s" %
+                         (src, root, file_root))
+            if src.rstrip(os.sep) != root:
+                logging.info("Create directory %s" % file_root)
+                dir_key = bucket.new_key(file_root + '/')
+                create_directory(dir_key)
+                logging.debug("Applying bucket policy %s" % policy)
+                dir_key.set_acl(policy)
+            for f in files:
+                filename = root + os.sep + f
+                if file_root != '':
+                    keyname = file_root.rstrip('/') + '/' + f
+                else:
+                    keyname = f
+                key = bucket.new_key(keyname)
+                logging.info("Upload key %s from file %s" %
+                             (keyname, filename))
+                upload_file(key, filename)
+                logging.debug("Applying bucket policy %s" % policy)
+                key.set_acl(policy)
+    else:
+        if os.path.isdir(src):
+            logging.error("%s is a directory please use the recursive option." % src)
+            return
+        if not os.path.isfile(src):
+            logging.error("File %s does not exist." % src)
+            return
+        if dest_name:
+            current_path = ''
+            for dir_part in dest_name.lstrip(os.sep).split(os.sep):
+                current_path = current_path + dir_part + '/'
+                key = bucket.new_key(current_path)
+                create_directory(key)
+                logging.debug("Applying bucket policy %s" % policy)
+                key.set_acl(policy)
+                key_name = current_path + os.path.basename(src)
+        else:
+            key_name = os.path.basename(src)
+        if multi:
+            m = MultiPart(access_key, secret_key, server, port)
+            m.start_upload(bucket_name, key_name, src, policy)
+        else:
+            key = bucket.new_key(key_name)
+            upload_file(key, src)
+            logging.debug("Applying bucket policy %s" % policy)
+            key.set_acl(policy)
+
+
 if __name__ == "__main__":
     import getopt
 
@@ -393,25 +493,37 @@ if __name__ == "__main__":
         usage()
 
     src = args[0]
-    dest = args[1]
+    dest = args[-1]
     upload = False
     download = False
     src_match = re.match('(\w+):([\w\.\-\/]*)', src)
     dest_match = re.match('(\w+):([\w\.\-\/]*)', dest)
 
-    if src_match:
-        if dest_match:
-            logging.error("Can not copy from a bucket to a bucket.")
-            usage()
-        else:
+
+    if dest_match:
+        if src_match:
+            if not os.path.exists(src):
+                logging.error("Can not copy from a bucket to a bucket.")
+                usage()
+        bucket_name = dest_match.group(1)
+        dest_name = dest_match.group(2)
+        upload = True
+        logging.info("Upload mode with bucket %s" % bucket_name)
+        if dest_name:
+             logging.info("Uploading to the prefix %s." % dest_name)
+        logging.info("Uploading files %s." % args[0:-1])
+    else:
+        if src_match:
+            if len(args) > 2:
+                logging.error("Uploads only support a single BUCKET:SRC and DEST.")
+                usage()
             bucket_name = src_match.group(1)
             key_name = src_match.group(2)
             download = True
-    else:
-        if dest_match:
-            bucket_name = dest_match.group(1)
-            dest_name = dest_match.group(2)
-            upload = True
+            logging.info("Download mode with bucket %s." % bucket_name)
+            if key_name:
+                logging.info("Downloading with the key name/prefix %s." % key_name)
+            logging.info("Downloading to the local directory %s." % dest)
         else:
             logging.error("You need to provide a bucket in either SRC " +
                           "or DEST.")
@@ -425,87 +537,7 @@ if __name__ == "__main__":
         sys.exit()
 
     if upload:
-        ## we will use the bucket ACL as the default on the new key
-        policy = bucket.get_acl()
-        if recursive:
-            if not os.path.isdir(src):
-                logging.error("SRC %s is not a directory." % src)
-            else:
-                if dest_name:
-                    prefix = dest_name.rstrip(os.sep) + '/'
-                    logging.info("Create directory %s" % prefix)
-                    dir_key = bucket.new_key(prefix)
-                    create_directory(dir_key)
-                    logging.debug("Applying bucket policy %s" % policy)
-                    dir_key.set_acl(policy)
-                else:
-                    prefix = ''
-                for root, dirs, files in os.walk(src.rstrip(os.sep)):
-                    file_root = prefix + root.replace(src.rstrip(os.sep),
-                                                      '').lstrip(os.sep)
-                    logging.info("src: %s root: %s file_root: %s" %
-                                 (src, root, file_root))
-                    if src.rstrip(os.sep) != root:
-                        logging.info("Create directory %s" % file_root)
-                        dir_key = bucket.new_key(file_root + '/')
-                        create_directory(dir_key)
-                        logging.debug("Applying bucket policy %s" % policy)
-                        dir_key.set_acl(policy)
-                    for f in files:
-                        filename = root + os.sep + f
-                        if file_root != '':
-                            keyname = file_root.rstrip('/') + '/' + f
-                        else:
-                            keyname = f
-                        key = bucket.new_key(keyname)
-                        logging.info("Upload key %s from file %s" %
-                                     (keyname, filename))
-                        upload_file(key, filename)
-                        logging.debug("Applying bucket policy %s" % policy)
-                        key.set_acl(policy)
-        else:
-            if not os.path.isfile(src):
-                logging.error("File %s does not exist." % src)
-                sys.exit(1)
-            if dest_name:
-                current_path = ''
-                for dir_part in dest_name.lstrip(os.sep).split(os.sep):
-                    current_path = current_path + dir_part + '/'
-                    key = bucket.new_key(current_path)
-                    create_directory(key)
-                    logging.debug("Applying bucket policy %s" % policy)
-                    key.set_acl(policy)
-                key_name = current_path + os.path.basename(src)
-            else:
-                key_name = os.path.basename(src)
-            if multi:
-                m = MultiPart(access_key, secret_key, server, port)
-                m.start_upload(bucket_name, key_name, src, policy)
-            else:
-                key = bucket.new_key(key_name)
-                upload_file(key, src)
-                logging.debug("Applying bucket policy %s" % policy)
-                key.set_acl(policy)
+        for source in args[0:-1]:
+            cpobj_upload(bucket, source, dest_name, recursive, multi)
     if download:
-        if recursive:
-            logging.info("Starting recursive download %s to %s prefix %s" %
-                         (bucket.name, dest, key_name))
-            if not os.path.isdir(dest):
-                logging.error("DEST %s is not a directory." % dest)
-                usage()
-            else:
-                for key in bucket.list(prefix=key_name):
-                    logging.info("Downloading key %s" % key)
-                    download_file(key, dest.rstrip(os.sep) + os.sep + key.name)
-        else:
-            if os.path.isfile(dest) and not force:
-                logging.error("File %s already exists " % dest +
-                              "please force flag to overwrite.")
-                usage()
-            else:
-                if multi:
-                    m = MultiPart(access_key, secret_key, server, port)
-                    m.start_download(bucket_name, key_name, dest)
-                else:
-                    key = bucket.get_key(key_name)
-                    download_file(key, dest)
+        cpobj_download(bucket, dest, key_name, recursive, multi)
