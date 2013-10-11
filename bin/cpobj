@@ -78,8 +78,11 @@ def transfer_stats(trans_bytes, total_bytes):
 def upload_file(key, filename, progress=True):
     global pbar
     if os.path.islink(filename):
-        logging.info('Skipping symlink %s.' % filename)
-        return
+        logging.warning('Skipping %s, symlink.' % filename)
+        return -1
+    if not os.path.isfile(filename):
+        logging.warning('Skipping %s, unknown file type.' % filename)
+        return -1
     file_size = os.stat(filename).st_size
     logging.info("Uploading %s with %d bytes." % (filename, file_size))
     if file_size is 0:
@@ -337,6 +340,9 @@ def cpobj_download(bucket, dest, key_name, recursive=False, multi=False):
                 logging.info("Downloading key %s" % key)
                 download_file(key, dest.rstrip(os.sep) + os.sep + key.name)
     else:
+        if not key_name:
+            logging.error("Must specify a key to download or use recusive option")
+            usage()
         if os.path.isfile(dest) and not force:
             logging.error("File %s already exists " % dest +
                           "please force flag to overwrite.")
@@ -363,31 +369,25 @@ def cpobj_upload(bucket, src, dest_name, recursive=False, multi=False):
         else:
             prefix = ''
         for root, dirs, files in os.walk(src.rstrip(os.sep)):
-            file_root = prefix + root.replace(src.rstrip(os.sep),
-                                              '').lstrip(os.sep)
-            logging.info("src: %s root: %s file_root: %s" %
-                         (src, root, file_root))
-            if src.rstrip(os.sep) != root:
-                logging.info("Create directory %s" % file_root)
-                dir_key = bucket.new_key(file_root + '/')
-                create_directory(dir_key)
-                logging.debug("Applying bucket policy %s" % policy)
-                dir_key.set_acl(policy)
+            directory = prefix + root
+            logging.info("Create directory %s" % directory)
+            dir_key = bucket.new_key(directory + '/')
+            create_directory(dir_key)
+            logging.debug("Applying bucket policy %s" % policy)
+            dir_key.set_acl(policy)
             for f in files:
                 filename = root + os.sep + f
-                if file_root != '':
-                    keyname = file_root.rstrip('/') + '/' + f
-                else:
-                    keyname = f
+                keyname = prefix + root + '/' + f
                 key = bucket.new_key(keyname)
                 logging.info("Upload key %s from file %s" %
                              (keyname, filename))
-                upload_file(key, filename)
-                logging.debug("Applying bucket policy %s" % policy)
-                key.set_acl(policy)
+                res = upload_file(key, filename)
+                if res >= 0: 
+                    logging.debug("Applying bucket policy %s" % policy)
+                    key.set_acl(policy)
     else:
         if os.path.isdir(src):
-            logging.error("%s is a directory please use the recursive option." % src)
+            logging.warning("Skipping directory %s, use the recursive option." % src)
             return
         if not os.path.isfile(src):
             logging.error("File %s does not exist." % src)
@@ -408,9 +408,10 @@ def cpobj_upload(bucket, src, dest_name, recursive=False, multi=False):
             m.start_upload(bucket_name, key_name, src, policy)
         else:
             key = bucket.new_key(key_name)
-            upload_file(key, src)
-            logging.debug("Applying bucket policy %s" % policy)
-            key.set_acl(policy)
+            res = upload_file(key, src)
+            if res >= 0:
+                logging.debug("Applying bucket policy %s" % policy)
+                key.set_acl(policy)
 
 
 if __name__ == "__main__":
