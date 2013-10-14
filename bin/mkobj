@@ -124,3 +124,6 @@ if __name__ == "__main__":
             except boto.exception.S3CreateError, e:
                 logging.error("Cannont create bucket %s, %s.",
                               bucket_parts[0], e.error_code)
+            except boto.exception.BotoClientError, e:
+                logging.error("Cannot create bucket %s, %s.",
+                              bucket_parts[0], e)
