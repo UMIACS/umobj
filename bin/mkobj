@@ -20,7 +20,7 @@ SYNOPSIS
          bucket[:PATH]+
 
    Where
-        access_key  - Your Access Key ID.  If not supplied, boto will
+        access_key  - Your Access Key ID.  If not supplied, mkobj will
                       use the value of the environment variable
                       OBJ_ACCESS_KEY_ID
         secret_key  - Your Secret Access Key.  If not supplied, boto
