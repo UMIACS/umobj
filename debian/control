@@ -1,0 +1,16 @@
+Source: umobj
+Section: unknown
+Priority: extra
+Maintainer: UMIACS Staff (301-405-1775) <staff@umiacs.umd.edu>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.2
+Homepage: https://staff.umiacs.umd.edu/gitlab/ 
+
+Package: umobj
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, python-boto, python-filechunkio, python-progressbar
+Description: Command Line Utilties for UMIACS Object Storage Services
+  This is a collection of utilities written in Python using the
+  standard Boto library.  They all support some common environment
+  variables that can be set to avoid needing to specified each
+  command line. 
