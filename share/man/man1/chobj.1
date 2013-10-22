@@ -1,0 +1,54 @@
+./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
+.TH chobj 1 10/21/2013 UMobj "chobj Utility"
+
+.SH NAME
+chobj - change permissions on keys on a given Object Store
+
+.SH SYNOPSIS
+chobj [-a/--access_key=<access_key>] [-s/--secret_key=<secret_key>]
+      [-S/--server=<server>] [-P/--port=<port>] [-h/--help]
+      [-p/--policy=<policy>]+ [-V/--verbose] [-D/--debug]
+      bucket[:key]+
+
+.SH DESCRIPTION
+chobj can change the ACL on specific key(s) and allows one to specify multiple canned ACL policies.
+
+.SH OPTIONS
+
+.TP
+\fB-a, --access_key=<access_key>\fR
+This option allows you to specify an Object Store access key.  If not supplied, chobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
+
+.TP 
+\fB-s, --secret_key=<secret_key>\fR
+This option allows you to specify an Object Store secret key.  If not supplied, chobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
+
+.TP
+\fB-S, --server=<server>\fR
+This option allows you to specify an Object Store server.  If not supplied, chobj will use the value of the environment variable \fIOBJ_SERVER\fR.
+
+.TP
+\fB-P, --port=<port>\fR
+Object Store server port [Default: 443]
+
+.TP
+\fB-p/--policy=<policy>+\fR
+A policy consists of a username and a policy directive separated by a colon.  Policy directives include \fIREAD\fR, \fIWRITE\fR, and \fIFULL_CONTROL\fR.  For example, "-p liam:FULL_CONTROL" could be passed in to grant \fIFULL_CONTROL\fR to user liam.  This flag can be passed multiple times in the same invocation.
+
+.TP
+\fB-V/--verbose\fR
+Allow for more verbose output.
+
+.TP
+\fB-D/--debug\fR
+Running in debug mode prints actions that would be performed, but does not actually commit those actions against the Object Store.
+
+.TP
+\fB-h, --help\fR
+Help menu
+
+.SH AUTHOR
+UMIACS Staff
+
+.SH SEE ALSO
+cpobj(1), lsobj(1), mkobj(1), rmobj(1)

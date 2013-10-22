@@ -1,0 +1,61 @@
+./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
+.TH mkobj 1 10/21/2013 UMobj "mkobj Utility"
+
+.SH NAME
+mkobj - creates buckets and directories in the Object Store
+
+.SH SYNOPSIS
+mkobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
+         [-S/--server <server>] [-P/--port <port>] [-h/--help]
+         [-V/--verbose] [-D/--debug]
+         BUCKET[:PATH]+
+
+.SH DESCRIPTION
+\fBmkobj\fR creates buckets and directories in the given Object Store.  \fIBUCKET\fR represents the bucket that is to be created or into which directories will be created.  \fIPATH\fR can be specified in order to create a directory in the given \fBBUCKET\fR.
+
+.SH OPTIONS SUMMARY
+Here is a short summary of the options available in mkobj.  Please refer to the \fBOPTIONS\fR section below for more detailed descriptions.
+
+ -a, --access_key=<access_key>  Object store access key
+ -s, --secret_key=<secret_key>  Object store secret key
+ -S, --server=<server>          Object store server name
+ -P, --port=<port>              Object store server port [Default: 443]
+ -V, --verbose                  Verbose mode
+ -D, --debug                    Debug mode
+ -h, --help                     Help message
+
+.SH OPTIONS
+
+.TP
+\fB-a, --access_key=<access_key>\fR
+This option allows you to specify an Object Store access key.  If not supplied, mkobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
+
+.TP 
+\fB-s, --secret_key=<secret_key>\fR
+This option allows you to specify an Object Store secret key.  If not supplied, mkobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
+
+.TP
+\fB-S, --server=<server>\fR
+This option allows you to specify an Object Store server.  If not supplied, mkobj will use the value of the environment variable \fIOBJ_SERVER\fR.
+
+.TP
+\fB-P, --port=<port>\fR
+Object Store server port [Default: 443]
+
+.TP
+\fB-V/--verbose\fR
+Allow for more verbose output.
+
+.TP
+\fB-D/--debug\fR
+Running in debug mode prints actions that would be performed, but does not actually commit those actions against the Object Store.
+
+.TP
+\fB-h, --help\fR
+Help menu
+
+.SH AUTHOR
+UMIACS Staff
+
+.SH SEE ALSO
+chobj(1), cpobj(1), lsobj(1), rmobj(1)
