@@ -18,7 +18,7 @@ install: all
 	$(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(ETCS)
 	$(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(LIBS)
 	$(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(SHARE)
-	for mandir in `/bin/find $(MAN) -type d`; do \
+	for mandir in `/usr/bin/find $(MAN) -type d`; do \
 	    $(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)/$$mandir; \
 	done
 	$(INSTALL) -m 0755 -d $(DESTDIR)/$(BASEPATH)/$(SHARE)/doc
@@ -28,7 +28,7 @@ install: all
 	for etc in `/bin/ls $(ETCS)`; do \
 		$(INSTALL) $(ETCS)/$$etc $(DESTDIR)/$(BASEPATH)/$(ETCS)/$$etc; \
 	done
-	for man in `/bin/find $(MAN)/ -type f`; do \
+	for man in `/usr/bin/find $(MAN)/ -type f`; do \
 		$(INSTALL) $$man $(DESTDIR)/$(BASEPATH)/$$man; \
 	done
 	for lib in `/bin/ls $(LIBS)/*.py`; do \
