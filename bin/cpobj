@@ -497,9 +497,8 @@ if __name__ == "__main__":
     dest = args[-1]
     upload = False
     download = False
-    src_match = re.match('(\w+):([\w\.\-\/]*)', src)
-    dest_match = re.match('(\w+):([\w\.\-\/]*)', dest)
-
+    src_match = re.match('([\w\.\-]+):([\w\.\-\/]*)', src)
+    dest_match = re.match('([\w\.\-]+):([\w\.\-\/]*)', dest)
 
     if dest_match:
         if src_match:
