@@ -162,8 +162,8 @@ class UploadThread(threading.Thread):
             bucket = self.obj.get_bucket(self.mp.bucketname)
             for mp in bucket.get_all_multipart_uploads():
                 if mp.id == self.mp.mp_id:
-                    logging.debug('Uploading chunk (%d) %s' %
-                                 (retries, part_num))
+                    logging.debug('%s : Uploading chunk (%d) %s' %
+                                  (self.mp.mp_id, retries, part_num))
                     with FileChunkIO(self.mp.filename, 'r', offset=offset,
                                      bytes=bytes) as fp:
                         mp.upload_part_from_file(fp=fp, part_num=part_num)
@@ -174,10 +174,11 @@ class UploadThread(threading.Thread):
                 self._upload_part(part_num, offset,
                                   bytes, retries=retries-1)
             else:
-                logging.error('Failed uploading part %d' % part_num)
+                logging.error('%s : Failed uploading part %d' %
+                              (self.mp.mp_id, part_num))
                 raise exc
         else:
-            logging.info('Uploaded part %d' % part_num)
+            logging.info('%s : Uploaded part %d' % (self.mp.mp_id, part_num))
 
 
 class DownloadThread(threading.Thread):
@@ -244,6 +245,7 @@ class MultiPart:
                             calling_format=OrdinaryCallingFormat())
 
     def start_download(self, bucketname, keyname, filename, threads=4):
+        logging.info("Starting a multipart downlaod.")
         self.bucketname = bucketname
         if os.path.isdir(filename):
             self.filename = filename + os.sep + os.path.basename(keyname)
@@ -287,14 +289,15 @@ class MultiPart:
         headers.update({'Content-Type': mtype})
         mp = bucket.initiate_multipart_upload(keyname, headers=headers)
         self.mp_id = mp.id
+        logging.info("%s: Starting a mp upload for %s" % (mp.id, filename))
         source_size = os.stat(filename).st_size
         bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(source_size)),
                               5242880)
         chunk_amount = int(math.ceil(source_size / float(bytes_per_chunk)))
-        logging.info("Size: %16d   Chunk Size: %16d   Number Chunks: %8d" %
-                     (source_size, bytes_per_chunk, chunk_amount))
+        logging.info("%s : Size: %16d   Chunk Size: %16d   Number Chunks: %8d" %
+                     (mp.id, source_size, bytes_per_chunk, chunk_amount))
         queue = Queue.Queue()
-        logging.info("Starting a pool for %s with %d threads." %
+        logging.info("%s : Starting a pool with %d threads." %
                      (mp.id, threads))
 
         ### putting all the tasks together in a queue
@@ -321,14 +324,15 @@ class MultiPart:
         if len(mp.get_all_parts()) == chunk_amount:
             mp.complete_upload()
             key = bucket.get_key(keyname)
-            logging.debug("Applying bucket policy %s" % policy)
+            logging.debug("%s : Applying bucket policy %s" % (mp.id, policy))
             key.set_acl(policy)
         else:
-            logging.warning("Canceling upload (%d)" % mp.id)
+            logging.warning("%s : Canceling mulitpart upload." % mp.id)
             mp.cancel_upload()
 
 
-def cpobj_download(bucket, dest, key_name, recursive=False, multi=False):
+def cpobj_download(access_key, secret_key, bucket_name, dest, key_name, recursive=False, multi=False):
+    bucket = obj.get_bucket(bucket_name)
     if recursive:
         logging.info("Starting recursive download %s to %s prefix %s" %
                      (bucket.name, dest, key_name))
@@ -356,7 +360,9 @@ def cpobj_download(bucket, dest, key_name, recursive=False, multi=False):
                 download_file(key, dest)
 
 
-def cpobj_upload(bucket, src, dest_name, recursive=False, multi=False):
+def cpobj_upload(access_key, secret_key, bucket_name, src, dest_name, recursive=False, multi=False):
+    bucket = obj.get_bucket(bucket_name)
+    size = os.stat(src).st_size
     policy = bucket.get_acl()
     if recursive and os.path.isdir(src):
         if dest_name:
@@ -377,14 +383,19 @@ def cpobj_upload(bucket, src, dest_name, recursive=False, multi=False):
             dir_key.set_acl(policy)
             for f in files:
                 filename = root + os.sep + f
+                size = os.stat(filename).st_size
                 keyname = prefix + root + '/' + f
-                key = bucket.new_key(keyname)
                 logging.info("Upload key %s from file %s" %
                              (keyname, filename))
-                res = upload_file(key, filename)
-                if res >= 0: 
-                    logging.debug("Applying bucket policy %s" % policy)
-                    key.set_acl(policy)
+                if multi or (size > (1024*1024*1024)):
+                    m = MultiPart(access_key, secret_key, server, port)
+                    m.start_upload(bucket_name, keyname, filename, policy)
+                else:
+                    key = bucket.new_key(keyname)
+                    res = upload_file(key, filename)
+                    if res >= 0: 
+                        logging.debug("Applying bucket policy %s" % policy)
+                        key.set_acl(policy)
     else:
         if os.path.isdir(src):
             logging.warning("Skipping directory %s, use the recursive option." % src)
@@ -403,7 +414,8 @@ def cpobj_upload(bucket, src, dest_name, recursive=False, multi=False):
                 key_name = current_path + os.path.basename(src)
         else:
             key_name = os.path.basename(src)
-        if multi:
+        if multi or (size > (1024*1024*1024)):
+            logging.info("Starting a multipart upload.")
             m = MultiPart(access_key, secret_key, server, port)
             m.start_upload(bucket_name, key_name, src, policy)
         else:
@@ -538,6 +550,6 @@ if __name__ == "__main__":
 
     if upload:
         for source in args[0:-1]:
-            cpobj_upload(bucket, source, dest_name, recursive, multi)
+            cpobj_upload(access_key, secret_key, bucket_name, source, dest_name, recursive, multi)
     if download:
-        cpobj_download(bucket, dest, key_name, recursive, multi)
+        cpobj_download(access_key, secret_key, bucket_name, dest, key_name, recursive, multi)
