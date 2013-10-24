@@ -18,6 +18,8 @@ Here is a short summary of the options available in lsobj.  Please refer to the 
  -S, --server=<server>          Object store server name
  -P, --port=<port>              Object store server port [Default: 443]
  -p, --public                   Show public URLs for the files if available.
+ -l, --long                     Use long listing which show full ACL
+ -m, --md5                      Show MD5 sum of files if available
  -h, --help                     Help message
 
 .SH OPTIONS
@@ -40,7 +42,15 @@ Object Store server port [Default: 443]
 
 .TP
 \fB-p, --public\fR
-Show public URLs for the files if available
+Show public URLs for the files if available.
+
+.TP
+\fB-l, --long\fR
+Show the full ACL of each individual key.
+
+.TP
+\fB-m, --md5\fR
+Show the MD5 sum header for the key in the object store.  If the key was uploaded with Multipart there is currently no way to associate a MD5 sum and will be noted in the output.
 
 .TP
 \fB-h, --help\fR

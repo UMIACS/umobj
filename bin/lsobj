@@ -2,6 +2,7 @@
 
 import sys
 import os
+import re
 import boto.s3
 from boto.s3.connection import S3Connection
 from boto.s3.connection import OrdinaryCallingFormat
@@ -25,6 +26,8 @@ OPTIONS SUMMARY
     -S, --server <server>          Object store server name
     -P, --port <port>              Object store server port [Default: 443]
     -p, --public                   Show public URLs for the files if available.
+    -l, --long                     Use long listing which show full ACL
+    -m, --md5                      Show MD5 sum of files if available
     -h, --help
 
 OPTIONS
@@ -54,7 +57,7 @@ def sizeof_fmt(num):
     return "%3.1f %s" % (num, x)
 
 
-def list_bucket(b, prefix=None, public=False, long_list=False):
+def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
     """List everything in a bucket"""
     from boto.s3.prefix import Prefix
     from boto.s3.key import Key
@@ -87,6 +90,12 @@ def list_bucket(b, prefix=None, public=False, long_list=False):
         if isinstance(k, Key):
             print "%s\t%s\t%010s\t%s" % (mode, k.last_modified,
                                          sizeof_fmt(size), k.name)
+            if md5:
+                etag = k.etag.strip('\"')
+                if re.search('-\d+', etag):
+                    print "  MD5: Multipart"
+                else:
+                    print "  MD5: %s" % k.etag.strip('\"')
             if long_list:
                 try:
                     for grant in k.get_acl().acl.grants:
@@ -127,8 +136,8 @@ if __name__ == "__main__":
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-                                   "a:s:S:P:hpl",
-                                   ['access_key=', 'secret_key=', 'long',
+                                   "a:s:S:P:hplm",
+                                   ['access_key=', 'secret_key=', 'long', 'md5',
                                     'server=', 'port=', 'help', 'public'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
@@ -138,6 +147,7 @@ if __name__ == "__main__":
     secret_key = None
     bucket_name = None
     public = False
+    md5 = False
     long_list = False
     try:
         server = os.environ['OBJ_SERVER']
@@ -161,6 +171,8 @@ if __name__ == "__main__":
             public = True
         if o in ('-l', '--long'):
             long_list = True
+        if o in ('-m', '--md5'):
+            md5 = True
 
     if access_key is None:
         try:
@@ -192,7 +204,7 @@ if __name__ == "__main__":
             print "ERROR: bucket %s does not exist." % args[0]
             sys.exit(1)
         if len(bucket_parts) < 2:
-            list_bucket(bucket, public=public, long_list=long_list)
+            list_bucket(bucket, public=public, long_list=long_list, md5=md5)
         else:
             list_bucket(bucket, bucket_parts[1], public=public,
-                        long_list=long_list)
+                        long_list=long_list, md5=md5)
