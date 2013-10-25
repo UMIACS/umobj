@@ -27,7 +27,7 @@ def usage():
     prog_name = os.path.basename(sys.argv[0])
     usage_string = """
 NAME
-    %s - Copy files to and from a S3 compatiable object store
+    %s - Copy files to and from an S3 compatible object store
 
 SYNOPSIS
     %s [OPTION]... SRC [SRC]+ BUCKET[:DEST]
