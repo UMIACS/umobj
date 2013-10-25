@@ -11,7 +11,6 @@ import logging
 ## Load our local library functions
 sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
 from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt
-from umobj_key import create_directory
 
 usage_string = """
 SYNOPSIS
@@ -28,7 +27,7 @@ SYNOPSIS
                       will use the value of the environment variable
                       OBJ_SECRET_ACCESS_KEY
         SRC_BUCKET  - The name of the bucket to copy from.
-        DEST_BUCKET - The name of the bucket to copy from.
+        DEST_BUCKET - The name of the bucket to copy to.
         PATH        - The key name inside the bucket.
 """
 
@@ -102,18 +101,19 @@ if __name__ == "__main__":
                        calling_format=OrdinaryCallingFormat())
 
     if len(args) != 2:
+        logging.error("Please provide the correct number of arguments")
         usage()
 
     src = args[0]
     dest = args[-1]
-    src_match = re.match('([\w\.\-]+):([\w\.\-\/]*)', src)
-    dest_match = re.match('([\w\.\-]+):([\w\.\-\/]*)', dest)
+    src_match = re.match('([\w\.\-]+):([\w\.\-\/]+)', src)
+    dest_match = re.match('([\w\.\-]+):([\w\.\-\/]+)', dest)
 
     if src_match and dest_match:
         src_bucket_name = src_match.group(1)
         src_key_name = src_match.group(2)
         dest_bucket_name = dest_match.group(1)
-        dest_key_name =dest_match.group(2)
+        dest_key_name = dest_match.group(2)
 
         try:
             dest_bucket = obj.get_bucket(dest_bucket_name)
