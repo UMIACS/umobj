@@ -93,6 +93,9 @@ if __name__ == "__main__":
 
     umobj_logging(level)
 
+    logging.info("Using server %s" % server)
+    logging.info("Running %s" % sys.argv)     
+
     if access_key is None:
         try:
             access_key = os.environ['OBJ_ACCESS_KEY_ID']

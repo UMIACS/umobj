@@ -78,6 +78,8 @@ if __name__ == "__main__":
             level = logging.DEBUG
 
     umobj_logging(level)
+    logging.info("Using server %s" % server)
+    logging.info("Running %s" % sys.argv)
 
     if access_key is None:
         try:
