@@ -147,13 +147,10 @@ class UploadThread(threading.Thread):
         self.obj = self.mp.connect()
 
     def run(self):
-        while True:
-            try:
-                part_num, offset, bytes = self.queue.get(True, 2)
-                logging.info('Starting part %d on offset %d with %d bytes.' %
-                             (part_num, offset, bytes))
-            except Queue.Empty:
-                return
+        while not self.queue.empty():
+            part_num, offset, bytes = self.queue.get()
+            logging.info('%s : Starting part %d on offset %d with %d bytes.' %
+                         (self.mp.mp_id, part_num, offset, bytes))
             self._upload_part(part_num, offset, bytes)
             self.queue.task_done()
 
@@ -162,7 +159,7 @@ class UploadThread(threading.Thread):
             bucket = self.obj.get_bucket(self.mp.bucketname)
             for mp in bucket.get_all_multipart_uploads():
                 if mp.id == self.mp.mp_id:
-                    logging.debug('%s : Uploading chunk (%d) %s' %
+                    logging.debug('%s : Uploading chunk (%d retries left) %s' %
                                   (self.mp.mp_id, retries, part_num))
                     with FileChunkIO(self.mp.filename, 'r', offset=offset,
                                      bytes=bytes) as fp:
@@ -171,6 +168,7 @@ class UploadThread(threading.Thread):
         except Exception, exc:
             print exc
             if retries:
+                logging.info('%s : retrying with %d retries left' % retries-1)
                 self._upload_part(part_num, offset,
                                   bytes, retries=retries-1)
             else:
@@ -189,13 +187,10 @@ class DownloadThread(threading.Thread):
         self.obj = self.mp.connect()
 
     def run(self):
-        while True:
-            try:
-                start_byte, end_byte = self.queue.get(True, 2)
-                logging.info('Starting download bytes %d - %d.' %
-                             (start_byte, end_byte))
-            except Queue.Empty:
-                return
+        while not self.queue.empty():
+            start_byte, end_byte = self.queue.get(True, 2)
+            logging.info('%s : Starting download bytes %d - %d.' %
+                         (self.mp.mp_id, start_byte, end_byte))
             self._download_part(start_byte, end_byte)
             self.queue.task_done()
 
