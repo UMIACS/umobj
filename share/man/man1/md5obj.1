@@ -1,0 +1,51 @@
+./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
+.TH md5obj 1 10/21/2013 UMobj "md5obj Utility"
+
+.SH NAME
+md5obj - generate md5 sum for keys in the Object Store
+
+.SH SYNOPSIS
+md5obj [-a/--access_key=<access_key>] [-s/--secret_key=<secret_key>]
+       [-S/--server=<server>] [-P/--port=<port>] [-h/--help]
+       [-V/--verbose] [-D/--debug]
+       bucket:key
+
+.SH DESCRIPTION
+md5obj will generate the md5 sum of the given key in a bucket.  It will not use a temporary file but does need to fetch all bytes of \the key with a multipart download to generate the correct hash.  Please note that on very large keys this can take a significant \
+amount of time.
+
+.SH OPTIONS
+
+.TP
+\fB-a, --access_key=<access_key>\fR
+This option allows you to specify an Object Store access key.  If not supplied, chobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
+
+.TP 
+\fB-s, --secret_key=<secret_key>\fR
+This option allows you to specify an Object Store secret key.  If not supplied, chobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
+
+.TP
+\fB-S, --server=<server>\fR
+This option allows you to specify an Object Store server.  If not supplied, chobj will use the value of the environment variable \fIOBJ_SERVER\fR.
+
+.TP
+\fB-P, --port=<port>\fR
+Object Store server port [Default: 443]
+
+.TP
+\fB-V/--verbose\fR
+Allow for more verbose output.
+
+.TP
+\fB-D/--debug\fR
+Running in debug mode prints actions that would be performed, but does not actually commit those actions against the Object Store.
+
+.TP
+\fB-h, --help\fR
+Help menu
+
+.SH AUTHOR
+UMIACS Staff
+
+.SH SEE ALSO
+cpobj(1), lsobj(1), mkobj(1), rmobj(1)
