@@ -130,6 +130,9 @@ if __name__ == "__main__":
     
     md5 = hashlib.md5()
     size = key.size
+    if size == 0:
+        print md5.hexdigest()
+        sys.exit()
     pbar = progressbar.ProgressBar(maxval=size)
     bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(size)),
                               5242880)
