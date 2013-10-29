@@ -13,7 +13,8 @@ from boto.s3.connection import OrdinaryCallingFormat
 
 ## Load our local library functions
 sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
-from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt
+from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt, \
+        umobj_get_bucket_key_pair_from_string
 
 usage_string = """
 SYNOPSIS
@@ -111,12 +112,8 @@ if __name__ == "__main__":
     if len(args) == 0:
         usage()
 
-    bucket_match = re.match('(\w+):?([\w\.\-\/]*)', args[0])
-    bucket_name = bucket_match.group(1)
-    try:
-        key_name = bucket_match.group(2)
-    except AttributeError:
-        key_name = None
+    bucket_name, key_name = umobj_get_bucket_key_pair_from_string(args[0]) 
+
     try:
         bucket = obj.get_bucket(bucket_name)
     except boto.exception.S3ResponseError, e:

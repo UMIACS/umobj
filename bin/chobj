@@ -124,12 +124,13 @@ if __name__ == "__main__":
     if len(args) == 0:
         usage()
     for bucket_name in args:
-        bucket_parts = bucket_name.split(':', 1)
+        bucket_name, key_prefix_name = \
+                umobj_get_bucket_key_pair_from_string(bucket_name)
         try:
-            bucket = obj.get_bucket(bucket_parts[0])
+            bucket = obj.get_bucket(bucket_name)
         except boto.exception.S3ResponseError, e:
             logging.error("Can not access bucket %s, %s." %
-                          (bucket_parts[0], e.error_code))
+                          (bucket_name, e.error_code))
             sys.exit(1)
 
         ## we use the bucket policy as a starting point
@@ -137,17 +138,17 @@ if __name__ == "__main__":
         policy.acl = acl
         logging.info("Policy: %s" % policy)
 
-        if len(bucket_parts) > 1:
+        if key_name:
             logging.info("Working on %s in bucket %s" %
-                         (bucket_parts[1], bucket_parts[0]))
-            for key in bucket.list(prefix=bucket_parts[1]):
+                         (key_prefix_name, bucket_name))
+            for key in bucket.list(prefix=key_prefix_name):
                 try:
                     logging.info("Working on key %s" % key)
                     key.set_acl(policy)
                 except boto.exception.S3ResponseError:
                     pass
         else:
-            logging.info("Working on bucket %s" % bucket_parts[0])
+            logging.info("Working on bucket %s" % bucket_name)
             for key in bucket.get_all_keys():
                 try:
                     logging.info("Working on key %s" % key)

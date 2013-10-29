@@ -103,29 +103,30 @@ if __name__ == "__main__":
 
     if len(args) == 0:
         usage()
-    for bucket_name in args:
-        bucket_parts = bucket_name.split(':', 1)
-        if len(bucket_parts) > 1:
+
+    for arg in args:
+        bucket_name, key_name = umobj_get_bucket_key_pair_from_string(arg)
+        if key_name:
             logging.info("Creating directory %s in bucket %s" %
-                         (bucket_parts[1], bucket_parts[0]))
+                         (key_name, bucket_name))
             try:
-                bucket = obj.get_bucket(bucket_parts[0])
+                bucket = obj.get_bucket(bucket_name)
             except boto.exception.S3ResponseError, e:
                 logging.error("Can not access bucket %s, %s." %
-                              (bucket_parts[0], e.error_code))
+                              (bucket_name, e.error_code))
                 sys.exit(1)
             current_path = ''
-            for dir_part in bucket_parts[1].lstrip(os.sep).split(os.sep):
+            for dir_part in key_name.lstrip(os.sep).split(os.sep):
                 current_path = current_path + dir_part + '/'
                 key = bucket.new_key(current_path)
                 create_directory(key)
         else:
             try:
-                bucket = obj.create_bucket(bucket_parts[0])
-                print "Created bucket %s." % bucket_parts[0]
+                bucket = obj.create_bucket(bucket_name)
+                print "Created bucket %s." % bucket_name
             except boto.exception.S3CreateError, e:
                 logging.error("Cannont create bucket %s, %s.",
-                              bucket_parts[0], e.error_code)
+                              bucket_name, e.error_code)
             except boto.exception.BotoClientError, e:
                 logging.error("Cannot create bucket %s, %s.",
-                              bucket_parts[0], e)
+                              bucket_name, e)
