@@ -11,8 +11,7 @@ md5obj [-a/--access_key=<access_key>] [-s/--secret_key=<secret_key>]
        bucket:key
 
 .SH DESCRIPTION
-md5obj will generate the md5 sum of the given key in a bucket.  It will not use a temporary file but does need to fetch all bytes of \the key with a multipart download to generate the correct hash.  Please note that on very large keys this can take a significant \
-amount of time.
+md5obj will generate the md5 sum of the given key in a bucket.  It will not use a temporary file but does need to fetch all bytes of the key with a multipart download to generate the correct hash.  Please note that on very large keys this can take a significant amount of time.
 
 .SH OPTIONS
 
