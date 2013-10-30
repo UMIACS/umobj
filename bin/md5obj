@@ -123,11 +123,10 @@ if __name__ == "__main__":
         logging.error("Can not access bucket %s, %s." %
                       (bucket_name, e.error_code))
         sys.exit(1)   
-    try:
-        key = bucket.get_key(key_name)
-    except boto.exception.S3ResponseError, e:
+    key = bucket.get_key(key_name)
+    if key is None:
         logging.error("Key %s does not exist in bucket %s" % (key_name, bucket_name))
-    
+        sys.exit(1)
     md5 = hashlib.md5()
     size = key.size
     if size == 0:
