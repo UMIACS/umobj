@@ -10,7 +10,8 @@ import logging
 
 ## Load our local library functions
 sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
-from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt
+from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt, \
+        umobj_get_bucket_key_pair_from_string
 
 usage_string = """
 SYNOPSIS
@@ -104,17 +105,12 @@ if __name__ == "__main__":
         logging.error("Please provide the correct number of arguments")
         usage()
 
-    src = args[0]
-    dest = args[-1]
-    src_match = re.match('([\w\.\-]+):([\w\.\-\/]+)', src)
-    dest_match = re.match('([\w\.\-]+):([\w\.\-\/]+)', dest)
+    src_bucket_name, src_key_name = \
+            umobj_get_bucket_key_pair_from_string(args[0])
+    dest_bucket_name, dest_key_name = \
+            umobj_get_bucket_key_pair_from_string(args[1])
 
-    if src_match and dest_match:
-        src_bucket_name = src_match.group(1)
-        src_key_name = src_match.group(2)
-        dest_bucket_name = dest_match.group(1)
-        dest_key_name = dest_match.group(2)
-
+    if src_bucket_name and src_key_name and dest_bucket_name and dest_key_name:
         try:
             dest_bucket = obj.get_bucket(dest_bucket_name)
         except boto.exception.S3ResponseError, e:

@@ -10,7 +10,8 @@ from boto.s3.connection import OrdinaryCallingFormat
 
 ## Load our local library functions
 sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
-from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt
+from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt, \
+        umobj_get_bucket_key_pair_from_string
 
 usage_string = """
 SYNOPSIS
@@ -114,18 +115,13 @@ if __name__ == "__main__":
     if len(args) == 0:
         usage()
 
-    for bucket in args:
-        bucket_match = re.match('(\w+):?([\w\.\-\/]*)', bucket)
-        bucket_name = bucket_match.group(1)
-        try:
-            key_name = bucket_match.group(2)
-        except AttributeError:
-            key_name = None
+    for arg in args:
+        bucket_name, key_name = umobj_get_bucket_key_pair_from_string(arg)
 
         try:
             bucket = obj.get_bucket(bucket_name)
         except boto.exception.S3ResponseError:
-            logging.error("Bucket %s does not exist." % args[0])
+            logging.error("Bucket %s does not exist." % bucket_name)
             sys.exit(1)
 
         logging.info("Working on bucket %s" % bucket_name)
@@ -170,7 +166,7 @@ if __name__ == "__main__":
                     bucket.delete_key(key.name)
 
         else:  # non-recursive
-            if key_name is None or key_name is '':
+            if key_name is None:
                 logging.error('Can not delete bucket %s.  ' % bucket.name +
                               'please use recursive option.')
                 sys.exit(1)
