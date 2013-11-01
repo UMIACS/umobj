@@ -173,6 +173,5 @@ if __name__ == "__main__":
             elif key_name.endswith('/'):
                 logging.error('Please use the recursive option to delete a ' +
                               'directory.')
-                sys.exit(1)
             logging.info("Deleting key %s" % key_name)
             bucket.delete_key(key_name)
