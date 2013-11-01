@@ -7,7 +7,7 @@ SHARE = share
 MAN = share/man
 BASEPATH = opt/UMobj
 NAME = UMobj
-TEMPDIR := $(shell mktemp -d)
+TEMPDIR := $(shell mktemp -d /tmp/tmp.XXXXX)
 
 all:
 
