@@ -52,7 +52,7 @@ def usage():
 
 
 def sizeof_fmt(num):
-    for x in ['b ', 'KB', 'MB', 'GB', 'TB', 'XB']:
+    for x in ['b ', 'KB', 'MB', 'GB', 'TB', 'PB']:
         if num < 1024.0:
             return "%3.1f %s" % (num, x)
         num /= 1024.0
