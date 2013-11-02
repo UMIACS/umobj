@@ -11,7 +11,7 @@ from boto.s3.connection import OrdinaryCallingFormat
 ## Load our local library functions
 sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
 from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt, \
-        umobj_get_bucket_key_pair_from_string
+    umobj_get_bucket_key_pair_from_string
 
 all_users = 'http://acs.amazonaws.com/groups/global/AllUsers'
 
@@ -140,8 +140,9 @@ if __name__ == "__main__":
     try:
         opts, args = getopt.getopt(sys.argv[1:],
                                    "a:s:S:P:hplm",
-                                   ['access_key=', 'secret_key=', 'long', 'md5',
-                                    'server=', 'port=', 'help', 'public'])
+                                   ['access_key=', 'secret_key=', 'long',
+                                    'md5', 'server=', 'port=', 'help',
+                                    'public'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
         usage()
@@ -206,7 +207,7 @@ if __name__ == "__main__":
     else:
         try:
             bucket_name, key_prefix = \
-                    umobj_get_bucket_key_pair_from_string(args[0])
+                umobj_get_bucket_key_pair_from_string(args[0])
             bucket = obj.get_bucket(bucket_name)
         except boto.exception.S3ResponseError:
             print "ERROR: bucket %s does not exist." % bucket_name
