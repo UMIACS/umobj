@@ -11,7 +11,8 @@ import progressbar
 
 ## Load our local library functions
 sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
-from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt
+from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt, \
+    umobj_get_bucket_key_pair_from_string
 from umobj_key import create_directory
 from umobj_multipart import MultiPart
 
@@ -327,29 +328,35 @@ if __name__ == "__main__":
     dest = args[-1]
     upload = False
     download = False
-    src_match = re.match('([\w\.\-]+):([\w\.\-\/]*)', src)
-    dest_match = re.match('([\w\.\-]+):([\w\.\-\/]*)', dest)
+    src_bucket_name, src_key_name = \
+            umobj_get_bucket_key_pair_from_string(src)
+    dest_bucket_name, dest_key_name = \
+            umobj_get_bucket_key_pair_from_string(dest)
+    logging.debug("SRC Bucket Name: %s" % src_bucket_name)
+    logging.debug("SRC Key Name: %s" % src_key_name)
+    logging.debug("DEST Bucket Name: %s" % dest_bucket_name)
+    logging.debug("DEST Key Name: %s" % dest_key_name)
 
-    if dest_match:
-        if src_match:
+    if ':' in dest:
+        if ':' in src:
             if not os.path.exists(src):
                 logging.error("Can not copy from a bucket to a bucket.")
                 usage()
-        bucket_name = dest_match.group(1)
-        dest_name = dest_match.group(2)
+        bucket_name = dest_bucket_name
+        dest_name = dest_key_name
         upload = True
         logging.info("Upload mode with bucket %s" % bucket_name)
         if dest_name:
             logging.info("Uploading to the prefix %s." % dest_name)
         logging.info("Uploading files %s." % args[0:-1])
     else:
-        if src_match:
+        if ':' in src:
             if len(args) > 2:
                 logging.error("Uploads only support a single BUCKET:SRC " +
                               "and DEST.")
                 usage()
-            bucket_name = src_match.group(1)
-            key_name = src_match.group(2)
+            bucket_name = src_bucket_name
+            key_name = src_key_name
             download = True
             logging.info("Download mode with bucket %s." % bucket_name)
             if key_name:
