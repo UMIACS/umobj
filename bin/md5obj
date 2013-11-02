@@ -14,7 +14,7 @@ from boto.s3.connection import OrdinaryCallingFormat
 ## Load our local library functions
 sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
 from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt, \
-        umobj_get_bucket_key_pair_from_string
+    umobj_get_bucket_key_pair_from_string
 
 usage_string = """
 SYNOPSIS
@@ -112,17 +112,18 @@ if __name__ == "__main__":
     if len(args) == 0:
         usage()
 
-    bucket_name, key_name = umobj_get_bucket_key_pair_from_string(args[0]) 
+    bucket_name, key_name = umobj_get_bucket_key_pair_from_string(args[0])
 
     try:
         bucket = obj.get_bucket(bucket_name)
     except boto.exception.S3ResponseError, e:
         logging.error("Can not access bucket %s, %s." %
                       (bucket_name, e.error_code))
-        sys.exit(1)   
+        sys.exit(1)
     key = bucket.get_key(key_name)
     if key is None:
-        logging.error("Key %s does not exist in bucket %s" % (key_name, bucket_name))
+        logging.error("Key %s does not exist in bucket %s" %
+                      (key_name, bucket_name))
         sys.exit(1)
     md5 = hashlib.md5()
     size = key.size
@@ -131,22 +132,22 @@ if __name__ == "__main__":
         sys.exit()
     pbar = progressbar.ProgressBar(maxval=size)
     bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(size)),
-                              5242880)
-    chunk_amount = int(math.ceil(size / float(bytes_per_chunk)))  
+                          5242880)
+    chunk_amount = int(math.ceil(size / float(bytes_per_chunk)))
     logging.info("Bytes/Chunk : %d " % bytes_per_chunk +
                  "  Chunk Amount : %d" % chunk_amount)
     pbar.start()
     for i in range(chunk_amount):
         offset = i * bytes_per_chunk
         remaining_bytes = size - offset
-        bytes = min([bytes_per_chunk, remaining_bytes]) 
+        bytes = min([bytes_per_chunk, remaining_bytes])
         start_byte = offset
         end_byte = offset + bytes - 1
         logging.info("Processing bytes %d - %d" % (start_byte, end_byte))
         key_range = obj.make_request('GET',
                                      bucket=bucket_name,
                                      key=key_name,
-                                     headers={'Range': "bytes=%d-%d" % 
+                                     headers={'Range': "bytes=%d-%d" %
                                               (start_byte, end_byte)})
         chunk_size = min((end_byte-start_byte), 32 * 1024 * 1024)
         while True:
