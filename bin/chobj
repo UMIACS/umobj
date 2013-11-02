@@ -11,7 +11,7 @@ import logging
 ## Load our local library functions
 sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
 from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt, \
-        umobj_get_bucket_key_pair_from_string
+    umobj_get_bucket_key_pair_from_string
 from umobj_acl import CANNED_ACLS
 
 usage_string = """
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     umobj_logging(level)
 
     logging.info("Using server %s" % server)
-    logging.info("Running %s" % sys.argv)     
+    logging.info("Running %s" % sys.argv)
 
     if access_key is None:
         try:
@@ -126,7 +126,7 @@ if __name__ == "__main__":
         usage()
     for bucket_name in args:
         bucket_name, key_prefix_name = \
-                umobj_get_bucket_key_pair_from_string(bucket_name)
+            umobj_get_bucket_key_pair_from_string(bucket_name)
         try:
             bucket = obj.get_bucket(bucket_name)
         except boto.exception.S3ResponseError, e:
