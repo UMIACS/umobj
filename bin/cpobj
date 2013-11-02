@@ -165,6 +165,10 @@ def cpobj_download(access_key, secret_key, server, bucket_name, dest, key_name,
             usage()
         else:
             key = bucket.get_key(key_name)
+            if key is None:
+                logging.error("Key does not exist or if this is a prefix" +
+                              " you need to specify recusive, %s" % key_name)
+                return
             ## only multipart if we specify and the key is >5MB
             if multi and key.size > 5 * 1024 * 1024:
                 logging.info("Downloading key %s (%d) to %s" %
@@ -329,9 +333,9 @@ if __name__ == "__main__":
     upload = False
     download = False
     src_bucket_name, src_key_name = \
-            umobj_get_bucket_key_pair_from_string(src)
+        umobj_get_bucket_key_pair_from_string(src)
     dest_bucket_name, dest_key_name = \
-            umobj_get_bucket_key_pair_from_string(dest)
+        umobj_get_bucket_key_pair_from_string(dest)
     logging.debug("SRC Bucket Name: %s" % src_bucket_name)
     logging.debug("SRC Key Name: %s" % src_key_name)
     logging.debug("DEST Bucket Name: %s" % dest_bucket_name)
