@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import boto.s3
-import re
 import sys
 import os
 import logging
