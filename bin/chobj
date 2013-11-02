@@ -139,7 +139,7 @@ if __name__ == "__main__":
         policy.acl = acl
         logging.info("Policy: %s" % policy)
 
-        if key_name:
+        if key_prefix_name:
             logging.info("Working on %s in bucket %s" %
                          (key_prefix_name, bucket_name))
             for key in bucket.list(prefix=key_prefix_name):
