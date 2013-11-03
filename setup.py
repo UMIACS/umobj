@@ -22,7 +22,7 @@ def readme():
     with open("README.md") as f:
         return f.read()
 
-setup(name = "UMobj",
+setup(name = "umobj",
       version = __version__,
       description = "UMIACS Object Storage Commands",
       long_description = readme(),
