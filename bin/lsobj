@@ -3,6 +3,7 @@
 import sys
 import os
 import re
+import time
 import logging
 import boto.s3
 from boto.s3.connection import S3Connection
@@ -90,7 +91,8 @@ def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
             except S3ResponseError:
                 mode = "-------"
         if isinstance(k, Key):
-            print "%s\t%s\t%010s\t%s" % (mode, k.last_modified,
+            d = time.strptime(k.last_modified, "%Y-%m-%dT%H:%M:%S.%fZ")
+            print "%s\t%s\t%010s\t%s" % (mode, time.strftime("%m/%d/%Y %H:%M:%S", d),
                                          sizeof_fmt(size), k.name)
             if md5:
                 etag = k.etag.strip('\"')
