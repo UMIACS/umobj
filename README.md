@@ -24,5 +24,5 @@ These are most easily going to be satisfied with a virtualenv.
 ## Installation
 ---------------
 
- make install DESTDIR=/path/to/install
+  python setup.py install
 
