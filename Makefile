@@ -11,14 +11,5 @@ RPM:
 	$(GIT) --git-dir=$(TEMPDIR)/$(NAME)-$(VERSION)/.git checkout $(VERSION)
 	$(TAR) -C $(TEMPDIR) --exclude .git -czf $(BUILDROOT)/SOURCES/$(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION)
 	$(SED) "s/=VERSION=/$(VERSION)/" $(NAME).spec > $(BUILDROOT)/SPECS/$(NAME)-$(VERSION).spec
-	rpmbuild -bb $(BUILDROOT)/SPECS/$(NAME)-$(VERSION).spec --define "python_pkg ${PYTHON}"
-	rm -rf $(TEMPDIR)
-
-RHEL5RPM:
-	mkdir -p $(TEMPDIR)/$(NAME)-$(VERSION)
-	$(GIT) clone ./ $(TEMPDIR)/$(NAME)-$(VERSION)
-	$(GIT) --git-dir=$(TEMPDIR)/$(NAME)-$(VERSION)/.git checkout $(VERSION)
-	$(TAR) -C $(TEMPDIR) --exclude .git -czf $(BUILDROOT)/SOURCES/$(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION)
-	$(SED) "s/=VERSION=/$(VERSION)/" build/$(NAME)-rhel5.spec > $(BUILDROOT)/SPECS/$(NAME)-$(VERSION).spec
-	rpmbuild -bb $(BUILDROOT)/SPECS/$(NAME)-$(VERSION).spec
+	rpmbuild -bb $(BUILDROOT)/SPECS/$(NAME)-$(VERSION).spec --define "python ${PYTHON}"
 	rm -rf $(TEMPDIR)
