@@ -1,6 +1,6 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 #%{!?python_pkg: %global python_pkg %(%{__python} -c "from sys import executable; print executable.split('/')[-1]")}
-Name: UMobj
+Name: umobj
 Summary: Command Line Utilties for UMIACS Object Storage Services
 Version: =VERSION=
 Release: 1
@@ -41,7 +41,7 @@ rm -rf %{buildroot}
 %{_bindir}/rmobj
 %defattr(0644,root,root,-)
 %{python_sitelib}/umobj
-%{python_sitelib}/UMobj*.egg-info
+%{python_sitelib}/%{name}*.egg-info
 %{_mandir}/man1/*.1.gz
 
 %changelog
