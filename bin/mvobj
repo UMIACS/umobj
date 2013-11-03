@@ -8,8 +8,8 @@ import os
 import logging
 
 ## Load our local library functions
-sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
-from umobj_utils import umobj_logging, umobj_init_keyboard_interrupt, \
+sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
+from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
 
 usage_string = """
