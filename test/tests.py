@@ -5,8 +5,8 @@ import sys
 import os
 
 ## Load our local library functions
-sys.path.insert(0, "%s/../lib" % os.path.dirname(sys.argv[0]))
-from umobj_utils import umobj_get_bucket_key_pair_from_string
+sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
+from umobj.utils import umobj_get_bucket_key_pair_from_string
 
 
 class TestSequence(unittest.TestCase):
