@@ -42,6 +42,7 @@ rm -rf %{buildroot}
 %defattr(0755,root,root,-)
 %{python_sitelib}/umobj
 %defattr(0644,root,root,-)
+%{python_sitelib}/umobj/*
 %{python_sitelib}/%{name}*.egg-info
 %{_mandir}/man1/*.1.gz
 
