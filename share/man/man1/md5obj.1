@@ -7,7 +7,7 @@ md5obj - generate md5 sum for keys in the Object Store
 .SH SYNOPSIS
 md5obj [-a/--access_key=<access_key>] [-s/--secret_key=<secret_key>]
        [-S/--server=<server>] [-P/--port=<port>] [-h/--help]
-       [-V/--verbose] [-D/--debug]
+       [-V/--verbose] [-D/--debug] [--version]
        bucket:key
 
 .SH DESCRIPTION
@@ -30,6 +30,10 @@ This option allows you to specify an Object Store server.  If not supplied, chob
 .TP
 \fB-P, --port=<port>\fR
 Object Store server port [Default: 443]
+
+.TP
+\fB---version\fR
+Print the version.
 
 .TP
 \fB-V/--verbose\fR

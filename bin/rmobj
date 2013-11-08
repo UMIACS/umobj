@@ -9,13 +9,14 @@ from boto.s3.connection import OrdinaryCallingFormat
 
 ## Load our local library functions
 sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
+import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
 
 usage_string = """
 SYNOPSIS
    rmobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
-         [-S/--server <server>] [-P/--port <port>] [-f/--force]
+         [-S/--server <server>] [-P/--port <port>] [-f/--force] [--version]
          [-r/--recursive] [-V/--verbose] [-D/--debug] [-h/--help]
          bucket[:key]+
 
@@ -48,7 +49,7 @@ if __name__ == "__main__":
                                    'a:s:S:P:hrfVD',
                                    ['access_key=', 'secret_key=',
                                     'server=', 'port=', 'help', 'recursive',
-                                    'force', 'verbose', 'debug'])
+                                    'force', 'verbose', 'debug', 'version'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
         usage()
@@ -81,6 +82,9 @@ if __name__ == "__main__":
             recursive = True
         if o in ('-f', '--force'):
             force = True
+        if o in ('--version'):
+            print umobj.__version__
+            sys.exit()
         if o in ('-V', '--verbose'):
             level = logging.INFO
         if o in ('-D', '--debug'):

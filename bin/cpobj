@@ -10,6 +10,7 @@ import progressbar
 
 ## Load our local library functions
 sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
+import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
 from umobj.key import create_directory
@@ -39,6 +40,7 @@ OPTIONS SUMMARY
     -r, --recursive                Copy files recursively [Default: no]
     -f, --force                    Force overwrite files in download mode
     -V, --verbose                  Verbose mode
+        --version                  Print version
     -D, --debug                    Debug mode
     -h, --help
 
@@ -258,7 +260,7 @@ if __name__ == "__main__":
                                    ['access_key=', 'secret_key=',
                                     'server=', 'port=', 'multipart',
                                     'help', 'recursive', 'force',
-                                    'verbose', 'debug'])
+                                    'verbose', 'debug', 'version'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
         usage()
@@ -298,6 +300,9 @@ if __name__ == "__main__":
             force = True
         if o in ('-V', '--verbose'):
             level = logging.INFO
+        if o in ('--version'):
+            print umobj.__version__
+            sys.exit()
         if o in ('-D', '--debug'):
             level = logging.DEBUG
 

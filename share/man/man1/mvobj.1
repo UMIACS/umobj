@@ -7,7 +7,7 @@ mvobj - move a key from one location to another
 .SH SYNOPSIS
    mvobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
          [-S/--server <server>] [-P/--port <port>] [-h/--help]
-         [-V/--verbose] [-D/--debug]
+         [-V/--verbose] [-D/--debug] [--version]
          SRC_BUCKET:SRC_PATH DEST_BUCKET:DEST_PATH
 
 .SH DESCRIPTION
@@ -26,6 +26,7 @@ Here is a short summary of the options available in mvobj.  Please refer to the 
  -s, --secret_key=<secret_key>  Object store secret key
  -S, --server=<server>          Object store server name
  -P, --port=<port>              Object store server port [Default: 443]
+     --version                  Print version
  -V, --verbose                  Verbose mode
  -D, --debug                    Debug mode
  -h, --help                     Help message
@@ -47,6 +48,10 @@ This option allows you to specify an Object Store server.  If not supplied, mvob
 .TP
 \fB-P, --port=<port>\fR
 Object Store server port [Default: 443]
+
+.TP
+\fB---version\fR
+Print the version.
 
 .TP
 \fB-V/--verbose\fR

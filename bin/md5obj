@@ -12,6 +12,7 @@ from boto.s3.connection import OrdinaryCallingFormat
 
 ## Load our local library functions
 sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
+import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
 
@@ -19,7 +20,7 @@ usage_string = """
 SYNOPSIS
    md5obj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
           [-S/--server <server>] [-P/--port <port>]
-          [-V/--verbose] [-D/--debug] [-h/--help]
+          [-V/--verbose] [-D/--debug] [--version] [-h/--help]
           bucket:key
 
    Where
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     try:
         opts, args = getopt.getopt(sys.argv[1:],
                                    'a:s:S:P:hVD',
-                                   ['access_key=', 'secret_key=',
+                                   ['access_key=', 'secret_key=', 'version',
                                     'server=', 'port=', 'help', 'recursive',
                                     'force', 'verbose', 'debug'])
     except getopt.GetoptError, err:
@@ -78,6 +79,9 @@ if __name__ == "__main__":
             server = a
         if o in ('-P', '--port'):
             port = a
+        if o in ('--version'):
+            print umobj.__version__
+            sys.exit()
         if o in ('-V', '--verbose'):
             level = logging.INFO
         if o in ('-D', '--debug'):

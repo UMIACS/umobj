@@ -6,7 +6,7 @@ chobj - change permissions on keys on a given Object Store
 
 .SH SYNOPSIS
 chobj [-a/--access_key=<access_key>] [-s/--secret_key=<secret_key>]
-      [-S/--server=<server>] [-P/--port=<port>] [-h/--help]
+      [-S/--server=<server>] [-P/--port=<port>] [-h/--help] [--version]
       [-p/--policy=<policy>]+ [-V/--verbose] [-D/--debug]
       bucket[:key]+
 
@@ -34,6 +34,10 @@ Object Store server port [Default: 443]
 .TP
 \fB-p/--policy=<policy>+\fR
 A policy consists of a username and a policy directive separated by a colon.  Policy directives include \fIREAD\fR, \fIWRITE\fR, and \fIFULL_CONTROL\fR.  For example, "-p liam:FULL_CONTROL" could be passed in to grant \fIFULL_CONTROL\fR to user liam.  This flag can be passed multiple times in the same invocation.
+
+.TP
+\fB---version\fR
+Print the version.
 
 .TP
 \fB-V/--verbose\fR

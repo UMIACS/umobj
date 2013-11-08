@@ -10,6 +10,7 @@ import logging
 
 ## Load our local library functions
 sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
+import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
 from umobj.acl import CANNED_ACLS
@@ -18,7 +19,7 @@ usage_string = """
 SYNOPSIS
    chobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
          [-S/--server <server>] [-P/--port <port>] [-h/--help]
-         [-p/--policy <policy>]+ [-V/--verbose] [-D/--debug]
+         [-p/--policy <policy>]+ [-V/--verbose] [-D/--debug] [--version]
          bucket[:key]+
 
    Where
@@ -49,7 +50,7 @@ if __name__ == "__main__":
         opts, args = getopt.getopt(sys.argv[1:],
                                    'a:s:S:P:hDVp:',
                                    ['access_key=', 'secret_key=',
-                                    'server=', 'port=', 'help',
+                                    'server=', 'port=', 'help', 'version',
                                     'policy=', 'debug', 'verbose'])
     except getopt.GetoptError, err:
         print str(err)  # will print something like "option -a not recognized"
@@ -79,6 +80,9 @@ if __name__ == "__main__":
             port = a
         if o in ('-V', '--verbose'):
             level = logging.INFO
+        if o in ('--version'):
+            print umobj.__version__
+            sys.exit()
         if o in ('-D', '--debug'):
             level = logging.DEBUG
         if o in ('-p', '--policy'):
