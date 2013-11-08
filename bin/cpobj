@@ -207,7 +207,7 @@ def cpobj_upload(access_key, secret_key, server, bucket_name, src, dest_name,
                 keyname = prefix + root + '/' + f
                 logging.info("Upload key %s from file %s" %
                              (keyname, filename))
-                if multi or (size > (1024*1024*1024)):
+                if (multi and size > 0) or (size > (1024*1024*1024)):
                     m = MultiPart(access_key, secret_key, server, port)
                     m.start_upload(bucket_name, keyname, filename, policy)
                 else:
