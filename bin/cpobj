@@ -36,7 +36,7 @@ OPTIONS SUMMARY
     -s, --secret_key <secret_key>  Object store secret key
     -S, --server <server>          Object store server name
     -P, --port <port>              Object store server port [Default: 443]
-    -m, --multipart                Instantiate multipart uploads [Default: no]
+    -m, --multipart                Instantiate multipart transfer [Default: no]
     -r, --recursive                Copy files recursively [Default: no]
     -f, --force                    Force overwrite files in download mode
     -V, --verbose                  Verbose mode
