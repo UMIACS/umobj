@@ -7,12 +7,13 @@ import boto.s3
 from boto.s3.connection import S3Connection
 from boto.s3.connection import OrdinaryCallingFormat
 import progressbar
+import signal
 
 ## Load our local library functions
 sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
 import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
-    umobj_get_bucket_key_pair_from_string
+    umobj_get_bucket_key_pair_from_string, umobj_add_handler
 from umobj.key import create_directory
 from umobj.multipart import MultiPart
 
@@ -186,6 +187,16 @@ def cpobj_upload(access_key, secret_key, server, bucket_name, src, dest_name,
     bucket = obj.get_bucket(bucket_name)
     size = os.stat(src).st_size
     policy = bucket.get_acl()
+
+    # use a closure to capture the current bucket
+    def cancel_multipart_handler(signal, frame):
+        for upload in bucket.get_all_multipart_uploads():
+            upload.cancel_upload()
+            logging.info("Removed incomplete multipart upload: %s" %
+                         str(upload))
+
+    umobj_add_handler(signal.SIGINT, cancel_multipart_handler)
+
     if recursive and os.path.isdir(src):
         if dest_name:
             prefix = dest_name.rstrip(os.sep) + '/'
