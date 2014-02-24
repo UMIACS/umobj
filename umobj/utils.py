@@ -5,6 +5,8 @@ import os
 import sys
 import signal
 
+from handler_queue import HandlerQueue
+
 
 def umobj_logging(level, filename=None):
     ''' Set up logging for the umobj utilties.  '''
@@ -37,7 +39,12 @@ def umobj_keyboard_interrupt_handler(signal, frame):
 def umobj_init_keyboard_interrupt():
     '''Override the default SIGINT handler so that a stack trace is not printed
     to the user when a SIGINT is called'''
-    signal.signal(signal.SIGINT, umobj_keyboard_interrupt_handler)
+    umobj_add_handler(signal.SIGINT, umobj_keyboard_interrupt_handler)
+
+
+def umobj_add_handler(signal, handler):
+    '''A passthrough function to adding a handler to the global HandlerQueue'''
+    HandlerQueue.add_handler(signal, handler)
 
 
 def umobj_get_bucket_key_pair_from_string(bucket_and_key):
