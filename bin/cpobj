@@ -182,10 +182,30 @@ def cpobj_download(access_key, secret_key, server, bucket_name, dest, key_name,
                 download_file(key, dest)
 
 
+def lremove(prefix, string):
+    '''Returns string with the prefix removed'''
+    if string.startswith(prefix):
+        return string[len(prefix):]
+
+
+def walk_path(path, character='/'):
+    '''Generator that returns each part of the path'''
+    parts = path.strip(character).split(character)
+    for x, y in enumerate(parts):
+        yield '/'.join(parts[0:x+1])
+
+
 def cpobj_upload(access_key, secret_key, server, bucket_name, src, dest_name,
                  recursive=False, multi=False):
+    # retranslate to the full absolute path
+    src = os.path.abspath(src)
+    # retieve the bucket
     bucket = obj.get_bucket(bucket_name)
-    size = os.stat(src).st_size
+    try:
+        size = os.stat(src).st_size
+    except OSError as e:
+        logging.error(e)
+        return
     policy = bucket.get_acl()
 
     # use a closure to capture the current bucket
@@ -198,26 +218,38 @@ def cpobj_upload(access_key, secret_key, server, bucket_name, src, dest_name,
     umobj_add_handler(signal.SIGINT, cancel_multipart_handler)
 
     if recursive and os.path.isdir(src):
+        prefix = src.split(os.sep)[-1]
         if dest_name:
-            prefix = dest_name.rstrip(os.sep) + '/'
-            logging.info("Create directory %s" % prefix)
-            dir_key = bucket.new_key(prefix)
-            create_directory(dir_key)
-            logging.debug("Applying bucket policy %s" % policy)
-            dir_key.set_acl(policy)
-        else:
-            prefix = ''
-        for root, dirs, files in os.walk(src.rstrip(os.sep)):
-            directory = prefix + root
+            prefix = dest_name.rstrip(os.sep) + '/' + prefix
+        for directory in walk_path(prefix):
+            directory = directory + '/'
             logging.info("Create directory %s" % directory)
-            dir_key = bucket.new_key(directory + '/')
+            dir_key = bucket.new_key(directory)
             create_directory(dir_key)
             logging.debug("Applying bucket policy %s" % policy)
             dir_key.set_acl(policy)
+        for root, dirs, files in os.walk(src.rstrip(os.sep)):
+            # we will not create the base directory
+            if root != src:
+                directory = prefix + '/' + lremove(src, root).lstrip(os.sep)
+                logging.info("Create directory %s" % directory)
+                dir_key = bucket.new_key(directory + '/')
+                create_directory(dir_key)
+                logging.debug("Applying bucket policy %s" % policy)
+                dir_key.set_acl(policy)
             for f in files:
                 filename = root + os.sep + f
-                size = os.stat(filename).st_size
-                keyname = prefix + root + '/' + f
+                try:
+                    size = os.stat(filename).st_size
+                except OSError as e:
+                    logging.error(e)
+                    continue
+                if root != src:
+                    keyname = '%s/%s/%s' % (prefix,
+                                           lremove(src, root).lstrip(os.sep),
+                                           f)
+                else:
+                    keyname = '%s/%s' % (prefix, f)
                 logging.info("Upload key %s from file %s" %
                              (keyname, filename))
                 if (multi and size > 0) or (size > (1024*1024*1024)):
