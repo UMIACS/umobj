@@ -45,8 +45,8 @@ def check_key_upload(bucket, key_name, filename):
     if key is not None:
         file_md5 = compute_file_md5(filename)
         etag = key.etag.strip('\"')
-        log.debug('Etag : %s' % etag)
-        if etag.startswith('-'):
+        log.debug('Etag %s' % etag)
+        if '-' in etag:
             ## multipart upload need to read all data and compute
             log.info('Computing MD5 of %s:%s' % (bucket.name, key_name))
             key_md5 = compute_key_md5(bucket, key_name)
