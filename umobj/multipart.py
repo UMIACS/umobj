@@ -62,7 +62,7 @@ class DownloadThread(threading.Thread):
     def run(self):
         while not self.queue.empty():
             start_byte, end_byte = self.queue.get(True, 2)
-            logging.info('%s : Starting download bytes %d - %d.' %
+            logging.info('Starting downloading bytes %d - %d.' %
                          (self.mp.mp_id, start_byte, end_byte))
             self._download_part(start_byte, end_byte)
             self.queue.task_done()
@@ -120,7 +120,7 @@ class MultiPart:
         bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(size)),
                               5242880)
         chunk_amount = int(math.ceil(size / float(bytes_per_chunk)))
-        logging.info("%s : Size: %16d   " % (self.mp_id, size) +
+        logging.info("%s : Size: %16d   " % (self.keyname, size) +
                      "Chunk Size: %16d   " % bytes_per_chunk +
                      "Number Chunks: %8d" % chunk_amount)
         queue = Queue.Queue()
@@ -145,7 +145,8 @@ class MultiPart:
         headers.update({'Content-Type': mtype})
         mp = bucket.initiate_multipart_upload(keyname, headers=headers)
         self.mp_id = mp.id
-        logging.info("%s: Starting a mp upload for %s" % (mp.id, filename))
+        logging.info("%s: Starting a multipart upload for %s" %
+                     (mp.id, filename))
         source_size = os.stat(filename).st_size
         bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(source_size)),
                               5242880)
