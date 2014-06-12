@@ -7,6 +7,7 @@ log = logging.getLogger(__name__)
 
 
 def compute_file_md5(filename, block_size=2**20):
+    log.info('Computing MD5 hash on %s' % filename)
     f = open(filename)
     md5 = hashlib.md5()
     while True:

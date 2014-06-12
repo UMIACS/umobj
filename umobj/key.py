@@ -50,6 +50,8 @@ def check_key_upload(bucket, key_name, filename):
             log.info('Computing MD5 of %s:%s' % (bucket.name, key_name))
             key_md5 = compute_key_md5(bucket, key_name)
         else:
+            log.info('Key %s:%s has MD5 %s' % (bucket.name, key_name,
+                                               etag))
             key_md5 = etag
         if file_md5 == key_md5:
             log.info('File MD5 %s != Key MD5 %s' % (file_md5, key_md5))
