@@ -16,7 +16,9 @@ def compute_file_md5(filename, block_size=2**20):
             break
         md5.update(data)
     f.close()
-    return md5.digest()
+    digest = md5.digest()
+    log.info('File %s has MD5 %s' % (filename, digest))
+    return digest
 
 
 def compute_key_md5(bucket, key_name):
