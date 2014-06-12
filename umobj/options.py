@@ -1,5 +1,6 @@
 from optparse import Option, OptionGroup, OptionParser, OptionValueError
 from copy import copy
+import umobj
 
 def check_date(option, opt, value):
     try:
@@ -20,7 +21,8 @@ class OptionTypes(Option):
 class umobj_parser(object):
     def __init__(self, usage, description=None):
         self.parser = OptionParser(usage=usage, description=description,
-                                   option_class=OptionTypes)
+                                   option_class=OptionTypes,
+                                   version=umobj.__version__)
         self.parser.add_option("-D", "--debug", dest="debug",
                                action="store_true", default=False,
                                help="Enable debug-level logging mode")
@@ -35,6 +37,7 @@ class umobj_parser(object):
                                help="Object Store Host")
         self.parser.add_option("-P", "--port", dest="port",
                                help="Object Store Port")
+
     def print_help(self):
         self.parser.print_help()
 
