@@ -2,14 +2,8 @@
 
 import boto.s3
 import sys
-import os
 import logging
-from boto.s3.connection import S3Connection
-from boto.s3.connection import OrdinaryCallingFormat
 
-## Load our local library functions
-sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
-import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
 from umobj.obj import Obj
@@ -17,16 +11,18 @@ from umobj.options import umobj_parser
 
 
 if __name__ == "__main__":
-    usage = 'Usage: %prog [OPTION] bucket[:key]+'
+    umobj_init_keyboard_interrupt()
+    
     description = 'Remove Bucket(s) and Object(s)'
-    parser = umobj_parser(usage=usage, description=description)
+    parser = umobj_parser(description=description)
     parser.add_recursive()
     parser.add_force()
-    (options, args) = parser.parse_args()
+    parser.add_s3path(number='+', help='BUCKET:KEY', name='S3PATH')
+    args = parser.parse_args()
     ## setup logging
-    if options.debug:
+    if args.debug:
         logging_level = logging.DEBUG
-    elif options.verbose:
+    elif args.verbose:
         logging_level = logging.INFO
     else:
         logging_level = logging.WARNING
@@ -34,18 +30,14 @@ if __name__ == "__main__":
 
     logging.info("Running %s" % sys.argv)
 
-    if not Obj.connect(host=options.host,
-                       port=options.port,
-                       access_key=options.access_key,
-                       secret_key=options.secret_key):
+    if not Obj.connect(host=args.host,
+                       port=args.port,
+                       access_key=args.access_key,
+                       secret_key=args.secret_key):
         logging.error('Unable to contact object store.')
         sys.exit(1)
 
-    if len(args) == 0:
-        parser.print_usage()
-        sys.exit(1)
-
-    for arg in args:
+    for arg in args.S3PATH:
         bucket_name, key_name = umobj_get_bucket_key_pair_from_string(arg)
 
         try:
@@ -56,7 +48,7 @@ if __name__ == "__main__":
 
         logging.info("Working on bucket %s" % bucket_name)
 
-        if options.recursive:
+        if args.recursive:
             # removing all content inside bucket
             if not key_name:
                 ans = raw_input(' Are you sure you want to remove all the ' +
@@ -82,7 +74,7 @@ if __name__ == "__main__":
                 sys.exit(0)
 
             # removing a directory
-            if options.force:
+            if args.force:
                 for key in bucket.list(prefix=key_name):
                     logging.info("Deleting key %s" % key.name)
                     bucket.delete_key(key.name)

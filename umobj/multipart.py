@@ -6,8 +6,6 @@ import os
 import time
 import math
 from filechunkio import FileChunkIO
-from boto.s3.connection import S3Connection
-from boto.s3.connection import OrdinaryCallingFormat
 from umobj.obj import Obj
 import progressbar
 
@@ -63,7 +61,7 @@ class DownloadThread(threading.Thread):
         while not self.queue.empty():
             start_byte, end_byte = self.queue.get(True, 2)
             logging.info('Starting downloading bytes %d - %d.' %
-                         (self.mp.mp_id, start_byte, end_byte))
+                         (start_byte, end_byte))
             self._download_part(start_byte, end_byte)
             self.queue.task_done()
 

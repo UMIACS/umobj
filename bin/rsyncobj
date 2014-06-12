@@ -1,146 +1,51 @@
 #!/usr/bin/env python
 
+import boto
 import os
 import sys
 import logging
-
-## Load our local library functions
-sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
 
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
 from umobj.transfer import obj_upload, obj_download
 from umobj.obj import Obj
-
-
-def usage():
-    prog_name = os.path.basename(sys.argv[0])
-    usage_string = """
-NAME
-    %s - Copy files to and from an S3 compatible object store
-
-SYNOPSIS
-    %s [OPTION]... SRC [SRC]+ BUCKET[:DEST]
-
-    %s [OPTION]... BUCKET[:SRC] DEST
-
-OPTIONS SUMMARY
-
-    -a, --access_key <access_key>  Object store access key
-    -s, --secret_key <secret_key>  Object store secret key
-    -S, --server <server>          Object store server name
-    -P, --port <port>              Object store server port [Default: 443]
-    -m, --multipart                Instantiate multipart transfer [Default: no]
-    -r, --recursive                Copy files recursively [Default: no]
-    -f, --force                    Force overwrite files in download mode
-    -V, --verbose                  Verbose mode
-        --version                  Print version
-    -D, --debug                    Debug mode
-    -h, --help
-
-OPTIONS
-    access_key  - Your Access Key ID.  If not supplied, boto will
-                  use the value of the environment variable OBJ_ACCESS_KEY_ID.
-    secret_key  - Your Secret Access Key.  If not supplied, will use the value
-                  of the environment variable OBJ_SECRET_ACCESS_KEY.
-    server      - The object storage server you want to connect to.  This can
-                  be overridden by the OBJ_SERVER environment variable.
-    BUCKET      - The bucket that is to be used for this copy operation.  This
-                  is necessary on one and only one of the SRC and DEST
-                  arguments.
-    SRC         - Local file system directory/file or object store key.  A
-                  directory is allowed for uploads if recursive is turned on,
-                  and is allowed for download.
-    DEST        - Local file system directory/file or object store key.  A
-                  directory is allowed for downloads.
-
-""" % (prog_name, prog_name, prog_name)
-    print usage_string
-    sys.exit()
+from umobj.options import umobj_parser
 
 
 if __name__ == "__main__":
-    import getopt
-
     umobj_init_keyboard_interrupt()
 
-    try:
-        opts, args = getopt.getopt(sys.argv[1:],
-                                   'a:b:s:S:P:hmrfVD',
-                                   ['access_key=', 'secret_key=',
-                                    'server=', 'port=', 'multipart',
-                                    'help', 'recursive', 'force',
-                                    'verbose', 'debug', 'version'])
-    except getopt.GetoptError, err:
-        print str(err)  # will print something like "option -a not recognized"
-        usage()
+    description = 'Copy Object(s) - ' + \
+                  'Copy objects to and from object store'
+    parser = umobj_parser(description=description)
+    parser.add_recursive(help='Copy files recursively')
+    parser.add_force(help='Force overwrite files when downloading')
+    parser.add_multipart()
+    parser.add_s3path(name='SOURCE', number=1,
+                      help='BUCKET[:SRC] or SRC')
+    parser.add_s3path(name='DESTINATION', number=1,
+                      help='DEST or BUCKET[:DEST]')
+    args = parser.parse_args()
+    ## setup logging
+    if args.debug:
+        logging_level = logging.DEBUG
+    elif args.verbose:
+        logging_level = logging.INFO
+    else:
+        logging_level = logging.WARNING
+    umobj_logging(logging_level)
 
-    force = False
-    multi = False
-    level = logging.WARNING
-    access_key = None
-    secret_key = None
-    bucket_name = None
-    try:
-        server = os.environ['OBJ_SERVER']
-    except:
-        server = 'obj.umiacs.umd.edu'
-    port = 443
-    recursive = False
-
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            usage()
-            sys.exit()
-        if o in ('-a', '--access_key'):
-            access_key = a
-        if o in ('-s', '--secret_key'):
-            secret_key = a
-        if o in ('-b', '--bucket'):
-            bucket_name = a
-        if o in ('-S', '--server'):
-            server = a
-        if o in ('-P', '--port'):
-            port = a
-        if o in ('-m', '--multipart'):
-            multi = True
-        if o in ('-r', '--recursive'):
-            recursive = True
-        if o in ('-f', '--force'):
-            force = True
-        if o in ('-V', '--verbose'):
-            level = logging.INFO
-        if o in ('--version'):
-            print umobj.__version__
-            sys.exit()
-        if o in ('-D', '--debug'):
-            level = logging.DEBUG
-
-    umobj_logging(level)
-
-    logging.info("Using server %s" % server)
     logging.info("Running %s" % sys.argv)
 
-    if access_key is None:
-        try:
-            access_key = os.environ['OBJ_ACCESS_KEY_ID']
-        except:
-            logging.error("Please provide access_key")
-            usage()
-    if secret_key is None:
-        try:
-            secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
-        except:
-            logging.error("Please provide secret_key")
-            usage()
+    if not Obj.connect(host=args.host,
+                       port=args.port,
+                       access_key=args.access_key,
+                       secret_key=args.secret_key):
+        logging.error('Unable to contact object store.')
+        sys.exit(1)
 
-    Obj(host=server, port=port, access_key=access_key, secret_key=secret_key)
-
-    if len(args) < 2:
-        usage()
-
-    src = args[0]
-    dest = args[-1]
+    src = args.SOURCE[0]
+    dest = args.DESTINATION[1]
     upload = False
     download = False
     src_bucket_name, src_key_name = \
@@ -156,20 +61,17 @@ if __name__ == "__main__":
         if ':' in src:
             if not os.path.exists(src):
                 logging.error("Can not copy from a bucket to a bucket.")
-                usage()
+                parser.print_help()
+                sys.exit(1)
         bucket_name = dest_bucket_name
         dest_name = dest_key_name
         upload = True
         logging.info("Upload mode with bucket %s" % bucket_name)
         if dest_name:
             logging.info("Uploading to the prefix %s." % dest_name)
-        logging.info("Uploading files %s." % args[0:-1])
+        logging.info("Uploading file(s) %s." % src)
     else:
         if ':' in src:
-            if len(args) > 2:
-                logging.error("Uploads only support a single BUCKET:SRC " +
-                              "and DEST.")
-                usage()
             bucket_name = src_bucket_name
             key_name = src_key_name
             download = True
@@ -181,19 +83,18 @@ if __name__ == "__main__":
         else:
             logging.error("You need to provide a bucket in either SRC " +
                           "or DEST.")
-            usage()
+            parser.print_help()
+            sys.exit(1)
 
     try:
         bucket = Obj.conn.get_bucket(bucket_name)
     except boto.exception.S3ResponseError, e:
         logging.error("Unable to access bucket %s, %s." %
                       (bucket_name, e.error_code))
-        sys.exit()
+        sys.exit(1)
 
     if upload:
-        for source in args[0:-1]:
-            obj_upload(access_key, secret_key, server, bucket_name, source,
-                       dest_name, recursive, multi)
+        obj_upload(bucket_name, src, dest_name, args.recursive, args.multipart)
     if download:
-        obj_download(access_key, secret_key, server, bucket_name, dest,
-                     key_name, recursive, multi)
+        obj_download(bucket_name, dest, key_name, args.recursive,
+                     args.multipart)

@@ -3,58 +3,33 @@
 import boto
 from boto.s3.acl import ACL
 import sys
-import os
 import logging
 
-## Load our local library functions
-sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
 from umobj.obj import Obj
-from umobj.acl import CANNED_ACLS, acl_pairs, split_acl
+from umobj.acl import acl_pairs, split_acl
 from umobj.options import umobj_parser
-
-usage_string = """
-SYNOPSIS
-   chobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
-         [-S/--server <server>] [-P/--port <port>] [-r/--recursive] [-h/--help]
-         [-p/--policy <policy>]+ [-V/--verbose] [-D/--debug] [--version]
-         bucket[:key]+
-
-   Where
-        access_key  - Your Access Key ID.  If not supplied, chobj will
-                      use the value of the environment variable
-                      OBJ_ACCESS_KEY_ID
-        secret_key  - Your Secret Access Key.  If not supplied, boto
-                      will use the value of the environment variable
-                      OBJ_SECRET_ACCESS_KEY
-        bucket      - The name of the bucket to operate on.
-        key         - Optional key or key prefix to use.
-        policy      - username:permission where permission is one of
-                      FULL_CONTROL, READ, WRITE, READ_ACL, WRITE_ACL
-"""
-
-
-def usage():
-    print usage_string
-    sys.exit()
 
 
 if __name__ == "__main__":
     umobj_init_keyboard_interrupt()
 
-    usage = 'Usage: %prog [OPTION] <BUCKET>[:KEY_PREFIX]+'
     description = 'Change Object - ' + \
                   'Modify Access Control lists for a set of buckets and/or keys'
-    parser = umobj_parser(usage=usage, description=description)
+    description_epilog = '''  POLICY      - username:ACL where ACL is one of
+                FULL_CONTROL, READ, WRITE, READ_ACL, WRITE_ACL'''
+    parser = umobj_parser(description=description,
+                          description_epilog=description_epilog)
     parser.add_recursive(help='Recursively apply ACL to keys')
     parser.add_mode(choices=['add', 'remove', 'clear'])
     parser.add_policy()
-    (options, args) = parser.parse_args()
+    parser.add_s3path(number=1)
+    args = parser.parse_args()
     ## setup logging
-    if options.debug:
+    if args.debug:
         logging_level = logging.DEBUG
-    elif options.verbose:
+    elif args.verbose:
         logging_level = logging.INFO
     else:
         logging_level = logging.WARNING
@@ -62,20 +37,20 @@ if __name__ == "__main__":
 
     logging.info("Running %s" % sys.argv)
 
-    if options.mode is None:
+    if args.mode is None:
         logging.error('Please provide a mode.')
         parser.print_help()
         sys.exit()
 
-    if options.policies is None:
+    if args.policies is None:
         logging.error('One or more policy ACL is required.')
         parser.print_help()
         sys.exit(1)
 
-    if not Obj.connect(host=options.host,
-                       port=options.port,
-                       access_key=options.access_key,
-                       secret_key=options.secret_key):
+    if not Obj.connect(host=args.host,
+                       port=args.port,
+                       access_key=args.access_key,
+                       secret_key=args.secret_key):
         logging.error('Unable to contact object store.')
         sys.exit(1)
 
@@ -97,22 +72,22 @@ if __name__ == "__main__":
         policy = bucket.get_acl()
         logging.info('Current ACL Policy %s' % ', '.join(acl_pairs(policy.acl)))
 
-        if options.mode == 'add':
-            for p in options.policies:
+        if args.mode == 'add':
+            for p in args.policies:
                 u, g = split_acl(p)
                 policy.acl.add_user_grant(g, u)
-        elif options.mode == 'remove':
+        elif args.mode == 'remove':
             grants = []
             for grant in policy.acl.grants:
-                for p in options.policies:
+                for p in args.policies:
                     u, g = split_acl(p)
                     if grant.permission != g  or grant.id != u:
                         grants.append(grant)
             policy.acl.grants = grants
-        elif options.mode == 'clear':
+        elif args.mode == 'clear':
             acl = ACL()
-            print options.policies
-            for p in options.policies:
+            print args.policies
+            for p in args.policies:
                 u, g = split_acl(p)
                 acl.add_user_grant(g, u)
             policy.acl = acl
@@ -135,7 +110,7 @@ if __name__ == "__main__":
             except boto.exception.S3ResponseError:
                 logging.warning('Unable to set bucket ACL %s' %
                                 ', '.join(acl_pairs(policy.acl)))
-            if options.recursive:
+            if args.recursive:
                 for key in bucket.get_all_keys():
                     try:
                         logging.info("Applying ACL to %s:%s" % (bucket.name,

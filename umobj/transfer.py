@@ -1,11 +1,7 @@
-import boto
 import logging
 import os
 import progressbar
 import signal
-from boto.utils import parse_ts
-from pytz import utc
-from datetime import datetime
 from umobj.key import check_directory, create_directory, check_key_upload
 from umobj.utils import umobj_add_handler, walk_path, lremove
 from umobj.multipart import MultiPart
@@ -86,21 +82,22 @@ def download_file(key, filename, progress=True):
     pbar.finish()
 
 
-def obj_download(bucket_name, dest, key_name, recursive=False, multi=False):
+def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
+                 multi=False):
     bucket = Obj.conn.get_bucket(bucket_name)
     if recursive:
         logging.info("Starting recursive download %s to %s prefix %s" %
                      (bucket.name, dest, key_name))
         if not os.path.isdir(dest):
             logging.error("DEST %s is not a directory." % dest)
-            usage()
+            return
         else:
             for key in bucket.list(prefix=key_name):
                 filename = dest.rstrip(os.sep) + os.sep + key.name
                 logging.info("Downloading key %s (%d) to %s" %
                              (key, key.size, filename))
                 if multi and key.size > 5 * 1024 * 1024:
-                    m = MultiPart(access_key, secret_key, server, port)
+                    m = MultiPart()
                     m.start_download(bucket_name, key.name, dest)
                 else:
                     download_file(key, filename)
@@ -108,11 +105,11 @@ def obj_download(bucket_name, dest, key_name, recursive=False, multi=False):
         if not key_name:
             logging.error("Must specify a key to download or use " +
                           "recusive option")
-            usage()
+            return
         if os.path.isfile(dest) and not force:
             logging.error("File %s already exists " % dest +
                           "please force flag to overwrite.")
-            usage()
+            return
         else:
             key = bucket.get_key(key_name)
             if key is None:
@@ -185,7 +182,7 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False):
                 logging.info("Upload key %s from file %s" %
                              (keyname, filename))
                 if (multi and size > 0) or (size > (1024*1024*1024)):
-                    m = MultiPart(access_key, secret_key, server, port)
+                    m = MultiPart()
                     m.start_upload(bucket_name, keyname, filename, policy)
                 else:
                     key = bucket.new_key(keyname)

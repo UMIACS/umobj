@@ -2,123 +2,47 @@
 
 import boto.s3
 import sys
-import os
 import math
 import hashlib
 import logging
 import progressbar
-from boto.s3.connection import S3Connection
-from boto.s3.connection import OrdinaryCallingFormat
 
-## Load our local library functions
-sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
-import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
-
-usage_string = """
-SYNOPSIS
-   md5obj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
-          [-S/--server <server>] [-P/--port <port>]
-          [-V/--verbose] [-D/--debug] [--version] [-h/--help]
-          bucket:key
-
-   Where
-        access_key  - Your Access Key ID.  If not supplied, rmobj will
-                      use the value of the environment variable
-                      OBJ_ACCESS_KEY_ID
-        secret_key  - Your Secret Access Key.  If not supplied, boto
-                      will use the value of the environment variable
-                      OBJ_SECRET_ACCESS_KEY
-        bucket      - The name of the bucket that holds the key.
-        key         - The name of the key to get a MD5 sum of.
-"""
-
-
-def usage():
-    print usage_string
-    sys.exit()
+from umobj.obj import Obj
+from umobj.options import umobj_parser
 
 
 if __name__ == "__main__":
-    import sys
-    import os
-    import getopt
-
     umobj_init_keyboard_interrupt()
 
-    try:
-        opts, args = getopt.getopt(sys.argv[1:],
-                                   'a:s:S:P:hVD',
-                                   ['access_key=', 'secret_key=', 'version',
-                                    'server=', 'port=', 'help', 'recursive',
-                                    'force', 'verbose', 'debug'])
-    except getopt.GetoptError, err:
-        print str(err)  # will print something like "option -a not recognized"
-        usage()
+    description = 'List Object(s)'
+    parser = umobj_parser(description=description)
+    parser.add_s3path(number=1, help='BUCKET:KEY')
+    args = parser.parse_args()
+    ## setup logging
+    if args.debug:
+        logging_level = logging.DEBUG
+    elif args.verbose:
+        logging_level = logging.INFO
+    else:
+        logging_level = logging.WARNING
+    umobj_logging(logging_level)
 
-    level = logging.WARNING
-    access_key = None
-    secret_key = None
-    bucket_name = None
-    try:
-        server = os.environ['OBJ_SERVER']
-    except:
-        server = 'obj.umiacs.umd.edu'
-    port = 443
-
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            usage()
-            sys.exit()
-        if o in ('-a', '--access_key'):
-            access_key = a
-        if o in ('-s', '--secret_key'):
-            secret_key = a
-        if o in ('-S', '--server'):
-            server = a
-        if o in ('-P', '--port'):
-            port = a
-        if o in ('--version'):
-            print umobj.__version__
-            sys.exit()
-        if o in ('-V', '--verbose'):
-            level = logging.INFO
-        if o in ('-D', '--debug'):
-            level = logging.DEBUG
-
-    umobj_logging(level)
-
-    logging.info("Using server %s" % server)
     logging.info("Running %s" % sys.argv)
 
-    if access_key is None:
-        try:
-            access_key = os.environ['OBJ_ACCESS_KEY_ID']
-        except:
-            logging.error("Please provide access_key")
-            usage()
-    if secret_key is None:
-        try:
-            secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
-        except:
-            logging.error("Please provide secret_key")
-            usage()
+    if not Obj.connect(host=args.host,
+                       port=args.port,
+                       access_key=args.access_key,
+                       secret_key=args.secret_key):
+        logging.error('Unable to contact object store.')
+        sys.exit(1)
 
-    obj = S3Connection(host=server,
-                       port=port,
-                       is_secure=True,
-                       aws_access_key_id=access_key,
-                       aws_secret_access_key=secret_key,
-                       calling_format=OrdinaryCallingFormat())
-
-    if len(args) == 0:
-        usage()
-
-    bucket_name, key_name = umobj_get_bucket_key_pair_from_string(args[0])
+    S3PATH=args.S3PATH[0]
+    bucket_name, key_name = umobj_get_bucket_key_pair_from_string(S3PATH)
 
     try:
-        bucket = obj.get_bucket(bucket_name)
+        bucket = Obj.conn.get_bucket(bucket_name)
     except boto.exception.S3ResponseError, e:
         logging.error("Can not access bucket %s, %s." %
                       (bucket_name, e.error_code))
@@ -147,11 +71,11 @@ if __name__ == "__main__":
         start_byte = offset
         end_byte = offset + bytes - 1
         logging.info("Processing bytes %d - %d" % (start_byte, end_byte))
-        key_range = obj.make_request('GET',
-                                     bucket=bucket_name,
-                                     key=key_name,
-                                     headers={'Range': "bytes=%d-%d" %
-                                              (start_byte, end_byte)})
+        key_range = Obj.conn.make_request('GET',
+                                          bucket=bucket_name,
+                                          key=key_name,
+                                          headers={'Range': "bytes=%d-%d" %
+                                                   (start_byte, end_byte)})
         chunk_size = min((end_byte-start_byte), 32 * 1024 * 1024)
         while True:
             data = key_range.read(chunk_size)

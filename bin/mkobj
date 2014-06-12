@@ -1,56 +1,28 @@
 #!/usr/bin/env python
 
 import boto
-from boto.s3.connection import S3Connection
-from boto.s3.connection import OrdinaryCallingFormat
 import sys
 import os
 import logging
 
-## Load our local library functions
-sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
-import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
 from umobj.key import create_directory
 from umobj.obj import Obj
 from umobj.options import umobj_parser
 
-usage_string = """
-SYNOPSIS
-   mkobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
-         [-S/--server <server>] [-P/--port <port>] [-h/--help]
-         [-V/--verbose] [-D/--debug] [--version]
-         bucket[:PATH]+
-
-   Where
-        access_key  - Your Access Key ID.  If not supplied, mkobj will
-                      use the value of the environment variable
-                      OBJ_ACCESS_KEY_ID
-        secret_key  - Your Secret Access Key.  If not supplied, boto
-                      will use the value of the environment variable
-                      OBJ_SECRET_ACCESS_KEY
-        bucket      - The name of the bucket(s) to create.
-        PATH        - Optional directory path to create
-"""
-
-
-def usage():
-    print usage_string
-    sys.exit()
-
 
 if __name__ == "__main__":
     umobj_init_keyboard_interrupt()
 
-    usage = 'Usage: %prog [OPTION] bucket[:PATH]+'
     description = 'Make Bucket(s) - Create buckets or paths within buckets'
-    parser = umobj_parser(usage=usage, description=description)
-    (options, args) = parser.parse_args()
+    parser = umobj_parser(description=description)
+    parser.add_s3path(number='+', help='BUCKET', name='BUCKET')
+    args = parser.parse_args()
     ## setup logging
-    if options.debug:
+    if args.debug:
         logging_level = logging.DEBUG
-    elif options.verbose:
+    elif args.verbose:
         logging_level = logging.INFO
     else:
         logging_level = logging.WARNING
@@ -58,18 +30,14 @@ if __name__ == "__main__":
 
     logging.info("Running %s" % sys.argv)
 
-    if not Obj.connect(host=options.host,
-                       port=options.port,
-                       access_key=options.access_key,
-                       secret_key=options.secret_key):
+    if not Obj.connect(host=args.host,
+                       port=args.port,
+                       access_key=args.access_key,
+                       secret_key=args.secret_key):
         logging.error('Unable to contact object store.')
         sys.exit(1)
 
-    if len(args) == 0:
-        parser.print_usage()
-        sys.exit(1)
-
-    for arg in args:
+    for arg in args.S3PATH:
         bucket_name, key_name = umobj_get_bucket_key_pair_from_string(arg)
         if key_name:
             logging.info("Creating directory %s in bucket %s" %

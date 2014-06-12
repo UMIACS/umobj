@@ -1,7 +1,10 @@
+import logging
+
 CANNED_ACLS = frozenset(['READ', 'WRITE', 'READ_ACP', 'WRITE_ACP',
                          'FULL_CONTROL'])
 all_users = 'http://acs.amazonaws.com/groups/global/AllUsers'
 
+log = logging.getLogger(__name__)
 
 def acl_pairs(acl):
     pairs = []

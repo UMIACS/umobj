@@ -4,16 +4,9 @@ import os
 import sys
 import logging
 import boto.s3
-from boto.s3.connection import S3Connection
-from boto.s3.connection import OrdinaryCallingFormat
-import progressbar
-import signal
 
-## Load our local library functions
-sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
-import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
-    umobj_get_bucket_key_pair_from_string, umobj_add_handler
+    umobj_get_bucket_key_pair_from_string
 from umobj.transfer import obj_upload, obj_download
 from umobj.obj import Obj
 from umobj.options import umobj_parser
@@ -68,22 +61,24 @@ OPTIONS
 
 
 if __name__ == "__main__":
-    import getopt
 
     umobj_init_keyboard_interrupt()
 
-    usage = 'Usage: %prog [OPTION] <BUCKET>[:KEY_PREFIX]+'
     description = 'Copy Object(s) - ' + \
                   'Copy objects to and from object store'
-    parser = umobj_parser(usage=usage, description=description)
-    parser.add_recursive(help='Copy files recursively [Default: no]')
+    parser = umobj_parser(description=description)
+    parser.add_recursive(help='Copy files recursively')
     parser.add_force(help='Force overwrite files when downloading')
     parser.add_multipart()
-    (options, args) = parser.parse_args()
+    parser.add_s3path(name='SOURCE', number=1,
+                      help='BUCKET[:SRC] or SRC')
+    parser.add_s3path(name='DESTINATION', number=1,
+                      help='DEST or BUCKET[:DEST]')
+    args = parser.parse_args()
     ## setup logging
-    if options.debug:
+    if args.debug:
         logging_level = logging.DEBUG
-    elif options.verbose:
+    elif args.verbose:
         logging_level = logging.INFO
     else:
         logging_level = logging.WARNING
@@ -91,19 +86,15 @@ if __name__ == "__main__":
 
     logging.info("Running %s" % sys.argv)
 
-    if not Obj.connect(host=options.host,
-                       port=options.port,
-                       access_key=options.access_key,
-                       secret_key=options.secret_key):
+    if not Obj.connect(host=args.host,
+                       port=args.port,
+                       access_key=args.access_key,
+                       secret_key=args.secret_key):
         logging.error('Unable to contact object store.')
         sys.exit(1)
 
-    if len(args) < 2:
-        parser.print_help()
-        sys.exit(1)
-
-    src = args[0]
-    dest = args[-1]
+    src = args.SOURCE[0]
+    dest = args.DESTINATION[0]
     upload = False
     download = False
     src_bucket_name, src_key_name = \
@@ -119,21 +110,17 @@ if __name__ == "__main__":
         if ':' in src:
             if not os.path.exists(src):
                 logging.error("Can not copy from a bucket to a bucket.")
-                usage()
+                parser.print_help()
+                sys.exit(1)
         bucket_name = dest_bucket_name
         dest_name = dest_key_name
         upload = True
         logging.info("Upload mode with bucket %s" % bucket_name)
         if dest_name:
             logging.info("Uploading to the prefix %s." % dest_name)
-        logging.info("Uploading files %s." % args[0:-1])
+        logging.info("Uploading files %s." % src)
     else:
         if ':' in src:
-            if len(args) > 2:
-                logging.error("Uploads only support a single BUCKET:SRC " +
-                              "and DEST.")
-                parser.print_help()
-                sys.exit(1)
             bucket_name = src_bucket_name
             key_name = src_key_name
             download = True
@@ -156,9 +143,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if upload:
-        for source in args[0:-1]:
-            obj_upload(bucket_name, source, dest_name, options.recursive,
-                       options.multipart)
+        obj_upload(bucket_name, src, dest_name, args.recursive,
+                       args.multipart)
     if download:
-        obj_download(bucket_name, dest, key_name, options.recursive,
-                     options.multipart)
+        obj_download(bucket_name, dest, key_name, args.force, args.recursive,
+                     args.multipart)
