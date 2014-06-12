@@ -12,124 +12,51 @@ sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
 import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
-
-usage_string = """
-SYNOPSIS
-   rmobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
-         [-S/--server <server>] [-P/--port <port>] [-f/--force] [--version]
-         [-r/--recursive] [-V/--verbose] [-D/--debug] [-h/--help]
-         bucket[:key]+
-
-   Where
-        access_key  - Your Access Key ID.  If not supplied, rmobj will
-                      use the value of the environment variable
-                      OBJ_ACCESS_KEY_ID
-        secret_key  - Your Secret Access Key.  If not supplied, boto
-                      will use the value of the environment variable
-                      OBJ_SECRET_ACCESS_KEY
-        bucket      - The name of the bucket to remove or remove files
-                      from.
-"""
-
-
-def usage():
-    print usage_string
-    sys.exit()
+from umobj.obj import Obj
+from umobj.options import umobj_parser
 
 
 if __name__ == "__main__":
-    import sys
-    import os
-    import getopt
+    usage = 'Usage: %prog [OPTION] bucket[:key]+'
+    description = 'Remove Bucket(s) and Object(s)'
+    parser = umobj_parser(usage=usage, description=description)
+    parser.add_recursive()
+    parser.add_force()
+    (options, args) = parser.parse_args()
+    ## setup logging
+    if options.debug:
+        logging_level = logging.DEBUG
+    elif options.verbose:
+        logging_level = logging.INFO
+    else:
+        logging_level = logging.WARNING
+    umobj_logging(logging_level)
 
-    umobj_init_keyboard_interrupt()
-
-    try:
-        opts, args = getopt.getopt(sys.argv[1:],
-                                   'a:s:S:P:hrfVD',
-                                   ['access_key=', 'secret_key=',
-                                    'server=', 'port=', 'help', 'recursive',
-                                    'force', 'verbose', 'debug', 'version'])
-    except getopt.GetoptError, err:
-        print str(err)  # will print something like "option -a not recognized"
-        usage()
-
-    level = logging.WARNING
-    access_key = None
-    secret_key = None
-    bucket_name = None
-    recursive = False
-    force = False
-    try:
-        server = os.environ['OBJ_SERVER']
-    except:
-        server = 'obj.umiacs.umd.edu'
-    port = 443
-
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            usage()
-            sys.exit()
-        if o in ('-a', '--access_key'):
-            access_key = a
-        if o in ('-s', '--secret_key'):
-            secret_key = a
-        if o in ('-S', '--server'):
-            server = a
-        if o in ('-P', '--port'):
-            port = a
-        if o in ('-r', '--recursive'):
-            recursive = True
-        if o in ('-f', '--force'):
-            force = True
-        if o in ('--version'):
-            print umobj.__version__
-            sys.exit()
-        if o in ('-V', '--verbose'):
-            level = logging.INFO
-        if o in ('-D', '--debug'):
-            level = logging.DEBUG
-
-    umobj_logging(level)
-
-    logging.info("Using server %s" % server)
     logging.info("Running %s" % sys.argv)
 
-    if access_key is None:
-        try:
-            access_key = os.environ['OBJ_ACCESS_KEY_ID']
-        except:
-            logging.error("Please provide access_key")
-            usage()
-    if secret_key is None:
-        try:
-            secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
-        except:
-            logging.error("Please provide secret_key")
-            usage()
-
-    obj = S3Connection(host=server,
-                       port=port,
-                       is_secure=True,
-                       aws_access_key_id=access_key,
-                       aws_secret_access_key=secret_key,
-                       calling_format=OrdinaryCallingFormat())
+    if not Obj.connect(host=options.host,
+                       port=options.port,
+                       access_key=options.access_key,
+                       secret_key=options.secret_key):
+        logging.error('Unable to contact object store.')
+        sys.exit(1)
 
     if len(args) == 0:
-        usage()
+        parser.print_usage()
+        sys.exit(1)
 
     for arg in args:
         bucket_name, key_name = umobj_get_bucket_key_pair_from_string(arg)
 
         try:
-            bucket = obj.get_bucket(bucket_name)
+            bucket = Obj.conn.get_bucket(bucket_name)
         except boto.exception.S3ResponseError:
             logging.error("Bucket %s does not exist." % bucket_name)
             sys.exit(1)
 
         logging.info("Working on bucket %s" % bucket_name)
 
-        if recursive:
+        if options.recursive:
             # removing all content inside bucket
             if not key_name:
                 ans = raw_input(' Are you sure you want to remove all the ' +
@@ -148,14 +75,14 @@ if __name__ == "__main__":
                 ans = raw_input(' Do you want to remove the bucket \'%s\'?' %
                                 bucket.name + ' [yes/no] ').lower()
                 if ans == 'yes':
-                    obj.delete_bucket(bucket.name)
+                    Obj.conn.delete_bucket(bucket.name)
                     logging.info("Deleting the bucket %s" % bucket_name)
                 else:
                     logging.info("Not deleting the bucket %s" % bucket_name)
                 sys.exit(0)
 
             # removing a directory
-            if force:
+            if options.force:
                 for key in bucket.list(prefix=key_name):
                     logging.info("Deleting key %s" % key.name)
                     bucket.delete_key(key.name)
@@ -170,7 +97,7 @@ if __name__ == "__main__":
 
         else:  # non-recursive
             if key_name is None:
-                logging.error('Can not delete bucket %s.  ' % bucket.name +
+                logging.error('Can not delete bucket %s, ' % bucket.name +
                               'please use recursive option.')
                 sys.exit(1)
             elif key_name.endswith('/'):

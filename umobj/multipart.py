@@ -8,6 +8,7 @@ import math
 from filechunkio import FileChunkIO
 from boto.s3.connection import S3Connection
 from boto.s3.connection import OrdinaryCallingFormat
+from umobj.obj import Obj
 import progressbar
 
 
@@ -91,25 +92,14 @@ class DownloadThread(threading.Thread):
 class MultiPart:
 
     ### code adapted from https://gist.github.com/fabiant7t/924094
-    def __init__(self, access_key, secret_key, server='obj.umiacs.umd.edu',
-                 port=443, secure=True):
-        self.access_key = access_key
-        self.secret_key = secret_key
-        self.server = server
-        self.port = port
-        self.secure = secure
+    def __init__(self):
         self.mp_id = None
         self.bucketname = None
         self.filename = None
         self.keyname = None
 
     def connect(self):
-        return S3Connection(host=self.server,
-                            port=self.port,
-                            is_secure=self.secure,
-                            aws_access_key_id=self.access_key,
-                            aws_secret_access_key=self.secret_key,
-                            calling_format=OrdinaryCallingFormat())
+        return Obj.conn
 
     def start_download(self, bucketname, keyname, filename, threads=4):
         logging.info("Starting a multipart download for bucket %s and key %s" %

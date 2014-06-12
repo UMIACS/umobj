@@ -13,6 +13,8 @@ import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
 from umobj.key import create_directory
+from umobj.obj import Obj
+from umobj.options import umobj_parser
 
 usage_string = """
 SYNOPSIS
@@ -39,75 +41,33 @@ def usage():
 
 
 if __name__ == "__main__":
-    import getopt
-
     umobj_init_keyboard_interrupt()
 
-    try:
-        opts, args = getopt.getopt(sys.argv[1:],
-                                   'a:s:S:P:hRDV',
-                                   ['access_key=', 'secret_key=',
-                                    'server=', 'port=', 'help',
-                                    'debug', 'verbose', 'version'])
-    except getopt.GetoptError, err:
-        print str(err)  # will print something like "option -a not recognized"
-        usage()
+    usage = 'Usage: %prog [OPTION] bucket[:PATH]+'
+    description = 'Make Bucket(s) - Create buckets or paths within buckets'
+    parser = umobj_parser(usage=usage, description=description)
+    (options, args) = parser.parse_args()
+    ## setup logging
+    if options.debug:
+        logging_level = logging.DEBUG
+    elif options.verbose:
+        logging_level = logging.INFO
+    else:
+        logging_level = logging.WARNING
+    umobj_logging(logging_level)
 
-    access_key = None
-    secret_key = None
-    level = logging.WARNING
-    try:
-        server = os.environ['OBJ_SERVER']
-    except:
-        server = 'obj.umiacs.umd.edu'
-    port = 443
-
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            usage()
-            sys.exit()
-        if o in ('-a', '--access_key'):
-            access_key = a
-        if o in ('-s', '--secret_key'):
-            secret_key = a
-        if o in ('-S', '--server'):
-            server = a
-        if o in ('-P', '--port'):
-            port = a
-        if o in ('--version'):
-            print umobj.__version__
-            sys.exit()
-        if o in ('-V', '--verbose'):
-            level = logging.INFO
-        if o in ('-D', '--debug'):
-            level = logging.DEBUG
-
-    umobj_logging(level)
-    logging.info("Using server %s" % server)
     logging.info("Running %s" % sys.argv)
 
-    if access_key is None:
-        try:
-            access_key = os.environ['OBJ_ACCESS_KEY_ID']
-        except:
-            logging.error("Please provide access_key")
-            usage()
-    if secret_key is None:
-        try:
-            secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
-        except:
-            logging.error("Please provide secret_key")
-            usage()
-
-    obj = S3Connection(host=server,
-                       port=port,
-                       is_secure=True,
-                       aws_access_key_id=access_key,
-                       aws_secret_access_key=secret_key,
-                       calling_format=OrdinaryCallingFormat())
+    if not Obj.connect(host=options.host,
+                       port=options.port,
+                       access_key=options.access_key,
+                       secret_key=options.secret_key):
+        logging.error('Unable to contact object store.')
+        sys.exit(1)
 
     if len(args) == 0:
-        usage()
+        parser.print_usage()
+        sys.exit(1)
 
     for arg in args:
         bucket_name, key_name = umobj_get_bucket_key_pair_from_string(arg)
@@ -115,7 +75,7 @@ if __name__ == "__main__":
             logging.info("Creating directory %s in bucket %s" %
                          (key_name, bucket_name))
             try:
-                bucket = obj.get_bucket(bucket_name)
+                bucket = Obj.conn.get_bucket(bucket_name)
             except boto.exception.S3ResponseError, e:
                 logging.error("Can not access bucket %s, %s." %
                               (bucket_name, e.error_code))
@@ -123,11 +83,10 @@ if __name__ == "__main__":
             current_path = ''
             for dir_part in key_name.lstrip(os.sep).split(os.sep):
                 current_path = current_path + dir_part + '/'
-                key = bucket.new_key(current_path)
-                create_directory(key)
+                create_directory(bucket, current_path)
         else:
             try:
-                bucket = obj.create_bucket(bucket_name)
+                bucket = Obj.conn.create_bucket(bucket_name)
                 print "Created bucket %s." % bucket_name
             except boto.exception.S3CreateError, e:
                 logging.error("Cannont create bucket %s, %s.",

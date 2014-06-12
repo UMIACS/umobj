@@ -70,3 +70,41 @@ def umobj_get_bucket_key_pair_from_string(bucket_and_key):
             return (values[0], None)
     else:  # should never reach here
         return (None, None)
+
+
+def lremove(prefix, string):
+    '''Returns string with the prefix removed'''
+    if string.startswith(prefix):
+        return string[len(prefix):]
+
+
+def walk_path(path, character='/'):
+    '''Generator that returns each part of a file like path'''
+    parts = path.strip(character).split(character)
+    for x, y in enumerate(parts):
+        yield '/'.join(parts[0:x+1])
+
+
+def print_word_list(words, preface=None):
+    '''Given an array, print it in a condensed form separated by spaces'''
+    line_length = 79
+    chars_left_in_line = line_length
+    returning = ''
+    if preface is not None:
+        words.insert(0, preface)
+    for word in words:
+        if chars_left_in_line < len(word):
+            returning += '\n'
+            chars_left_in_line = line_length
+        returning += ' %s' % (str(word))
+        chars_left_in_line -= (len(str(word)) + 1)
+
+    return returning
+
+
+def sizeof_fmt(num):
+    for x in ['b ', 'KB', 'MB', 'GB', 'TB', 'PB']:
+        if num < 1024.0:
+            return "%3.1f %s" % (num, x)
+        num /= 1024.0
+    return "%3.1f %s" % (num, x)

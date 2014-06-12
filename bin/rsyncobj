@@ -3,22 +3,14 @@
 import os
 import sys
 import logging
-import boto.s3
-from boto.s3.connection import S3Connection
-from boto.s3.connection import OrdinaryCallingFormat
-import progressbar
-import signal
 
 ## Load our local library functions
 sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
-import umobj
+
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
-    umobj_get_bucket_key_pair_from_string, umobj_add_handler
+    umobj_get_bucket_key_pair_from_string
 from umobj.transfer import obj_upload, obj_download
 from umobj.obj import Obj
-from umobj.options import umobj_parser
-
-pbar = None
 
 
 def usage():
@@ -72,35 +64,80 @@ if __name__ == "__main__":
 
     umobj_init_keyboard_interrupt()
 
-    usage = 'Usage: %prog [OPTION] <BUCKET>[:KEY_PREFIX]+'
-    description = 'Copy Object(s) - ' + \
-                  'Copy objects to and from object store'
-    parser = umobj_parser(usage=usage, description=description)
-    parser.add_recursive(help='Copy files recursively [Default: no]')
-    parser.add_force(help='Force overwrite files when downloading')
-    parser.add_multipart()
-    (options, args) = parser.parse_args()
-    ## setup logging
-    if options.debug:
-        logging_level = logging.DEBUG
-    elif options.verbose:
-        logging_level = logging.INFO
-    else:
-        logging_level = logging.WARNING
-    umobj_logging(logging_level)
+    try:
+        opts, args = getopt.getopt(sys.argv[1:],
+                                   'a:b:s:S:P:hmrfVD',
+                                   ['access_key=', 'secret_key=',
+                                    'server=', 'port=', 'multipart',
+                                    'help', 'recursive', 'force',
+                                    'verbose', 'debug', 'version'])
+    except getopt.GetoptError, err:
+        print str(err)  # will print something like "option -a not recognized"
+        usage()
 
+    force = False
+    multi = False
+    level = logging.WARNING
+    access_key = None
+    secret_key = None
+    bucket_name = None
+    try:
+        server = os.environ['OBJ_SERVER']
+    except:
+        server = 'obj.umiacs.umd.edu'
+    port = 443
+    recursive = False
+
+    for o, a in opts:
+        if o in ('-h', '--help'):
+            usage()
+            sys.exit()
+        if o in ('-a', '--access_key'):
+            access_key = a
+        if o in ('-s', '--secret_key'):
+            secret_key = a
+        if o in ('-b', '--bucket'):
+            bucket_name = a
+        if o in ('-S', '--server'):
+            server = a
+        if o in ('-P', '--port'):
+            port = a
+        if o in ('-m', '--multipart'):
+            multi = True
+        if o in ('-r', '--recursive'):
+            recursive = True
+        if o in ('-f', '--force'):
+            force = True
+        if o in ('-V', '--verbose'):
+            level = logging.INFO
+        if o in ('--version'):
+            print umobj.__version__
+            sys.exit()
+        if o in ('-D', '--debug'):
+            level = logging.DEBUG
+
+    umobj_logging(level)
+
+    logging.info("Using server %s" % server)
     logging.info("Running %s" % sys.argv)
 
-    if not Obj.connect(host=options.host,
-                       port=options.port,
-                       access_key=options.access_key,
-                       secret_key=options.secret_key):
-        logging.error('Unable to contact object store.')
-        sys.exit(1)
+    if access_key is None:
+        try:
+            access_key = os.environ['OBJ_ACCESS_KEY_ID']
+        except:
+            logging.error("Please provide access_key")
+            usage()
+    if secret_key is None:
+        try:
+            secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
+        except:
+            logging.error("Please provide secret_key")
+            usage()
+
+    Obj(host=server, port=port, access_key=access_key, secret_key=secret_key)
 
     if len(args) < 2:
-        parser.print_help()
-        sys.exit(1)
+        usage()
 
     src = args[0]
     dest = args[-1]
@@ -132,8 +169,7 @@ if __name__ == "__main__":
             if len(args) > 2:
                 logging.error("Uploads only support a single BUCKET:SRC " +
                               "and DEST.")
-                parser.print_help()
-                sys.exit(1)
+                usage()
             bucket_name = src_bucket_name
             key_name = src_key_name
             download = True
@@ -145,20 +181,19 @@ if __name__ == "__main__":
         else:
             logging.error("You need to provide a bucket in either SRC " +
                           "or DEST.")
-            parser.print_help()
-            sys.exit(1)
+            usage()
 
     try:
         bucket = Obj.conn.get_bucket(bucket_name)
     except boto.exception.S3ResponseError, e:
         logging.error("Unable to access bucket %s, %s." %
                       (bucket_name, e.error_code))
-        sys.exit(1)
+        sys.exit()
 
     if upload:
         for source in args[0:-1]:
-            obj_upload(bucket_name, source, dest_name, options.recursive,
-                       options.multipart)
+            obj_upload(access_key, secret_key, server, bucket_name, source,
+                       dest_name, recursive, multi)
     if download:
-        obj_download(bucket_name, dest, key_name, options.recursive,
-                     options.multipart)
+        obj_download(access_key, secret_key, server, bucket_name, dest,
+                     key_name, recursive, multi)

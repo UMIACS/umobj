@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import boto
-from boto.s3.connection import S3Connection
-from boto.s3.connection import OrdinaryCallingFormat
 import sys
 import os
 import logging
@@ -12,30 +10,8 @@ sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
 import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
-
-usage_string = """
-SYNOPSIS
-   mvobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
-         [-S/--server <server>] [-P/--port <port>] [-h/--help]
-         [-V/--verbose] [-D/--debug] [--version]
-         SRC_BUCKET:PATH DEST_BUCKET:PATH
-
-   Where
-        access_key  - Your Access Key ID.  If not supplied, mkobj will
-                      use the value of the environment variable
-                      OBJ_ACCESS_KEY_ID
-        secret_key  - Your Secret Access Key.  If not supplied, boto
-                      will use the value of the environment variable
-                      OBJ_SECRET_ACCESS_KEY
-        SRC_BUCKET  - The name of the bucket to copy from.
-        DEST_BUCKET - The name of the bucket to copy to.
-        PATH        - The key name inside the bucket.
-"""
-
-
-def usage():
-    print usage_string
-    sys.exit()
+from umobj.obj import Obj
+from umobj.options import umobj_parser
 
 
 if __name__ == "__main__":
@@ -43,70 +19,32 @@ if __name__ == "__main__":
 
     umobj_init_keyboard_interrupt()
 
-    try:
-        opts, args = getopt.getopt(sys.argv[1:],
-                                   'a:s:S:P:hRDV',
-                                   ['access_key=', 'secret_key=',
-                                    'server=', 'port=', 'help',
-                                    'debug', 'verbose', 'version'])
-    except getopt.GetoptError, err:
-        print str(err)  # will print something like "option -a not recognized"
-        usage()
+    usage = 'Usage: %prog [OPTION] SRC_BUCKET:PATH DEST_BUCKET:PATH'
+    description = 'Move Bucket(s) - Move objects between buckets'
+    parser = umobj_parser(usage=usage, description=description)
+    (options, args) = parser.parse_args()
+    ## setup logging
+    if options.debug:
+        logging_level = logging.DEBUG
+    elif options.verbose:
+        logging_level = logging.INFO
+    else:
+        logging_level = logging.WARNING
+    umobj_logging(logging_level)
 
-    access_key = None
-    secret_key = None
-    level = logging.WARNING
-    try:
-        server = os.environ['OBJ_SERVER']
-    except:
-        server = 'obj.umiacs.umd.edu'
-    port = 443
+    logging.info("Running %s" % sys.argv)
 
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            usage()
-            sys.exit()
-        if o in ('-a', '--access_key'):
-            access_key = a
-        if o in ('-s', '--secret_key'):
-            secret_key = a
-        if o in ('-S', '--server'):
-            server = a
-        if o in ('-P', '--port'):
-            port = a
-        if o in ('--version'):
-            print umobj.__version__
-            sys.exit()
-        if o in ('-V', '--verbose'):
-            level = logging.INFO
-        if o in ('-D', '--debug'):
-            level = logging.DEBUG
-
-    umobj_logging(level)
-
-    if access_key is None:
-        try:
-            access_key = os.environ['OBJ_ACCESS_KEY_ID']
-        except:
-            logging.error("Please provide access_key")
-            usage()
-    if secret_key is None:
-        try:
-            secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
-        except:
-            logging.error("Please provide secret_key")
-            usage()
-
-    obj = S3Connection(host=server,
-                       port=port,
-                       is_secure=True,
-                       aws_access_key_id=access_key,
-                       aws_secret_access_key=secret_key,
-                       calling_format=OrdinaryCallingFormat())
+    if not Obj.connect(host=options.host,
+                       port=options.port,
+                       access_key=options.access_key,
+                       secret_key=options.secret_key):
+        logging.error('Unable to contact object store.')
+        sys.exit(1)
 
     if len(args) != 2:
-        logging.error("Please provide the correct number of arguments")
-        usage()
+        logging.error("Please provide the source and destination")
+        parser.print_help()
+        sys.exit(1)
 
     src_bucket_name, src_key_name = \
         umobj_get_bucket_key_pair_from_string(args[0])
@@ -115,7 +53,7 @@ if __name__ == "__main__":
 
     if src_bucket_name and src_key_name and dest_bucket_name and dest_key_name:
         try:
-            dest_bucket = obj.get_bucket(dest_bucket_name)
+            dest_bucket = Obj.conn.get_bucket(dest_bucket_name)
         except boto.exception.S3ResponseError, e:
             logging.error("Cannot access bucket %s, %s." %
                           (dest_bucket_name, e.error_code))
@@ -127,7 +65,7 @@ if __name__ == "__main__":
                          (src_bucket_name, src_key_name,
                           dest_bucket_name, dest_key_name))
             # be very sure that the object copied before we delete the original
-            obj.get_bucket(src_bucket_name).get_key(src_key_name).delete()
+            Obj.conn.get_bucket(src_bucket_name).get_key(src_key_name).delete()
         except boto.exception.S3ResponseError, e:
             logging.error("SRC %s:%s does not exist" %
                           (src_bucket_name, src_key_name))
@@ -140,4 +78,5 @@ if __name__ == "__main__":
     else:
         logging.error("You need to provide a bucket and key in both the SRC " +
                       "and the DEST.")
-        usage()
+        parser.print_help()
+        sys.exit(1)

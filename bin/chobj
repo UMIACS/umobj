@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import boto
-from boto.s3.connection import S3Connection
-from boto.s3.connection import OrdinaryCallingFormat
 from boto.s3.acl import ACL
 import sys
 import os
@@ -10,15 +8,16 @@ import logging
 
 ## Load our local library functions
 sys.path.insert(0, "%s/.." % os.path.dirname(sys.argv[0]))
-import umobj
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
-from umobj.acl import CANNED_ACLS
+from umobj.obj import Obj
+from umobj.acl import CANNED_ACLS, acl_pairs, split_acl
+from umobj.options import umobj_parser
 
 usage_string = """
 SYNOPSIS
    chobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
-         [-S/--server <server>] [-P/--port <port>] [-h/--help]
+         [-S/--server <server>] [-P/--port <port>] [-r/--recursive] [-h/--help]
          [-p/--policy <policy>]+ [-V/--verbose] [-D/--debug] [--version]
          bucket[:key]+
 
@@ -42,121 +41,105 @@ def usage():
 
 
 if __name__ == "__main__":
-    import getopt
-
     umobj_init_keyboard_interrupt()
 
-    try:
-        opts, args = getopt.getopt(sys.argv[1:],
-                                   'a:s:S:P:hDVp:',
-                                   ['access_key=', 'secret_key=',
-                                    'server=', 'port=', 'help', 'version',
-                                    'policy=', 'debug', 'verbose'])
-    except getopt.GetoptError, err:
-        print str(err)  # will print something like "option -a not recognized"
-        usage()
+    usage = 'Usage: %prog [OPTION] <BUCKET>[:KEY_PREFIX]+'
+    description = 'Change Object - ' + \
+                  'Modify Access Control lists for a set of buckets and/or keys'
+    parser = umobj_parser(usage=usage, description=description)
+    parser.add_recursive(help='Recursively apply ACL to keys')
+    parser.add_mode(choices=['add', 'remove', 'clear'])
+    parser.add_policy()
+    (options, args) = parser.parse_args()
+    ## setup logging
+    if options.debug:
+        logging_level = logging.DEBUG
+    elif options.verbose:
+        logging_level = logging.INFO
+    else:
+        logging_level = logging.WARNING
+    umobj_logging(logging_level)
 
-    access_key = None
-    secret_key = None
-    level = logging.WARNING
-    policies = []
-    try:
-        server = os.environ['OBJ_SERVER']
-    except:
-        server = 'obj.umiacs.umd.edu'
-    port = 443
-
-    for o, a in opts:
-        if o in ('-h', '--help'):
-            usage()
-            sys.exit()
-        if o in ('-a', '--access_key'):
-            access_key = a
-        if o in ('-s', '--secret_key'):
-            secret_key = a
-        if o in ('-S', '--server'):
-            server = a
-        if o in ('-P', '--port'):
-            port = a
-        if o in ('-V', '--verbose'):
-            level = logging.INFO
-        if o in ('--version'):
-            print umobj.__version__
-            sys.exit()
-        if o in ('-D', '--debug'):
-            level = logging.DEBUG
-        if o in ('-p', '--policy'):
-            p = a.split(':', 1)
-            if len(p) is not 2:
-                print "ERROR: %s policy is not in the right format" % a
-                sys.exit(1)
-            if p[1] not in CANNED_ACLS:
-                print "ERROR: %s is not a supported canned acl" % p[1]
-                print "       Supported: %s" % ', '.join(CANNED_ACLS)
-                sys.exit(1)
-            policies.append(tuple(p))
-
-    umobj_logging(level)
-
-    logging.info("Using server %s" % server)
     logging.info("Running %s" % sys.argv)
 
-    if access_key is None:
-        try:
-            access_key = os.environ['OBJ_ACCESS_KEY_ID']
-        except:
-            logging.error("Please provide access_key")
-            usage()
-    if secret_key is None:
-        try:
-            secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
-        except:
-            logging.error("Please provide secret_key")
-            usage()
+    if options.mode is None:
+        logging.error('Please provide a mode.')
+        parser.print_help()
+        sys.exit()
 
-    obj = S3Connection(host=server,
-                       port=port,
-                       is_secure=True,
-                       aws_access_key_id=access_key,
-                       aws_secret_access_key=secret_key,
-                       calling_format=OrdinaryCallingFormat())
+    if options.policies is None:
+        logging.error('One or more policy ACL is required.')
+        parser.print_help()
+        sys.exit(1)
 
-    ## construct the ACL
-    acl = ACL()
-    for u, g in policies:
-        acl.add_user_grant(g, u)
+    if not Obj.connect(host=options.host,
+                       port=options.port,
+                       access_key=options.access_key,
+                       secret_key=options.secret_key):
+        logging.error('Unable to contact object store.')
+        sys.exit(1)
 
     if len(args) == 0:
-        usage()
+        parser.print_help()
+        sys.exit(1)
+
     for bucket_name in args:
         bucket_name, key_prefix_name = \
             umobj_get_bucket_key_pair_from_string(bucket_name)
         try:
-            bucket = obj.get_bucket(bucket_name)
+            bucket = Obj.conn.get_bucket(bucket_name)
         except boto.exception.S3ResponseError, e:
             logging.error("Can not access bucket %s, %s." %
                           (bucket_name, e.error_code))
-            sys.exit(1)
+            continue
 
         ## we use the bucket policy as a starting point
         policy = bucket.get_acl()
-        policy.acl = acl
-        logging.info("Policy: %s" % policy)
+        logging.info('Current ACL Policy %s' % ', '.join(acl_pairs(policy.acl)))
+
+        if options.mode == 'add':
+            for p in options.policies:
+                u, g = split_acl(p)
+                policy.acl.add_user_grant(g, u)
+        elif options.mode == 'remove':
+            grants = []
+            for grant in policy.acl.grants:
+                for p in options.policies:
+                    u, g = split_acl(p)
+                    if grant.permission != g  or grant.id != u:
+                        grants.append(grant)
+            policy.acl.grants = grants
+        elif options.mode == 'clear':
+            acl = ACL()
+            print options.policies
+            for p in options.policies:
+                u, g = split_acl(p)
+                acl.add_user_grant(g, u)
+            policy.acl = acl
+
+        logging.info('ACL Policy to be applied %s' %
+                     ', '.join(acl_pairs(policy.acl)))
 
         if key_prefix_name:
-            logging.info("Working on %s in bucket %s" %
-                         (key_prefix_name, bucket_name))
             for key in bucket.list(prefix=key_prefix_name):
                 try:
-                    logging.info("Working on key %s" % key)
+                    logging.info("Applying ACL to %s:%s" % (bucket.name,
+                                                            key.name))
                     key.set_acl(policy)
                 except boto.exception.S3ResponseError:
                     pass
         else:
-            logging.info("Working on bucket %s" % bucket_name)
-            for key in bucket.get_all_keys():
-                try:
-                    logging.info("Working on key %s" % key)
-                    key.set_acl(policy)
-                except boto.exception.S3ResponseError:
-                    pass
+            logging.info("Applying ACL to bucket %s." % bucket.name)
+            try:
+                bucket.set_acl(policy)
+            except boto.exception.S3ResponseError:
+                logging.warning('Unable to set bucket ACL %s' %
+                                ', '.join(acl_pairs(policy.acl)))
+            if options.recursive:
+                for key in bucket.get_all_keys():
+                    try:
+                        logging.info("Applying ACL to %s:%s" % (bucket.name,
+                                                                key.name))
+                        key.set_acl(policy)
+                    except boto.exception.S3ResponseError:
+                        pass
