@@ -45,7 +45,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     src = args.SOURCE[0]
-    dest = args.DESTINATION[1]
+    dest = args.DESTINATION[0]
     upload = False
     download = False
     src_bucket_name, src_key_name = \
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if upload:
-        obj_upload(bucket_name, src, dest_name, args.recursive, args.multipart)
+        obj_upload(bucket_name, src, dest_name, True, args.multipart)
     if download:
-        obj_download(bucket_name, dest, key_name, args.recursive,
+        obj_download(bucket_name, dest, key_name, True,
                      args.multipart)

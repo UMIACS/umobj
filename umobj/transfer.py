@@ -177,7 +177,7 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False):
                                             f)
                 else:
                     keyname = '%s/%s' % (prefix, f)
-                if not check_key_upload(bucket, keyname, file_st):
+                if not check_key_upload(bucket, keyname, filename):
                     continue
                 logging.info("Upload key %s from file %s" %
                              (keyname, filename))

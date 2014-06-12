@@ -1,6 +1,6 @@
 import logging
-from pytz import utc
-from datetime import datetime
+
+from umobj.md5 import compute_key_md5, compute_file_md5
 
 log = logging.getLogger(__name__)
 
@@ -37,23 +37,25 @@ def check_directory(bucket, directory):
         return False
 
 
-def check_key_upload(bucket, key_name, file_st):
-    '''Given a key_name and a os.stat() output decide
-       to update the key in the object store'''
+
+def check_key_upload(bucket, key_name, filename):
+    '''Given a bucket, key_name and the filename locally check for update
+       via MD5 sum'''
     key = bucket.get_key(key_name)
     if key is not None:
-        if key.size == file_st.st_size:
-            try:
-                key_mod_dt = utc.localize(datetime.strptime(key.last_modified,
-                                          '%a, %d %b %Y %H:%M:%S %Z'))
-            except ValueError:
-                return True
-            log.debug('Key modified date : %s' % key_mod_dt)
-            print file_st.st_mtime
-            file_mod_dt = utc.localize(datetime.fromtimestamp(file_st.st_mtime))
-            log.debug('File modified date : %s' % file_mod_dt)
-            if key_mod_dt > file_mod_dt:
-                log.info('No update required %s:%s' % (bucket.name,
-                                                           key_name))
-                return False
-    return True
+        file_md5 = compute_file_md5(filename)
+        etag = key.etag.strip('\"')
+        if etag.startswith('-'):
+            ## multipart upload need to read all data and compute
+            log.info('Computing MD5 of %s:%s' % (bucket.name, key_name))
+            key_md5 = compute_key_md5(bucket, key_name)
+        else:
+            key_md5 = etag
+        if file_md5 == key_md5:
+            log.info('File MD5 %s != Key MD5 %s' % (file_md5, key_md5))
+            return True
+        else:
+            return False
+    else:
+        log.info('Key doet not exist, need to upload.')
+        return True
