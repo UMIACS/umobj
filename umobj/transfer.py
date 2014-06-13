@@ -62,7 +62,7 @@ def download_file(key, filename, progress=True):
         pbar.start()
         if filename.endswith('/'):
             if not os.path.isdir(filename):
-                logging.info("Creating directory %s." % filename)
+                logging.info("Creating directory %s" % filename)
                 os.makedirs(filename)
             else:
                 logging.info("Directory %s already exists, skipping." %
