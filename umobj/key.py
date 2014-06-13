@@ -1,3 +1,4 @@
+import os
 import logging
 
 from umobj.md5 import compute_key_md5, compute_file_md5
