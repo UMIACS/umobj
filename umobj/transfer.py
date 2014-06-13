@@ -55,7 +55,7 @@ def upload_file(key, filename, progress=True):
 
 
 def download_file(key, filename, progress=True):
-    logging.info("Downloading %s with %d bytes." % (filename, key.size))
+    logging.info("Downloading to %s with %d bytes." % (filename, key.size))
     global pbar
     if key.size is 0:
         pbar = progressbar.ProgressBar(maxval=100)

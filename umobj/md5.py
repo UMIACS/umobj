@@ -35,7 +35,7 @@ def compute_key_md5(bucket, key_name):
         bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(size)),
                               5242880)
         chunk_amount = int(math.ceil(size / float(bytes_per_chunk)))
-        log.info("Total Bytes: %d " % size +
+        log.info("MD5 Total Bytes: %d " % size +
                  "Bytes/Chunk : %d " % bytes_per_chunk +
                  "Chunks : %d" % chunk_amount)
         #pbar.start()
@@ -45,7 +45,7 @@ def compute_key_md5(bucket, key_name):
             bytes = min([bytes_per_chunk, remaining_bytes])
             start_byte = offset
             end_byte = offset + bytes - 1
-            log.info("Processing bytes %d - %d" % (start_byte, end_byte))
+            log.info("MD5 Processing bytes %d - %d" % (start_byte, end_byte))
             key_range = Obj.conn.make_request('GET',
                                               bucket=bucket.name,
                                               key=key_name,
