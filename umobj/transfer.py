@@ -3,6 +3,7 @@ import os
 import progressbar
 import signal
 from umobj.key import check_directory, create_directory, check_key_upload
+from umobj.key import check_key_download
 from umobj.utils import umobj_add_handler, walk_path, lremove
 from umobj.multipart import MultiPart
 from umobj.obj import Obj
