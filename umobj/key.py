@@ -62,3 +62,33 @@ def check_key_upload(bucket, key_name, filename):
     else:
         log.info('Key doet not exist, need to upload.')
         return True
+
+
+def check_key_download(bucket, key_name, filename):
+    '''Given a bucket, key_name and the filename check to see if we need to
+       update via the MD5 sum'''
+    if os.exists(filename):
+        key = bucket.get_key(key_name)
+        file_md5 = compute_file_md5(filename)
+        if key is not None:
+            etag = key.etag.strip('\"')
+            log.debug('Etag %s' % etag)
+            if '-' in etag:
+                ## multipart upload need to read all data and compute
+                log.info('Computing MD5 of %s:%s' % (bucket.name, key_name))
+                key_md5 = compute_key_md5(bucket, key_name)
+            else:
+                key_md5 = etag
+            log.info('Key %s:%s has MD5 %s' % (bucket.name, key_name,
+                                               key_md5))
+            if file_md5 != key_md5:
+                log.info('File MD5 %s != Key MD5 %s' % (file_md5, key_md5))
+                return True
+            else:
+                return False
+        else:
+            log.error('Key does not exist %s:%s' % (bucket.name, key_name))
+            return True
+    else:
+        log.info('File does not exist, download required.')
+        return True

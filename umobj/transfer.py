@@ -62,6 +62,9 @@ def download_file(key, filename, progress=True):
         pbar.start()
         if filename.endswith('/'):
             if not os.path.isdir(filename):
+                if os.path.isfile(filename.rstrip('/')):
+                    logging.critical('%s already a file can not make directory')
+                    sys.exit(1)
                 logging.info("Creating directory %s" % filename)
                 os.makedirs(filename)
             else:
@@ -94,6 +97,8 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
         else:
             for key in bucket.list(prefix=key_name):
                 filename = dest.rstrip(os.sep) + os.sep + key.name
+                if not check_key_download(bucket, key.name, filename):
+                    continue
                 logging.info("Downloading key %s (%d) to %s" %
                              (key, key.size, filename))
                 if multi and key.size > 5 * 1024 * 1024:
@@ -115,6 +120,8 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
             if key is None:
                 logging.error("Key does not exist or if this is a prefix" +
                               " you need to specify recusive, %s" % key_name)
+                return
+            if not check_key_download(bucket, key.name, dest):
                 return
             ## only multipart if we specify and the key is >5MB
             if multi and key.size > 5 * 1024 * 1024:
