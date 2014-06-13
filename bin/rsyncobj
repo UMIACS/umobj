@@ -94,7 +94,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if upload:
-        obj_upload(bucket_name, src, dest_name, args.recursive, args.multipart)
+        obj_upload(bucket_name, src, dest_name, args.recursive, args.multipart,
+                   True)
     if download:
         obj_download(bucket_name, dest, key_name, args.force, args.recursive,
-                     args.multipart)
+                     args.multipart, True)

@@ -87,7 +87,7 @@ def download_file(key, filename, progress=True):
 
 
 def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
-                 multi=False):
+                 multi=False, checksum=False):
     bucket = Obj.conn.get_bucket(bucket_name)
     if recursive:
         logging.info("Starting recursive download %s to %s prefix %s" %
@@ -122,7 +122,7 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
                 logging.error("Key does not exist or if this is a prefix" +
                               " you need to specify recusive, %s" % key_name)
                 return
-            if not check_key_download(bucket, key.name, dest):
+            if checksum and not check_key_download(bucket, key.name, dest):
                 return
             ## only multipart if we specify and the key is >5MB
             if multi and key.size > 5 * 1024 * 1024:
@@ -135,7 +135,8 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
                 download_file(key, dest)
 
 
-def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False):
+def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
+               checksum=False):
     # retranslate to the full absolute path
     src = os.path.abspath(src)
     # retieve the bucket
@@ -185,7 +186,7 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False):
                                             f)
                 else:
                     keyname = '%s/%s' % (prefix, f)
-                if not check_key_upload(bucket, keyname, filename):
+                if checksum and not check_key_upload(bucket, keyname, filename):
                     continue
                 logging.info("Upload key %s from file %s" %
                              (keyname, filename))
@@ -214,6 +215,8 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False):
                 key_name = current_path + os.path.basename(src)
         else:
             key_name = os.path.basename(src)
+        if checksum and not check_key_upload(bucket, key_name, src):
+            continue
         if multi or (size > (1024*1024*1024)):
             logging.info("Starting a multipart upload.")
             m = MultiPart()
