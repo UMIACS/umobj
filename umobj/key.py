@@ -68,7 +68,7 @@ def check_key_upload(bucket, key_name, filename):
 def check_key_download(bucket, key_name, filename):
     '''Given a bucket, key_name and the filename check to see if we need to
        update via the MD5 sum'''
-    if os.exists(filename):
+    if os.path.exists(filename):
         key = bucket.get_key(key_name)
         file_md5 = compute_file_md5(filename)
         if key is not None:
