@@ -216,7 +216,7 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
         else:
             key_name = os.path.basename(src)
         if checksum and not check_key_upload(bucket, key_name, src):
-            continue
+            return
         if multi or (size > (1024*1024*1024)):
             logging.info("Starting a multipart upload.")
             m = MultiPart()
