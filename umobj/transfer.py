@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import progressbar
 import signal
 from umobj.key import check_directory, create_directory, check_key_upload

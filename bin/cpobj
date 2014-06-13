@@ -14,52 +14,6 @@ from umobj.options import umobj_parser
 pbar = None
 
 
-def usage():
-    prog_name = os.path.basename(sys.argv[0])
-    usage_string = """
-NAME
-    %s - Copy files to and from an S3 compatible object store
-
-SYNOPSIS
-    %s [OPTION]... SRC [SRC]+ BUCKET[:DEST]
-
-    %s [OPTION]... BUCKET[:SRC] DEST
-
-OPTIONS SUMMARY
-
-    -a, --access_key <access_key>  Object store access key
-    -s, --secret_key <secret_key>  Object store secret key
-    -S, --server <server>          Object store server name
-    -P, --port <port>              Object store server port [Default: 443]
-    -m, --multipart                Instantiate multipart transfer [Default: no]
-    -r, --recursive                Copy files recursively [Default: no]
-    -f, --force                    Force overwrite files in download mode
-    -V, --verbose                  Verbose mode
-        --version                  Print version
-    -D, --debug                    Debug mode
-    -h, --help
-
-OPTIONS
-    access_key  - Your Access Key ID.  If not supplied, boto will
-                  use the value of the environment variable OBJ_ACCESS_KEY_ID.
-    secret_key  - Your Secret Access Key.  If not supplied, will use the value
-                  of the environment variable OBJ_SECRET_ACCESS_KEY.
-    server      - The object storage server you want to connect to.  This can
-                  be overridden by the OBJ_SERVER environment variable.
-    BUCKET      - The bucket that is to be used for this copy operation.  This
-                  is necessary on one and only one of the SRC and DEST
-                  arguments.
-    SRC         - Local file system directory/file or object store key.  A
-                  directory is allowed for uploads if recursive is turned on,
-                  and is allowed for download.
-    DEST        - Local file system directory/file or object store key.  A
-                  directory is allowed for downloads.
-
-""" % (prog_name, prog_name, prog_name)
-    print usage_string
-    sys.exit()
-
-
 if __name__ == "__main__":
 
     umobj_init_keyboard_interrupt()
