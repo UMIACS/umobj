@@ -35,8 +35,9 @@ def compute_key_md5(bucket, key_name):
         bytes_per_chunk = max(int(math.sqrt(5242880) * math.sqrt(size)),
                               5242880)
         chunk_amount = int(math.ceil(size / float(bytes_per_chunk)))
-        log.info("Bytes/Chunk : %d " % bytes_per_chunk +
-                 "Chunk Amount : %d" % chunk_amount)
+        log.info("Total Bytes: %d " % size +
+                 "Bytes/Chunk : %d " % bytes_per_chunk +
+                 "Chunks : %d" % chunk_amount)
         #pbar.start()
         for i in range(chunk_amount):
             offset = i * bytes_per_chunk
