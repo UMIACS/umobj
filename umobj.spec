@@ -10,9 +10,6 @@ URL: https://staff.umiacs.umd.edu/gitlab/staff/UMobj
 Source0: %{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}
 Requires: %{python}, %{python}-boto, %{python}-progressbar, %{python}-filechunkio
-%if 0%{rhel} < 7
-Requires: %{python}-argparse
-%endif 
 BuildArch: noarch
 
 %description
