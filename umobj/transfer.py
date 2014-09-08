@@ -87,6 +87,11 @@ def download_file(key, filename, progress=True):
     pbar.finish()
 
 
+def obj_key(bucket_name, key_name):
+    bucket = Obj.conn.get_bucket(bucket_name)
+    return bucket.get_key(key_name)
+
+
 def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
                  multi=False, checksum=False):
     bucket = Obj.conn.get_bucket(bucket_name)
@@ -166,6 +171,11 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
             directory = directory + '/'
             if not check_directory(bucket, directory):
                 create_directory(bucket, directory)
+        operations = sum([len(files) for r, d, files in \
+                         os.walk(src.rstrip(os.sep))])
+        pbar = progressbar.ProgressBar(maxval=operations)
+        pbar.start()
+        count = 0
         for root, dirs, files in os.walk(src.rstrip(os.sep)):
             # we will not create the base directory
             if root != src:
@@ -173,6 +183,9 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
                                         lremove(src, root).lstrip(os.sep))
                 if not check_directory(bucket, directory):
                     create_directory(bucket, directory)
+                    count += 1
+                    if count < operations:
+                        pbar.update(count)
             for f in files:
                 filename = root + os.sep + f
                 try:
@@ -196,10 +209,14 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
                     m.start_upload(bucket_name, keyname, filename, policy)
                 else:
                     key = bucket.new_key(keyname)
-                    res = upload_file(key, filename)
+                    res = upload_file(key, filename, progress=False)
                     if res >= 0:
                         logging.debug("Applying bucket policy %s" % policy)
                         key.set_acl(policy)
+                count += 1
+                if count < operations:
+                    pbar.update(count)
+        pbar.finish()
     else:
         if os.path.isdir(src):
             logging.warning("Skipping directory %s, " % src +
