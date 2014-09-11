@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     try:
         bag = bagit.Bag(src)
-        logging.info('Bag %s already exists not rebaging.' % src)
+        logging.info('Bag %s already exists; not rebaging.' % src)
     except bagit.BagError:
         qset = QuestionSet()
         qset.add(Question('Contact Name', 'Contact-Name'))
@@ -90,14 +90,15 @@ if __name__ == "__main__":
     if bagit_txt is not None:
         obj_entries = load_bag_checksums(bucket_name, key_path)
         if cmp(obj_entries, bag.entries) != 0:
-            logging.error('Conflict between manifest in file system and ' + \
-                          'object store.  Please remove or rename bag ' + \
-                          'in object store before trying to continue.')
+            logging.error('Conflict between manifest in filesystem and ' + \
+                          'object store.  Please remove or rename the bag ' + \
+                          'in the object store before trying to continue.')
             sys.exit(1)
         logging.info('Bag is already uploaded.  You can do a full ' + \
                      'validation with the cmpobj command.')
     else:
         obj_upload(bucket_name, src, dest_key_name, True, args.multipart)
         print 'Bag successfully uploaded to object store.'
-        print 'Please verify and when confident you may remove local ' + \
-               'filesystem directory %s.' % os.path.abspath('src')
+        print 'Please verify the content and, when confident, you may ' + \
+              'remove the local ' + \
+              'filesystem directory: %s.' % os.path.abspath(src)
