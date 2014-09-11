@@ -37,7 +37,7 @@ if __name__ == "__main__":
         logging.error('Unable to contact object store.')
         sys.exit(1)
 
-    for arg in args.S3PATH:
+    for arg in args.BUCKET:
         bucket_name, key_name = umobj_get_bucket_key_pair_from_string(arg)
         if key_name:
             logging.info("Creating directory %s in bucket %s" %
