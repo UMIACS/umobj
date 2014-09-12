@@ -5,6 +5,14 @@ from umobj.transfer import obj_key
 log = logging.getLogger(__name__)
 
 
+def get_bag_checksumming_algorithm(bucket_name, key_path):
+    for algo in bagit.checksum_algos:
+        manifest = obj_key(bucket_name, '%s/manifest-%s.txt' % (key_path, algo))
+        if manifest is not None:
+            return algo
+    return None
+
+
 def obj_checksums(bucket_name, key_path):
     for algo in bagit.checksum_algos:
         manifest = obj_key(bucket_name, '%s/manifest-%s.txt' % (key_path, algo))
