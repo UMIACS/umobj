@@ -1,17 +1,19 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH md5obj 1 10/21/2013 UMobj "md5obj Utility"
+.TH cmpobj 1 9/12/2014 UMobj "cmpobj Utility"
 
 .SH NAME
-md5obj - generate md5 sum for keys in the Object Store
+cmpobj - retrieve md5 sum for keys in the Object Store
 
 .SH SYNOPSIS
-md5obj [-a/--access_key=<access_key>] [-s/--secret_key=<secret_key>]
+cmpobj [-a/--access_key=<access_key>] [-s/--secret_key=<secret_key>]
        [-S/--server=<server>] [-P/--port=<port>] [-h/--help]
-       [-V/--verbose] [-D/--debug] [--version]
+       [-V/--verbose] [-D/--debug] [--version] [-v/--verify-bag]
        bucket:key
 
 .SH DESCRIPTION
-md5obj will generate the md5 sum of the given key in a bucket.  It will not use a temporary file, but does need to fetch all bytes of the key with a multipart download to generate the correct hash.  Please note that on very large keys this can take a significant amount of time.
+cmpobj will generate the md5 sum of the given key in a bucket.  It will not use a temporary file, but does need to fetch all bytes of the key with a multipart download to generate the correct hash.  Please note that on very large keys this can take a significant amount of time.
+
+Secondly, cmpobj can verify the contents of a Bagit archive.  It does this by retrieving the manifest and comparing the expected integrity checksum with the actual one computed from pulling each key down from the Object Store.
 
 .SH OPTIONS
 
@@ -30,6 +32,10 @@ This option allows you to specify an Object Store server.  If not supplied, chob
 .TP
 \fB-P, --port=<port>\fR
 Object Store server port [Default: 443]
+
+.TP
+\fB-v, --verify-bag\fR
+Verify bagit archive.  You will still need to pass in the \fIBUCKET\fR:\fIKEY\R combination that contains the archive.
 
 .TP
 \fB---version\fR

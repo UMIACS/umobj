@@ -35,7 +35,7 @@ rm -rf %{buildroot}
 %{_bindir}/chobj
 %{_bindir}/cpobj
 %{_bindir}/lsobj
-%{_bindir}/md5obj
+%{_bindir}/cmpobj
 %{_bindir}/mkobj
 %{_bindir}/mvobj
 %{_bindir}/rmobj
