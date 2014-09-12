@@ -79,7 +79,7 @@ if __name__ == "__main__":
         logging.info('bag_info %s' % answers)
         bag = bagit.make_bag(src, answers)
 
-    basename = os.path.basename(os.path.abspath('src'))
+    basename = os.path.basename(os.path.abspath(src))
 
     if dest_key_name is None:
         key_path = src.split(os.sep)[-1]
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         key_path = '%s/%s' % (dest_key_name, src.split(os.sep)[-1])
 
     bagit_txt = obj_key(bucket_name, '%s/bagit.txt' % key_path)
-    if bagit_txt is not None:
+    if bagit_txt is not None:   # bag may already exist
         obj_entries = load_bag_checksums(bucket_name, key_path)
         if cmp(obj_entries, bag.entries) != 0:
             logging.error('Conflict between manifest in filesystem and ' + \
@@ -96,7 +96,7 @@ if __name__ == "__main__":
             sys.exit(1)
         logging.info('Bag is already uploaded.  You can do a full ' + \
                      'validation with the cmpobj command.')
-    else:
+    else:  # bag does not appear to exist
         obj_upload(bucket_name, src, dest_key_name, True, args.multipart)
         print 'Bag successfully uploaded to object store.'
         print 'Please verify the content and, when confident, you may ' + \
