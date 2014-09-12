@@ -88,8 +88,12 @@ def download_file(key, filename, progress=True):
 
 
 def obj_key(bucket_name, key_name):
+    '''Return a Key object given bucket_name and key_name'''
     bucket = Obj.conn.get_bucket(bucket_name)
-    return bucket.get_key(key_name)
+    if bucket:
+        return bucket.get_key(key_name)
+    else:
+        return None
 
 
 def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
