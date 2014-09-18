@@ -9,7 +9,7 @@ License: unknown
 URL: https://staff.umiacs.umd.edu/gitlab/staff/UMobj
 Source0: %{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}
-Requires: %{python}, %{python}-boto, %{python}-progressbar, %{python}-filechunkio
+Requires: %{python}, %{python}-boto, %{python}-progressbar, %{python}-filechunkio, %{python}-bagit
 BuildArch: noarch
 
 %description
