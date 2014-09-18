@@ -5,14 +5,32 @@ import sys
 import logging
 import boto.s3
 import bagit
+import shutil
+from tempfile import mkdtemp
+
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
-from umobj.verify import load_bag_checksums
+from umobj.verify import obj_checksums, load_bag_checksums
+from umobj.tar import make_tarfile_from_files
 from umobj.transfer import obj_upload, obj_download, obj_key
+from umobj.email_utils import send_email
 from umobj.obj import Obj
 from umobj.options import umobj_parser
 from qav.questions import Question, QuestionSet
 from qav.validators import EmailValidator
+
+body_text = '''
+This is a report of the following BagIt run.  Please find attached the manifest from the job that just completed.
+
+Details
+=======
+Source Directory: %(source)s
+Destination: %(dest)s
+Contact Name: %(Contact-Name)s
+Contact Email: %(Contact-Email)s
+Description: %(External-Description)s
+
+'''
 
 pbar = None
 
@@ -99,6 +117,35 @@ if __name__ == "__main__":
     else:  # bag does not appear to exist
         obj_upload(bucket_name, src, dest_key_name, True, args.multipart)
         print 'Bag successfully uploaded to object store.'
-        print 'Please verify the content and, when confident, you may ' + \
-              'remove the local ' + \
+
+        tmp_path = mkdtemp(prefix='umobj_bagit-', dir='/tmp')
+        manifest_filename = '%s/manifest' % tmp_path
+        compressed_manifest_filename = '%s/manifest.tar.gz' % tmp_path
+        algo, uncompressed_manifest_content = obj_checksums(bucket_name,
+                                                            key_path)
+
+        # write stored manifest out to a tmp file
+        with open(manifest_filename, 'w') as f:
+            f.write(uncompressed_manifest_content)
+
+        make_tarfile_from_files(compressed_manifest_filename,
+                                [manifest_filename],
+                                squash_hierarchy=True)
+
+        body_text_info = dict(answers)
+        body_text_info['source'] = src
+        body_text_info['dest'] = dest
+
+        # email the mainfests
+        send_email(send_from='bagobj@umiacs.umd.edu',
+                   send_to=[answers['Contact-Email']],
+                   subject='Bagobj report for %s' % os.path.abspath(src),
+                   body_text=body_text % body_text_info,
+                   files=[compressed_manifest_filename])
+
+        # delete the temporary files/directory
+        shutil.rmtree(tmp_path)
+
+        print 'Please verify the content and you may, ' + \
+              'when confident, remove the local ' + \
               'filesystem directory: %s.' % os.path.abspath(src)
