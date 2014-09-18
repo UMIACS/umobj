@@ -1,0 +1,55 @@
+./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
+.TH bagobj 1 9/18/2014 UMobj "bagobj Utility"
+
+.SH NAME
+bagobj - archive a directory to Object Storage using the BagIt format
+
+.SH SYNOPSIS
+bagobj [-a/--access_key=<access_key>] [-s/--secret_key=<secret_key>]
+      [-S/--server=<server>] [-P/--port=<port>] [-h/--help] [--version]
+      [-p/--policy=<policy>]+ [-V/--verbose] [-D/--debug]
+      bucket[:key]+
+
+.SH DESCRIPTION
+bagobj supports the creation of BagIt archives, which package hierarchical filesystems.  BagIt is a format developed by the United States Library of Congress to support the archival of arbitrary digital content.  The contents of a BagIt archive can be verified by using the \fBcmpobj\fR utility.
+
+.SH OPTIONS
+
+.TP
+\fB-a, --access_key=<access_key>\fR
+This option allows you to specify an Object Store access key.  If not supplied, bagobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
+
+.TP 
+\fB-s, --secret_key=<secret_key>\fR
+This option allows you to specify an Object Store secret key.  If not supplied, bagobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
+
+.TP
+\fB-S, --server=<server>\fR
+This option allows you to specify an Object Store server.  If not supplied, bagobj will use the value of the environment variable \fIOBJ_SERVER\fR.
+
+.TP
+\fB-P, --port=<port>\fR
+Object Store server port [Default: 443]
+
+.TP
+\fB---version\fR
+Print the version.
+
+.TP
+\fB-V/--verbose\fR
+Allow for more verbose output.
+
+.TP
+\fB-D/--debug\fR
+Running in debug mode prints detailed information about the calls being made against the Object Store.  This debugging information can be useful to UMIACS Staff if you have encountered a problem and need assistance.
+
+.TP
+\fB-h, --help\fR
+Help menu
+
+.SH AUTHOR
+UMIACS Staff
+
+.SH SEE ALSO
+chobj(1), cmpobj(1), cpobj(1), lsobj(1), mkobj(1), mvobj(1),
+rmobj(1), syncobj(1)
