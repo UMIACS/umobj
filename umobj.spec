@@ -6,7 +6,7 @@ Version: =VERSION=
 Release: 1
 Group: UMIACS
 License: unknown
-URL: https://staff.umiacs.umd.edu/gitlab/staff/UMobj
+URL: https://gitlab.umiacs.umd.edu/staff/umobj
 Source0: %{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}
 Requires: %{python}, %{python}-boto, %{python}-progressbar, %{python}-filechunkio, %{python}-bagit
