@@ -36,7 +36,7 @@ setup(name="umobj",
                "bin/lsobj",
                "bin/mkobj",
                "bin/mvobj",
-               "bin/rmobj"
+               "bin/rmobj",
                "bin/syncobj"
                ],
       url="https://staff.umiacs.umd.edu/gitlab/staff/UMobj",
