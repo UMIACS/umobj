@@ -18,27 +18,35 @@ if sys.version_info <= (2, 5):
     print >> sys.stderr, error
     sys.exit(1)
 
+
 def readme():
     with open("README.md") as f:
         return f.read()
 
-setup(name = "umobj",
-      version = __version__,
-      description = "UMIACS Object Storage Commands",
-      long_description = readme(),
-      author = "Derek Yarnell",
-      author_email = "derek@umiacs.umd.edu",
-      scripts = ["bin/chobj", "bin/cpobj", "bin/lsobj",
-                 "bin/md5obj", "bin/mkobj", "bin/mvobj",
-                 "bin/rmobj"],
-      url = "https://staff.umiacs.umd.edu/gitlab/staff/UMobj",
-      packages = ["umobj"],
-      platforms = "Posix; MacOS X; Windows",
-      classifiers = ["Development Status :: 5 - Production/Stable",
-                     "Operating System :: OS Independent",
-                     "Topic :: Internet",
-                     "Programming Language :: Python :: 2",
-                     "Programming Language :: Python :: 2.6",
-                     "Programming Language :: Python :: 2.7"],
+setup(name="umobj",
+      version=__version__,
+      description="UMIACS Object Storage Commands",
+      long_description=readme(),
+      author="Derek Yarnell",
+      author_email="derek@umiacs.umd.edu",
+      scripts=["bin/bagobj",
+               "bin/chobj",
+               "bin/cmpobj",
+               "bin/cpobj",
+               "bin/lsobj",
+               "bin/mkobj",
+               "bin/mvobj",
+               "bin/rmobj",
+               "bin/syncobj"
+               ],
+      url="https://staff.umiacs.umd.edu/gitlab/staff/UMobj",
+      packages=["umobj"],
+      platforms="Posix; MacOS X; Windows",
+      classifiers=["Development Status :: 5 - Production/Stable",
+                   "Operating System :: OS Independent",
+                   "Topic :: Internet",
+                   "Programming Language :: Python :: 2",
+                   "Programming Language :: Python :: 2.6",
+                   "Programming Language :: Python :: 2.7"],
       **extra
       )

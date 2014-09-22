@@ -9,6 +9,7 @@ from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
 from umobj.obj import Obj
 from umobj.options import umobj_parser
 from umobj.md5 import compute_key_md5
+from umobj.verify import load_bag_checksums, get_bag_checksumming_algorithm
 
 
 if __name__ == "__main__":
@@ -16,8 +17,10 @@ if __name__ == "__main__":
 
     description = 'List Object(s)'
     parser = umobj_parser(description=description)
-    parser.add_s3path(number=1, help='BUCKET:KEY')
+    parser.add_s3path(number='+', help='BUCKET:KEY')
+    parser.add_verify_bag()
     args = parser.parse_args()
+
     ## setup logging
     if args.debug:
         logging_level = logging.DEBUG
@@ -46,6 +49,22 @@ if __name__ == "__main__":
                       (bucket_name, e.error_code))
         sys.exit(1)
 
-    md5 = compute_key_md5(bucket, key_name)
-    if md5 is not None:
-        print md5
+    if args.verify_bag:  # comparing/verifying a bagit archive 
+        logging.debug("Verifying the integrity of bag %s in buket %s." %
+                      (key_name, bucket_name))
+        entries = load_bag_checksums(bucket_name, key_name)
+        algo = get_bag_checksumming_algorithm(bucket_name, key_name)
+        for entry in entries:
+            entry_path = '%s/%s' % ('liamfoo', entry)
+            expected_md5 = entries[entry][algo]
+            actual_md5 = compute_key_md5(bucket, entry_path)
+            if expected_md5 != actual_md5:
+                logging.error('The integrity of this bag is compromised')
+                logging.debug('key: %s, actual: %s, expected: %s' %
+                              (entry_path, actual_md5, expected_md5))
+                sys.exit(1)  # we should probably list all mismatched keys
+        logging.info('Successfully verified the integrity of the archive.')
+    else:  # computing md5 for a single key
+        md5 = compute_key_md5(bucket, key_name)
+        if md5 is not None:
+            print md5

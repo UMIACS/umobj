@@ -70,7 +70,8 @@ if __name__ == "__main__":
 
         ## we use the bucket policy as a starting point
         policy = bucket.get_acl()
-        logging.info('Current ACL Policy %s' % ', '.join(acl_pairs(policy.acl)))
+        logging.info('Current ACL Policy: %s' %
+                     ', '.join(acl_pairs(policy.acl)))
 
         if args.mode == 'add':
             for p in args.policies:
@@ -92,7 +93,7 @@ if __name__ == "__main__":
                 acl.add_user_grant(g, u)
             policy.acl = acl
 
-        logging.info('ACL Policy to be applied %s' %
+        logging.info('ACL Policy to be applied: %s' %
                      ', '.join(acl_pairs(policy.acl)))
 
         if key_prefix_name:

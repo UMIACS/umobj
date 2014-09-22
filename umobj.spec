@@ -6,10 +6,10 @@ Version: =VERSION=
 Release: 1
 Group: UMIACS
 License: unknown
-URL: https://staff.umiacs.umd.edu/gitlab/staff/UMobj
+URL: https://gitlab.umiacs.umd.edu/staff/umobj
 Source0: %{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}
-Requires: %{python}, %{python}-boto, %{python}-progressbar, %{python}-filechunkio
+Requires: %{python}, %{python}-boto, %{python}-progressbar, %{python}-argparse, %{python}-filechunkio, %{python}-bagit, qav
 BuildArch: noarch
 
 %description
@@ -32,13 +32,15 @@ rm -rf %{buildroot}
 
 %files
 %defattr(0755,root,root,-)
+%{_bindir}/bagobj
 %{_bindir}/chobj
+%{_bindir}/cmpobj
 %{_bindir}/cpobj
 %{_bindir}/lsobj
-%{_bindir}/md5obj
 %{_bindir}/mkobj
 %{_bindir}/mvobj
 %{_bindir}/rmobj
+%{_bindir}/syncobj
 %defattr(0755,root,root,-)
 %{python_sitelib}/umobj
 %defattr(0644,root,root,-)

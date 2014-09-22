@@ -1,21 +1,21 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH cpobj 1 9/12/2014 UMobj "cpobj Utility"
+.TH syncobj 1 9/18/2014 UMobj "syncobj Utility"
 
 .SH NAME
-cpobj - Copy files to and from an Object Store
+syncobj - Synchronize files to and from an Object Store
 
 .SH SYNOPSIS
-cpobj [OPTION]... SRC BUCKET[:DEST]
+syncobj [OPTION]... SRC BUCKET[:DEST]
 
-cpobj [OPTION]... BUCKET[:SRC] DEST
+syncobj [OPTION]... BUCKET[:SRC] DEST
 
 
 .SH DESCRIPTION
-cpobj can be used to copy files bidirectionally between the local filesystem and an Object Store.
+syncobj can be used to synchronize files bidirectionally between the local filesystem and an Object Store.
 
 .TP
 BUCKET
-The bucket that is to be used for this copy operation.  This is necessary on one and only one of the SRC and DEST arguments.
+The bucket that is to be used for this syncronization operation.  This is necessary on one and only one of the SRC and DEST arguments.
 
 .TP
 SRC
@@ -26,7 +26,7 @@ DEST
 Local file system directory/file or object store key.  A directory is allowed for downloads.
 
 .SH OPTIONS SUMMARY
-Here is a short summary of the options available in cpobj.  Please refer to the \fBOPTIONS\fR section below for more detailed descriptions. 
+Here is a short summary of the options available in syncobj.  Please refer to the \fBOPTIONS\fR section below for more detailed descriptions. 
 
  -a, --access_key=<access_key>  Object store access key
  -s, --secret_key=<secret_key>  Object store secret key
@@ -44,15 +44,15 @@ Here is a short summary of the options available in cpobj.  Please refer to the 
 
 .TP
 \fB-a, --access_key=<access_key>\fR
-This option allows you to specify an Object Store access key.  If not supplied, cpobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
+This option allows you to specify an Object Store access key.  If not supplied, syncobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
 
 .TP 
 \fB-s, --secret_key=<secret_key>\fR
-This option allows you to specify an Object Store secret key.  If not supplied, cpobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
+This option allows you to specify an Object Store secret key.  If not supplied, syncobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
 
 .TP
 \fB-S, --server=<server>\fR
-This option allows you to specify an Object Store server.  If not supplied, cpobj will use the value of the environment variable \fIOBJ_SERVER\fR.
+This option allows you to specify an Object Store server.  If not supplied, syncobj will use the value of the environment variable \fIOBJ_SERVER\fR.
 
 .TP
 \fB-P, --port=<port>\fR
@@ -90,5 +90,5 @@ Help menu
 UMIACS Staff
 
 .SH SEE ALSO
-bagobj(1), chobj(1), cmpobj(1), lsobj(1), mkobj(1), mvobj(1),
-rmobj(1), syncobj(1)
+bagobj(1), chobj(1), cmpobj(1), cpobj(1), lsobj(1), mkobj(1), mvobj(1),
+rmobj(1)

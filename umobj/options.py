@@ -51,6 +51,11 @@ class umobj_parser(object):
     def parse_args(self):
         return self.parser.parse_args()
 
+    def add_verify_bag(self, short='-v', long='--verify-bag',
+                       dest='verify_bag', help='Verify bagit archive'):
+        self.parser.add_argument(short, long, dest=dest, help=help,
+                                 action='store_true', default=False)
+
     def add_s3path(self, name='S3PATH', number='+', help='BUCKET[:KEY]'):
         self.parser.add_argument(name, type=str, nargs=number, help=help)
 
