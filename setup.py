@@ -10,6 +10,7 @@ except ImportError:
     extra = {}
 
 import sys
+import os
 
 from umobj import __version__
 
