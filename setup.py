@@ -20,7 +20,8 @@ if sys.version_info <= (2, 5):
 
 
 def readme():
-    with open("README.md") as f:
+    current_directory = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(current_directory, "README.md")) as f:
         return f.read()
 
 setup(name="umobj",
