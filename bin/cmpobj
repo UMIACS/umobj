@@ -50,12 +50,12 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if args.verify_bag:  # comparing/verifying a bagit archive 
-        logging.debug("Verifying the integrity of bag %s in buket %s." %
+        logging.debug("Verifying the integrity of bag %s in bucket %s." %
                       (key_name, bucket_name))
         entries = load_bag_checksums(bucket_name, key_name)
         algo = get_bag_checksumming_algorithm(bucket_name, key_name)
         for entry in entries:
-            entry_path = '%s/%s' % ('liamfoo', entry)
+            entry_path = '%s/%s' % (key_name, entry)
             expected_md5 = entries[entry][algo]
             actual_md5 = compute_key_md5(bucket, entry_path)
             if expected_md5 != actual_md5:
