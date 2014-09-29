@@ -10,7 +10,6 @@ except ImportError:
     extra = {}
 
 import sys
-import os
 
 from umobj import __version__
 
@@ -20,15 +19,9 @@ if sys.version_info <= (2, 5):
     sys.exit(1)
 
 
-def readme():
-    current_directory = os.path.dirname(os.path.realpath(__file__))
-    with open(os.path.join(current_directory, "README.md")) as f:
-        return f.read()
-
 setup(name="umobj",
       version=__version__,
       description="UMIACS Object Storage Commands",
-      long_description=readme(),
       author="Derek Yarnell",
       author_email="derek@umiacs.umd.edu",
       scripts=["bin/bagobj",
