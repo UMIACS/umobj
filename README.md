@@ -56,7 +56,7 @@ To list buckets and keys in the Object Store you can use the <b>lsobj</b> comman
 If given without an argument it will list your buckets (this will only list
 buckets that you created).
 
-```
+```bash
 $ lsobj
 bob
 test
@@ -68,7 +68,7 @@ you were granted access to a bucket that you didn't create you can also use this
 command to display its contents.  This will list all the keys in your bucket,
 which can take a long time.
 
-```
+```bash
 $ lsobj test
 -rwx---	2013-10-04T15:25:09.000Z	    1.8 KB	UMIACSCA.pem
 -rwx---	2013-10-04T15:25:24.000Z	  311.4 KB	cover.jpg
@@ -88,14 +88,14 @@ the bucket ending in a ```/``` will be interpreted by the ```lsobj``` utility an
 website as a directory.   You can also list only subdirectories with the
 ```lsobj``` utility.
 
-<pre>
+```bash
 $ lsobj test:foo/
 foo/
 -rwx---	2013-10-04T15:27:39.000Z	    0.0 b 	foo/
 -rwx---	2013-10-04T15:27:40.000Z	    0.0 b 	foo/bar
 ================================================================================
 		TOTAL:  	    0.0 b  	2 Files
-</pre>
+```
 
 ### mkobj
 
@@ -104,7 +104,7 @@ mkobj creates buckets and directories in the Object Store.
 <b>Please note that bucket names are unique in the Object Store, so you may
 very well get an error back that the name has already been used.</b>  
 
-```
+```bash
 $ mkobj foo
 Created bucket foo.
 $ lsobj
@@ -116,7 +116,7 @@ zeta
 
 You can also create directories within your buckets to provide a way to group your data.
 
-```
+```bash
 % mkobj foo:bar/
 % lsobj foo
 -rwx---	2013-10-04T15:38:38.000Z	    0.0 b 	bar/
@@ -129,7 +129,7 @@ Copying files to the Object Store can be done per-file or recursively both to an
 
 To copy a single file to the Object Store you can use <code>cpobj</code> and specify a bucket with a trailing <code>:</code> (with an optional additional path).
 
-```
+```bash
 % cpobj test.png foo:
 100% |##############################################################################################|
 % lsobj foo
@@ -141,7 +141,7 @@ To copy a single file to the Object Store you can use <code>cpobj</code> and spe
 
 To copy a directory of files you will need to use the <code>-r</code> or <code>--recursive</code> flags.
 
-```
+```bash
 % lsobj foo
 ================================================================================
 		TOTAL:  	    0.0 b  	0 Files
@@ -161,13 +161,13 @@ To copy a directory of files you will need to use the <code>-r</code> or <code>-
 ### rmobj
 You can delete your buckets and keys with ```rmobj```.  It can take a bucket and work recursively, asking you to delete all the files and the bucket itself.  It can also just delete specific files in a bucket when given on the command line.
 
-```
+```bash
 % rmobj -r foo
  Are you sure you want to remove all the contents of the bucket 'foo'? [yes/no] yes
  Do you want to remove the bucket 'foo'? [yes/no] no
 ```
 
-```
+```bash
 % lsobj foo
 -rwx---	2013-10-09T18:44:20.000Z	    1.0 KB	setup.cfg
 -rwx---	2013-10-09T18:44:17.000Z	  781.0 b 	setup.py
@@ -182,7 +182,7 @@ You can delete your buckets and keys with ```rmobj```.  It can take a bucket and
 ```
 
 You can also remove directories within a bucket.  To do so, you will need to pass the <code>-r</code> flag.  This will prompt you for the removal of every key under that directory unless the <code>-f</code> flag is passed as well.
-```
+```bash
 % lsobj foo
 -rwx---	2013-10-10T21:58:17.000Z	    0.0 b 	research/
 -rwx---	2013-10-10T21:58:17.000Z	    0.0 b 	research/papers/
@@ -206,7 +206,7 @@ You can also remove directories within a bucket.  To do so, you will need to pas
 ### chobj
 You can change the ACL on a specific key(s) and specify multiple canned ACL policies in a single command.
 
-```
+```bash
 % chobj -p liam:FULL_CONTROL -p derek:FULL_CONTROL foo:test-requirements.txt
 ```
 
@@ -216,7 +216,7 @@ store.  It does this by comparing the checksum between the local and remote.  Th
 does not follow symlinks and will warn when it encounters files (character,
 block, fifo, etc.) that it can not archive.
 
-```
+```bash
 % syncobj -r devel/puppet test:
 100% |#########################################################################|
 ```
