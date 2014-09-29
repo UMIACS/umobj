@@ -31,6 +31,12 @@ For example if you use the ```bash``` shell you can add the following to your
 export OBJ_ACCESS_KEY_ID="31sdfadDFAHFDN+344qOEIS"
 export OBJ_SECRET_ACCESS_KEY="NDSMK3233adfahadflkkPDSH092DSJKDKDJKFDLSFLNK"
 ```
+Or in tcsh you can do the following or add it into your ```.tcshrc```.
+
+```tcsh
+setenv OBJ_ACCESS_KEY_ID "31sdfadDFAHFDN+344qOEIS"
+setenv OBJ_SECRET_ACCESS_KEY "NDSMK3233adfahadflkkPDSH092DSJKDKDJKFDLSFLNK"
+```
 
 You can optionally pass the <code>--access_key</code>, <code>--secret_key</code>
 and <code>--server</code> switches to the utilities to get the same behavior.
