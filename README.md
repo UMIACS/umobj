@@ -27,7 +27,7 @@ than ```obj.umiacs.umd.edu```.
 For example if you use the ```bash``` shell you can add the following to your
 ```.bashrc``` or ```.bash_profile```.
 
-```
+```bash
 export OBJ_ACCESS_KEY_ID="31sdfadDFAHFDN+344qOEIS"
 export OBJ_SECRET_ACCESS_KEY="NDSMK3233adfahadflkkPDSH092DSJKDKDJKFDLSFLNK"
 ```
