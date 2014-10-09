@@ -86,6 +86,7 @@ if __name__ == "__main__":
     try:
         bag = bagit.Bag(src)
         logging.info('Bag %s already exists; not rebaging.' % src)
+        bag_info = bag.info
     except bagit.BagError:
         qset = QuestionSet()
         qset.add(Question('Contact Name', 'Contact-Name'))
@@ -93,9 +94,9 @@ if __name__ == "__main__":
         qset.add(Question('Description', 'External-Description'))
 
         qset.ask()
-        answers = qset.answers
-        logging.info('bag_info %s' % answers)
-        bag = bagit.make_bag(src, answers)
+        bag_info = qset.answers
+        logging.info('bag_info %s' % bag_info)
+        bag = bagit.make_bag(src, bag_info)
 
     basename = os.path.basename(os.path.abspath(src))
 
@@ -132,13 +133,13 @@ if __name__ == "__main__":
                                 [manifest_filename],
                                 squash_hierarchy=True)
 
-        body_text_info = dict(answers)
+        body_text_info = dict(bag_info)
         body_text_info['source'] = src
         body_text_info['dest'] = dest
 
         # email the mainfests
         send_email(send_from='bagobj@umiacs.umd.edu',
-                   send_to=[answers['Contact-Email']],
+                   send_to=[bag_info['Contact-Email']],
                    subject='Bagobj report for %s' % os.path.abspath(src),
                    body_text=body_text % body_text_info,
                    files=[compressed_manifest_filename])
