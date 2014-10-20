@@ -42,7 +42,7 @@ class HandlerQueue:
         # a function is being redefined, its closure has changed.
         for fun in HandlerQueue._queue[sig]:
             if fun.__name__ == function.__name__:
-                HandlerQueue._queue.remove(fun)
+                HandlerQueue._queue.pop(fun, None)
 
         if prepend:
             HandlerQueue._queue[sig].insert(0, function)
