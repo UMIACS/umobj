@@ -66,10 +66,9 @@ class umobj_parser(object):
                                action=action, default=default)
 
     def add_policy(self, short='-p', long='--policy', dest='policies',
-                   action="append", help='ACL Policy(s)', metavar="POLICY"):
+                   help='ACL Policy(s)', metavar="POLICY"):
         self.parser.add_argument(short, long, dest=dest, help=help,
-                                 action=action, metavar=metavar, required=True,
-                                 nargs='+')
+                                 metavar=metavar, required=True, nargs='+')
 
     def add_recursive(self, short='-r', long='--recursive', dest='recursive',
                       help='Recurse', action='store_true', default=False):
