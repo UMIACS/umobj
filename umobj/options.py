@@ -23,7 +23,7 @@ class umobj_parser(object):
         self.parser._positionals.title = 'Positional Arguments'
         self.parser._optionals.title = 'Optional Arguments'
         self.parser.add_argument('-h', '--help', action='help',
-                                 help='Show this help and exit')
+                                 help='Print a help message and exit')
         self.parser.add_argument('--version', action='version',
                                  version=umobj.__version__,
                                  help='Show version number and exit')
@@ -89,7 +89,7 @@ class umobj_parser(object):
 
     def add_no_bucket_changes(self, long='--no-bucket-changes',
                               dest='no_bucket_changes',
-                              help="Don't make any changes to the bucket, only to the keys underneath.  You must also specify the recursive option",
+                              help="Don't make any changes to the bucket, only to the keys underneath.  You must also specify the recursive option.",
                               action='store_true', default=False):
         self.parser.add_argument(long, dest=dest, help=help, action=action,
                                  default=default)
@@ -106,7 +106,7 @@ class umobj_parser(object):
 
     def add_push_bucket_acls(self, short='-o', long='--push-bucket-acls',
                              dest='push_bucket_acls',
-                             help='Push bucket ACLs to key(s)',
+                             help='Push bucket ACLs to key(s).  WARNING: this will completely replace a key\'s ACL with exactly the ACL of the bucket.',
                              action='store_true', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
                                  action=action, default=default)
