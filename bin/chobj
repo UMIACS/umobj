@@ -22,12 +22,12 @@ if __name__ == "__main__":
     parser = umobj_parser(description=description,
                           description_epilog=description_epilog)
     parser.add_recursive(help='Recursively apply ACL to keys')
-    parser.add_mode(choices=['add', 'remove', 'clear'])
+    parser.add_mode(choices=['add', 'remove', 'clear'], help='Mode of operation.  Specifying "clear" will create an empty ACL to be applied.  However, if you specify policies in the same command, the ACL will contain those policies.')
     parser.add_no_bucket_changes()
-    parser.add_policy()
-    parser.add_public()
-    parser.add_private()
+    parser.add_public(help='Make selected keys public')
+    parser.add_private(help='Make selected keys private')
     parser.add_push_bucket_acls()
+    parser.add_policy()
     parser.add_s3path(number=1)
     args = parser.parse_args()
 
@@ -43,11 +43,11 @@ if __name__ == "__main__":
     logging.info("Running %s" % sys.argv)
 
     S3PATH = args.S3PATH
-    no_bucket_changes = args.no_bucket_changes
     recursive = args.recursive
     mode = args.mode
     public = args.public
     private = args.private
+    no_bucket_changes = args.no_bucket_changes
     push_bucket_acls = args.push_bucket_acls
     policies = args.policies
 
@@ -66,6 +66,21 @@ if __name__ == "__main__":
         logging.error('--public and a mode cannot both be specified together.')
         parser.print_help()
         sys.exit(1)
+
+    if private and mode:
+        logging.error('--private and a mode cannot both be specified together.')
+        parser.print_help()
+        sys.exit(1)
+
+    if push_bucket_acls and mode:
+        logging.error('--push-bucket-acls and a mode cannot both be '
+                'specified together.')
+        parser.print_help()
+        sys.exit(1)
+
+    if push_bucket_acls and no_bucket_changes:
+        logging.warning('--no-bucket-changes cannot possibly have any ' +
+                'effect when pushing bucket ACLs.')
 
     if not Obj.connect(host=args.host,
                        port=args.port,
