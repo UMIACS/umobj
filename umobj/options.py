@@ -94,23 +94,6 @@ class umobj_parser(object):
         self.parser.add_argument(long, dest=dest, help=help, action=action,
                                  default=default)
 
-    def add_public(self, short='-b', long='--public', dest='public',
-                   help='Public URL', action='store_true', default=False):
-        self.parser.add_argument(short, long, dest=dest, help=help,
-                                 action=action, default=default)
-
-    def add_private(self, long='--private', dest='private',
-                    help='Make Private', action='store_true', default=False):
-        self.parser.add_argument(long, dest=dest, help=help,
-                                 action=action, default=default)
-
-    def add_push_bucket_acls(self, short='-o', long='--push-bucket-acls',
-                             dest='push_bucket_acls',
-                             help='Push bucket ACLs to key(s).  WARNING: this will completely replace a key\'s ACL with exactly the ACL of the bucket.',
-                             action='store_true', default=False):
-        self.parser.add_argument(short, long, dest=dest, help=help,
-                                 action=action, default=default)
-
     def add_md5(self, short='-m', long='--md5', dest='md5', help='MD5 Sum',
                 action='store_true', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,

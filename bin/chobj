@@ -8,7 +8,7 @@ import logging
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
 from umobj.obj import Obj
-from umobj.acl import acl_pairs, split_acl, make_private
+from umobj.acl import split_acl, make_private
 from umobj.options import umobj_parser
 
 
@@ -22,16 +22,13 @@ if __name__ == "__main__":
     parser = umobj_parser(description=description,
                           description_epilog=description_epilog)
     parser.add_recursive(help='Recursively apply ACL to keys')
-    parser.add_mode(choices=['add', 'remove', 'clear'], help='Mode of operation.  Specifying "clear" will create an empty ACL to be applied.  However, if you specify policies in the same command, the ACL will contain those policies.')
+    parser.add_mode(choices=['add', 'remove', 'bucket', 'public', 'private', 'clear'], help='Mode of operation.  Specifying "clear" will create an empty ACL to be applied.  However, if you specify policies in the same command, the ACL will contain those policies.')
     parser.add_no_bucket_changes()
-    parser.add_public(help='Make selected keys public')
-    parser.add_private(help='Make selected keys private')
-    parser.add_push_bucket_acls()
     parser.add_policy()
     parser.add_s3path(number=1)
     args = parser.parse_args()
 
-    ## setup logging
+    # setup logging
     if args.debug:
         logging_level = logging.DEBUG
     elif args.verbose:
@@ -45,42 +42,27 @@ if __name__ == "__main__":
     S3PATH = args.S3PATH
     recursive = args.recursive
     mode = args.mode
-    public = args.public
-    private = args.private
+    public = mode == 'public'
+    private = mode == 'private'
     no_bucket_changes = args.no_bucket_changes
-    push_bucket_acls = args.push_bucket_acls
+    push_bucket_acls = mode == 'bucket'
     policies = args.policies
 
-    if not public and not private and not push_bucket_acls:
-        if mode is None:
-            logging.error('Please provide a mode.')
-            parser.print_help()
-            sys.exit()
+    # Bucket changes are only possible if the user does not not specify
+    # --no-bucket-changes and also does not specify --push-bucket-acls.
+    # Whether or not the bucket is included will also depend on whether or
+    # not a key_prefix is present.
+    bucket_changes_possible = not no_bucket_changes and not_push_bucket_acls
 
+    if not public and not private and not push_bucket_acls:
         if policies is None:
             logging.error('One or more ACL policies are required.')
             parser.print_help()
             sys.exit(1)
 
-    if public and mode:
-        logging.error('--public and a mode cannot both be specified together.')
-        parser.print_help()
-        sys.exit(1)
-
-    if private and mode:
-        logging.error('--private and a mode cannot both be specified together.')
-        parser.print_help()
-        sys.exit(1)
-
-    if push_bucket_acls and mode:
-        logging.error('--push-bucket-acls and a mode cannot both be '
-                'specified together.')
-        parser.print_help()
-        sys.exit(1)
-
     if push_bucket_acls and no_bucket_changes:
         logging.warning('--no-bucket-changes cannot possibly have any ' +
-                'effect when pushing bucket ACLs.')
+                        'effect when pushing bucket ACLs.')
 
     if not Obj.connect(host=args.host,
                        port=args.port,
@@ -109,7 +91,7 @@ if __name__ == "__main__":
             for key in bucket.list(prefix=key_name_prefix):
                 objects.append(key)
         else:
-            if not no_bucket_changes:
+            if bucket_changes_possible:
                 objects.append(bucket)
             if recursive:
                 for key in bucket.get_all_keys():
@@ -119,20 +101,17 @@ if __name__ == "__main__":
             bucket_policy = bucket.get_acl()
 
         for object in objects:
-            policy = object.get_acl()
-
-            if not mode:
-                if public:
-                    logging.info('Making %s public' % object.name)
-                    object.make_public()
-                elif private:
-                    logging.info('Making %s private' % object.name)
-                    make_private(object)
-                elif push_bucket_acls:
-                    logging.info('Pushing bucket acls to %s' % object.name)
-                    object.set_acl(bucket_policy)
+            if public:
+                logging.debug('Making %s public' % object.name)
+                object.make_public()
+            elif private:
+                logging.debug('Making %s private' % object.name)
+                make_private(object)
+            elif push_bucket_acls:
+                logging.debug('Pushing bucket acls to %s' % object.name)
+                object.set_acl(bucket_policy)
             else:
-                # modify acl
+                policy = object.get_acl()
                 if mode == 'add':
                     for p in policies:
                         u, g = split_acl(p)
@@ -142,7 +121,7 @@ if __name__ == "__main__":
                     for grant in policy.acl.grants:
                         for p in policies:
                             u, g = split_acl(p)
-                            if grant.permission != g  or grant.id != u:
+                            if grant.permission != g or grant.id != u:
                                 grants.append(grant)
                     policy.acl.grants = grants
                 elif mode == 'clear':
@@ -150,7 +129,7 @@ if __name__ == "__main__":
                     for p in policies:
                         u, g = split_acl(p)
                         acl.add_user_grant(g, u)
-                    policy.acl = acl 
+                    policy.acl = acl
 
                 try:
                     object.set_acl(policy)
