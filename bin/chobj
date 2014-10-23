@@ -56,9 +56,12 @@ if __name__ == "__main__":
 
     if not public and not private and not push_bucket_acls:
         if policies is None:
-            logging.error('One or more ACL policies are required.')
-            parser.print_help()
-            sys.exit(1)
+            if mode == 'clear':
+                policies = []
+            else:
+                logging.error('One or more ACL policies are required.')
+                parser.print_help()
+                sys.exit(1)
 
     if push_bucket_acls and no_bucket_changes:
         logging.warning('--no-bucket-changes cannot possibly have any ' +
@@ -117,18 +120,23 @@ if __name__ == "__main__":
                         u, g = split_acl(p)
                         policy.acl.add_user_grant(g, u)
                 elif mode == 'remove':
-                    grants = []
+                    grants_to_remove = []
                     for grant in policy.acl.grants:
                         for p in policies:
                             u, g = split_acl(p)
-                            if grant.permission != g or grant.id != u:
-                                grants.append(grant)
-                    policy.acl.grants = grants
+                            if grant.permission == g and grant.id == u:
+                                grants_to_remove.append(grant)
+                    policy.acl.grants = [gr for gr in policy.acl.grants
+                                         if gr not in grants_to_remove]
                 elif mode == 'clear':
                     acl = ACL()
                     for p in policies:
                         u, g = split_acl(p)
                         acl.add_user_grant(g, u)
+                    else:
+                        # clear shouldn't *fully* clear.  We still want the
+                        # object's owner to have FULL_CONTROL
+                        acl.add_user_grant('FULL_CONTROL', object.owner.id)
                     policy.acl = acl
 
                 try:
