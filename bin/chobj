@@ -52,7 +52,7 @@ if __name__ == "__main__":
     # --no-bucket-changes and also does not specify --push-bucket-acls.
     # Whether or not the bucket is included will also depend on whether or
     # not a key_prefix is present.
-    bucket_changes_possible = not no_bucket_changes and not_push_bucket_acls
+    bucket_changes_possible = not no_bucket_changes and not push_bucket_acls
 
     if not public and not private and not push_bucket_acls:
         if policies is None:
