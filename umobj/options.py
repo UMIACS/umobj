@@ -94,6 +94,17 @@ class umobj_parser(object):
         self.parser.add_argument(long, dest=dest, help=help, action=action,
                                  default=default)
 
+    def add_public(self, short='-b', long='--public', dest='public',
+                   help='Public URL', action='store_true', default=False):
+        self.parser.add_argument(short, long, dest=dest, help=help,
+                                 action=action, default=default)
+
+    def add_private(self, long='--private', dest='private',
+                    help='Make Private', action='store_true', default=False):
+        self.parser.add_argument(long, dest=dest, help=help,
+                                 action=action, default=default)
+
+
     def add_md5(self, short='-m', long='--md5', dest='md5', help='MD5 Sum',
                 action='store_true', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
