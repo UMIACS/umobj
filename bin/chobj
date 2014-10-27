@@ -8,7 +8,7 @@ import logging
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
 from umobj.obj import Obj
-from umobj.acl import acl_pairs, split_acl
+from umobj.acl import split_acl, make_private
 from umobj.options import umobj_parser
 
 
@@ -22,11 +22,13 @@ if __name__ == "__main__":
     parser = umobj_parser(description=description,
                           description_epilog=description_epilog)
     parser.add_recursive(help='Recursively apply ACL to keys')
-    parser.add_mode(choices=['add', 'remove', 'clear'])
+    parser.add_mode(choices=['add', 'remove', 'bucket', 'public', 'private', 'clear'], help='Mode of operation.  Specifying "clear" will create an empty ACL to be applied.  However, if you specify policies in the same command, the ACL will contain those policies.')
+    parser.add_no_bucket_changes()
     parser.add_policy()
     parser.add_s3path(number=1)
     args = parser.parse_args()
-    ## setup logging
+
+    # setup logging
     if args.debug:
         logging_level = logging.DEBUG
     elif args.verbose:
@@ -37,15 +39,33 @@ if __name__ == "__main__":
 
     logging.info("Running %s" % sys.argv)
 
-    if args.mode is None:
-        logging.error('Please provide a mode.')
-        parser.print_help()
-        sys.exit()
+    S3PATH = args.S3PATH
+    recursive = args.recursive
+    mode = args.mode
+    public = mode == 'public'
+    private = mode == 'private'
+    no_bucket_changes = args.no_bucket_changes
+    push_bucket_acls = mode == 'bucket'
+    policies = args.policies
 
-    if args.policies is None:
-        logging.error('One or more policy ACL is required.')
-        parser.print_help()
-        sys.exit(1)
+    # Bucket changes are only possible if the user does not not specify
+    # --no-bucket-changes and also does not specify --push-bucket-acls.
+    # Whether or not the bucket is included will also depend on whether or
+    # not a key_prefix is present.
+    bucket_changes_possible = not no_bucket_changes and not push_bucket_acls
+
+    if not public and not private and not push_bucket_acls:
+        if policies is None:
+            if mode == 'clear':
+                policies = []
+            else:
+                logging.error('One or more ACL policies are required.')
+                parser.print_help()
+                sys.exit(1)
+
+    if push_bucket_acls and no_bucket_changes:
+        logging.warning('--no-bucket-changes cannot possibly have any ' +
+                        'effect when pushing bucket ACLs.')
 
     if not Obj.connect(host=args.host,
                        port=args.port,
@@ -54,12 +74,12 @@ if __name__ == "__main__":
         logging.error('Unable to contact object store.')
         sys.exit(1)
 
-    if len(args) == 0:
+    if len(S3PATH) == 0:
         parser.print_help()
         sys.exit(1)
 
-    for bucket_name in args:
-        bucket_name, key_prefix_name = \
+    for bucket_name in S3PATH:
+        bucket_name, key_name_prefix = \
             umobj_get_bucket_key_pair_from_string(bucket_name)
         try:
             bucket = Obj.conn.get_bucket(bucket_name)
@@ -68,54 +88,58 @@ if __name__ == "__main__":
                           (bucket_name, e.error_code))
             continue
 
-        ## we use the bucket policy as a starting point
-        policy = bucket.get_acl()
-        logging.info('Current ACL Policy: %s' %
-                     ', '.join(acl_pairs(policy.acl)))
+        # get objects that we are targeting
+        objects = []
+        if key_name_prefix:
+            for key in bucket.list(prefix=key_name_prefix):
+                objects.append(key)
+        else:
+            if bucket_changes_possible:
+                objects.append(bucket)
+            if recursive:
+                for key in bucket.get_all_keys():
+                    objects.append(key)
 
-        if args.mode == 'add':
-            for p in args.policies:
-                u, g = split_acl(p)
-                policy.acl.add_user_grant(g, u)
-        elif args.mode == 'remove':
-            grants = []
-            for grant in policy.acl.grants:
-                for p in args.policies:
-                    u, g = split_acl(p)
-                    if grant.permission != g  or grant.id != u:
-                        grants.append(grant)
-            policy.acl.grants = grants
-        elif args.mode == 'clear':
-            acl = ACL()
-            print args.policies
-            for p in args.policies:
-                u, g = split_acl(p)
-                acl.add_user_grant(g, u)
-            policy.acl = acl
+        if push_bucket_acls:
+            bucket_policy = bucket.get_acl()
 
-        logging.info('ACL Policy to be applied: %s' %
-                     ', '.join(acl_pairs(policy.acl)))
+        for object in objects:
+            if public:
+                logging.debug('Making %s public' % object.name)
+                object.make_public()
+            elif private:
+                logging.debug('Making %s private' % object.name)
+                make_private(object)
+            elif push_bucket_acls:
+                logging.debug('Pushing bucket acls to %s' % object.name)
+                object.set_acl(bucket_policy)
+            else:
+                policy = object.get_acl()
+                if mode == 'add':
+                    for p in policies:
+                        u, g = split_acl(p)
+                        policy.acl.add_user_grant(g, u)
+                elif mode == 'remove':
+                    grants_to_remove = []
+                    for grant in policy.acl.grants:
+                        for p in policies:
+                            u, g = split_acl(p)
+                            if grant.permission == g and grant.id == u:
+                                grants_to_remove.append(grant)
+                    policy.acl.grants = [gr for gr in policy.acl.grants
+                                         if gr not in grants_to_remove]
+                elif mode == 'clear':
+                    acl = ACL()
+                    for p in policies:
+                        u, g = split_acl(p)
+                        acl.add_user_grant(g, u)
+                    else:
+                        # clear shouldn't *fully* clear.  We still want the
+                        # object's owner to have FULL_CONTROL
+                        acl.add_user_grant('FULL_CONTROL', object.owner.id)
+                    policy.acl = acl
 
-        if key_prefix_name:
-            for key in bucket.list(prefix=key_prefix_name):
                 try:
-                    logging.info("Applying ACL to %s:%s" % (bucket.name,
-                                                            key.name))
-                    key.set_acl(policy)
+                    object.set_acl(policy)
                 except boto.exception.S3ResponseError:
                     pass
-        else:
-            logging.info("Applying ACL to bucket %s." % bucket.name)
-            try:
-                bucket.set_acl(policy)
-            except boto.exception.S3ResponseError:
-                logging.warning('Unable to set bucket ACL %s' %
-                                ', '.join(acl_pairs(policy.acl)))
-            if args.recursive:
-                for key in bucket.get_all_keys():
-                    try:
-                        logging.info("Applying ACL to %s:%s" % (bucket.name,
-                                                                key.name))
-                        key.set_acl(policy)
-                    except boto.exception.S3ResponseError:
-                        pass

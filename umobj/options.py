@@ -23,7 +23,7 @@ class umobj_parser(object):
         self.parser._positionals.title = 'Positional Arguments'
         self.parser._optionals.title = 'Optional Arguments'
         self.parser.add_argument('-h', '--help', action='help',
-                                 help='Show this help and exit')
+                                 help='Print a help message and exit')
         self.parser.add_argument('--version', action='version',
                                  version=umobj.__version__,
                                  help='Show version number and exit')
@@ -68,7 +68,7 @@ class umobj_parser(object):
     def add_policy(self, short='-p', long='--policy', dest='policies',
                    help='ACL Policy(s)', metavar="POLICY"):
         self.parser.add_argument(short, long, dest=dest, help=help,
-                                 metavar=metavar, required=True, nargs='+')
+                                 metavar=metavar, action='append')
 
     def add_recursive(self, short='-r', long='--recursive', dest='recursive',
                       help='Recurse', action='store_true', default=False):
@@ -85,12 +85,14 @@ class umobj_parser(object):
         if choices is None:
             choices = ['add', 'modify', 'remove', 'delete']
         self.parser.add_argument(short, long, dest=dest, help=help,
-                                 choices=choices, required=True)
+                                 choices=choices)
 
-    def add_public(self, short='-b', long='--public', dest='public',
-                   help='Public URL', action='store_true', default=False):
-        self.parser.add_argument(short, long, dest=dest, help=help,
-                               action=action, default=default)
+    def add_no_bucket_changes(self, long='--no-bucket-changes',
+                              dest='no_bucket_changes',
+                              help="Don't make any changes to the bucket, only to the keys underneath.  You must also specify the recursive option.",
+                              action='store_true', default=False):
+        self.parser.add_argument(long, dest=dest, help=help, action=action,
+                                 default=default)
 
     def add_md5(self, short='-m', long='--md5', dest='md5', help='MD5 Sum',
                 action='store_true', default=False):

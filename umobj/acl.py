@@ -23,3 +23,17 @@ def split_acl(s):
         return None, None
     else:
         return parts[0], parts[1]
+
+
+def make_private(object):
+    '''Given a Bucket or a Key object, make it private by removing the
+    AllUsers grant'''
+    new_grants = []
+    acl = object.get_acl()
+    for g in acl.acl.grants:
+        if g.uri == all_users:
+            pass
+        else:
+            new_grants.append(g)
+    acl.acl.grants = new_grants
+    object.set_acl(acl)

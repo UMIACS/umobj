@@ -1,17 +1,19 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH chobj 1 9/12/2014 UMobj "chobj Utility"
+.TH chobj 1 10/23/2014 UMobj "chobj Utility"
 
 .SH NAME
-chobj - change permissions on keys on a given Object Store
+chobj - change permissions on keys and buckets in an Object Store
 
 .SH SYNOPSIS
-chobj [-a/--access_key=<access_key>] [-s/--secret_key=<secret_key>]
-      [-S/--server=<server>] [-P/--port=<port>] [-h/--help] [--version]
-      [-p/--policy=<policy>]+ [-V/--verbose] [-D/--debug]
-      bucket[:key]+
+chobj [-h] [--version] [-D] [-V] [-A ACCESS_KEY] [-S SECRET_KEY]
+             [-H HOST] [-P PORT] [-r]
+             [-m {add,remove,bucket,public,private,clear}]
+             [--no-bucket-changes] [-p POLICY]
+             bucket[:key]+
 
 .SH DESCRIPTION
-chobj can change the ACL on specific key(s) and allows one to specify multiple canned ACL policies.
+chobj can change the ACL on specific key(s) and buckets.
+
 
 .SH OPTIONS
 
@@ -50,6 +52,73 @@ Running in debug mode prints detailed information about the calls being made aga
 .TP
 \fB-h, --help\fR
 Help menu
+
+.SH EXAMPLES
+
+.PP
+There are two main phases when running chobj.  First, there is the selection phase.  The selection phase is where you tell the program precisely which buckets and keys you want to act upon.  In the second phase, chobj actually performs the same operation across all of the objects selected for inclusion in the first phase.
+
+.PP
+There are five classes of selection:
+.nf
+  * bucket only...........(mybucket:)
+  * one key...............(mybucket:mykey)
+  * subset of keys........(--recursive mybucket:backup/)
+  * all keys..............(--no-bucket-changes --recursive mybucket:)
+  * all keys and bucket...(--recursive mybucket:)
+.fi
+
+.PP
+Here are some examples of how one might use chobj to push bucket ACLs to keys.
+.RS
+.PP
+To push bucket ACLs to all keys in a bucket named \fBmyfiles\fR
+.PP
+.RS
+\f(CWchobj \-m bucket \-\-recursive myfiles:\fP
+.RE
+
+.PP
+To push bucket ACLs to a specific key named \fBfoo\fR in a bucket named \fBmyfiles\fR
+.PP
+.RS
+\f(CWchobj \-m bucket myfiles:foo\fP
+.RE
+.RE
+
+.PP
+Here are some examples how how to add/remove/clear ACLs on buckets and keys.
+.RS
+.PP
+To add FULL_CONTROL permission for user \fBliam\fR and \fIREAD\fR permission for user \fBderek\fR to a subset of keys:
+.RS
+.PP
+\f(CWchobj \-\-policy liam:FULLCONTROL \-\-policy derek:READ \-m add \-\-recursive mybucket:backup/\fP
+.RE
+.PP
+The \fIremove\fR mode is much the same as \fIadd\fR.
+.PP
+The \fIclear\fR mode will create an empty policy with only the policies (zero or more) that you specify.  If I have a \fBsecret_files\fR folder that I want to now restrict access to only me, I can do the following:
+.RS
+.PP
+\f(CWchobj \-m clear \-p liam:FULL_CONTROL \-r mybucket:secret_files/\fP
+.RE
+.PP
+Although the same end goal could be achieved with \fIremove\fR, the clear advantage of \fIclear\fR is that I don't have to enumerate all types of access that I am removing.
+.RE
+
+.PP
+Examples of making buckets and keys public and private
+.RS
+.PP
+Suppose you wanted to make every key public without exposing a list of every file in the \fBsemi_secret_files\fR bucket.  You could accomplish this with the following command:
+.RS
+.PP
+\f(CWchobj -r --no-bucket-changes -m public semi_secret_files:\fP
+.RE
+.PP
+If you wanted to make all of the keys private, you would have changed "-m public" to "-m private"
+.RE
 
 .SH AUTHOR
 UMIACS Staff
