@@ -68,7 +68,7 @@ if __name__ == "__main__":
         logging.error('Unable to contact object store.')
         sys.exit(1)
 
-    src = args.SOURCE[0]
+    src = os.path.normpath(args.SOURCE[0])
     dest = args.DESTINATION[0]
     dest_bucket_name, dest_key_name = \
         umobj_get_bucket_key_pair_from_string(dest)
@@ -121,7 +121,16 @@ if __name__ == "__main__":
 
         tmp_path = mkdtemp(prefix='umobj_bagit-', dir='/tmp')
         manifest_filename = '%s/manifest' % tmp_path
-        compressed_manifest_filename = '%s/manifest.tar.gz' % tmp_path
+        bagit_filename = '%s/bagit.txt' % tmp_path
+        bagit_key = obj_key(bucket_name, '%s/bagit.txt' % key_path)
+        bag_info_filename = '%s/bag-info.txt' % tmp_path
+        bag_info_key = obj_key(bucket_name, '%s/bag-info.txt' % key_path)
+
+        archive_filenames = [manifest_filename,
+                             bagit_filename, bag_info_filename]
+
+        compressed_manifest_filename = '%s/manifests.tar.gz' % tmp_path
+
         algo, uncompressed_manifest_content = obj_checksums(bucket_name,
                                                             key_path)
 
@@ -129,15 +138,23 @@ if __name__ == "__main__":
         with open(manifest_filename, 'w') as f:
             f.write(uncompressed_manifest_content)
 
+        # write bagit.txt out to a tmp file
+        with open(bagit_filename, 'w') as f:
+            f.write(bagit_key.get_contents_as_string())
+
+        # write bag-info.txt out to a tmp file
+        with open(bag_info_filename, 'w') as f:
+            f.write(bag_info_key.get_contents_as_string())
+
         make_tarfile_from_files(compressed_manifest_filename,
-                                [manifest_filename],
+                                archive_filenames,
                                 squash_hierarchy=True)
 
         body_text_info = dict(bag_info)
         body_text_info['source'] = src
         body_text_info['dest'] = dest
 
-        # email the mainfests
+        # email the manifests
         send_email(send_from='bagobj@umiacs.umd.edu',
                    send_to=[bag_info['Contact-Email']],
                    subject='Bagobj report for %s' % os.path.abspath(src),
