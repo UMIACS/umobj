@@ -50,6 +50,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if args.verify_bag:  # comparing/verifying a bagit archive 
+        intact = True
         logging.debug("Verifying the integrity of bag %s in bucket %s." %
                       (key_name, bucket_name))
         entries = load_bag_checksums(bucket_name, key_name)
@@ -59,11 +60,13 @@ if __name__ == "__main__":
             expected_md5 = entries[entry][algo]
             actual_md5 = compute_key_md5(bucket, entry_path)
             if expected_md5 != actual_md5:
-                logging.error('The integrity of this bag is compromised')
-                logging.debug('key: %s, actual: %s, expected: %s' %
-                              (entry_path, actual_md5, expected_md5))
-                sys.exit(1)  # we should probably list all mismatched keys
-        logging.info('Successfully verified the integrity of the archive.')
+                logging.warning('key %s differs, actual: %s, expected: %s' %
+                                (entry_path, actual_md5, expected_md5))
+                intact = False
+        if intact:
+            logging.info('Successfully verified the integrity of the archive.')
+        else:
+            logging.error('The integrity of this bag is compromised')
     else:  # computing md5 for a single key
         md5 = compute_key_md5(bucket, key_name)
         if md5 is not None:
