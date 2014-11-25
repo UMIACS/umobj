@@ -1,5 +1,5 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH chobj 1 10/23/2014 UMobj "chobj Utility"
+.TH chobj 1 11/25/2014 UMobj "chobj Utility"
 
 .SH NAME
 chobj - change permissions on keys and buckets in an Object Store
@@ -93,7 +93,7 @@ Here are some examples how how to add/remove/clear ACLs on buckets and keys.
 To add FULL_CONTROL permission for user \fBliam\fR and \fIREAD\fR permission for user \fBderek\fR to a subset of keys:
 .RS
 .PP
-\f(CWchobj \-\-policy liam:FULLCONTROL \-\-policy derek:READ \-m add \-\-recursive mybucket:backup/\fP
+\f(CWchobj \-\-policy liam:FULL_CONTROL \-\-policy derek:READ \-m add \-\-recursive mybucket:backup/\fP
 .RE
 .PP
 The \fIremove\fR mode is much the same as \fIadd\fR.
