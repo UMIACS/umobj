@@ -1,3 +1,4 @@
+*.pyc
 umobj.egg-info
 dist
 build
