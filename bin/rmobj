@@ -80,6 +80,7 @@ if __name__ == "__main__":
                         sys.exit(0)
                 Obj.conn.delete_bucket(bucket.name)
                 logging.info("Deleting the bucket %s" % bucket_name)
+                sys.exit(0)
 
             # removing a directory
             if interactive:
