@@ -115,6 +115,14 @@ class umobj_parser(object):
         self.parser.add_argument(short, long, dest=dest, help=help,
                                action=action, default=default)
 
+    def add_interactive(self, short='-i', long='--interactive',
+                        dest='interactive',
+                        help='Request confirmation before attempting to ' +
+                             'remove each file',
+                        action='store_true', default=False):
+        self.parser.add_argument(short, long, dest=dest, help=help,
+                                 action=action, default=default)
+
     def add_multipart(self, short='-m', long='--multipart', dest='multipart',
                       help='Multipart upload and downloads',
                       action='store_true', default=False):

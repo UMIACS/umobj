@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser = umobj_parser(description=description)
     parser.add_recursive()
     parser.add_force()
+    parser.add_interactive()
     parser.add_s3path(number='+', help='BUCKET:KEY', name='S3PATH')
     args = parser.parse_args()
     ## setup logging
@@ -29,6 +30,12 @@ if __name__ == "__main__":
     umobj_logging(logging_level)
 
     logging.info("Running %s" % sys.argv)
+
+    interactive = True
+    if args.force:
+        interactive = False
+    if args.interactive:
+        interactive = True
 
     if not Obj.connect(host=args.host,
                        port=args.port,
@@ -51,34 +58,31 @@ if __name__ == "__main__":
         if args.recursive:
             # removing all content inside bucket
             if not key_name:
-                ans = raw_input(' Are you sure you want to remove all the ' +
-                                'contents of the bucket \'%s\'? [yes/no] ' %
-                                bucket.name).lower()
-                if ans == 'yes':
-                    for key in bucket.list():
-                        logging.info("Deleting key %s" % key.name)
-                        bucket.delete_key(key.name)
-                else:
-                    logging.info("Aborting recursive deletion of bucket %s" %
-                                 bucket_name)
-                    sys.exit(0)
-
-                # removing the bucket itself
-                ans = raw_input(' Do you want to remove the bucket \'%s\'?' %
-                                bucket.name + ' [yes/no] ').lower()
-                if ans == 'yes':
-                    Obj.conn.delete_bucket(bucket.name)
-                    logging.info("Deleting the bucket %s" % bucket_name)
-                else:
-                    logging.info("Not deleting the bucket %s" % bucket_name)
-                sys.exit(0)
-
-            # removing a directory
-            if args.force:
-                for key in bucket.list(prefix=key_name):
+                if interactive:
+                    ans = raw_input(' Are you sure you want to remove all ' +
+                                    'the contents of the bucket ' +
+                                    '\'%s\'? [yes/no] ' % bucket.name).lower()
+                    if ans != 'yes':
+                        logging.info("Aborting recursive deletion of " +
+                                     "bucket %s" % bucket_name)
+                        sys.exit(0)
+                for key in bucket.list():
                     logging.info("Deleting key %s" % key.name)
                     bucket.delete_key(key.name)
-            else:
+
+                # removing the bucket itself
+                if interactive:
+                    ans = raw_input(' Do you want to remove the bucket ' +
+                                    '\'%s\'?' % bucket.name +
+                                    ' [yes/no] ').lower()
+                    if ans != 'yes':
+                        logging.info("Not deleting bucket %s" % bucket_name)
+                        sys.exit(0)
+                Obj.conn.delete_bucket(bucket.name)
+                logging.info("Deleting the bucket %s" % bucket_name)
+
+            # removing a directory
+            if interactive:
                 for key in bucket.list(prefix=key_name):
                     del_key_ans = raw_input('rmobj: delete \'%s\'? [y/n] ' %
                                             key.name).lower()
@@ -86,7 +90,10 @@ if __name__ == "__main__":
                         continue
                     logging.info("Deleting key %s" % key.name)
                     bucket.delete_key(key.name)
-
+            else:
+                for key in bucket.list(prefix=key_name):
+                    logging.info("Deleting key %s" % key.name)
+                    bucket.delete_key(key.name)
         else:  # non-recursive
             if key_name is None:
                 logging.error('Can not delete bucket %s, ' % bucket.name +

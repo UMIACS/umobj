@@ -1,14 +1,13 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH rmobj 1 9/12/2014 UMobj "rmobj Utility"
+.TH rmobj 1 12/17/2014 UMobj "rmobj Utility"
 
 .SH NAME
 rmobj - delete buckets and keys from an Object Store
 
 .SH SYNOPSIS
-rmobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
-      [-S/--server <server>] [-P/--port <port>] [-f/--force] [--version]
-      [-r/--recursive] [-V/--verbose] [-D/--debug] [-h/--help]
-      BUCKET[:KEY]+
+rmobj [-h] [--version] [-D] [-V] [-A ACCESS_KEY] [-S SECRET_KEY]
+             [-H HOST] [-P PORT] [-r] [-f] [-i]
+             S3PATH [S3PATH ...]
 
 .SH DESCRIPTION
 rmobj deletes keys and buckets from an Object Store.
@@ -24,6 +23,7 @@ Here is a short summary of the options available in rmobj.  Please refer to the 
  -P, --port=<port>              Object store server port [Default: 443]
  -r, --recursive                Delete files recursively [Default: no]
  -f, --force                    Force deletes without prompting
+ -i, --interactive              Prompt before each deletion (default)
      --version                  Print version
  -V, --verbose                  Verbose mode
  -D, --debug                    Debug mode
@@ -54,6 +54,11 @@ This specifies that files should be removed recursively.  If you are removing di
 .TP
 \fB-f/--force\fR
 The \fB--force\fR option will allow files to be deleted without prompting for each.
+
+.TP
+\fB-i/--interactive\fR
+The \fB-i\fR option will prompt for confirmation before deleting each file.
+This option overrides a \fB-f\fR option.
 
 .TP
 \fB---version\fR
