@@ -12,7 +12,7 @@ from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
 from umobj.options import umobj_parser
 from umobj.obj import Obj
 from umobj.acl import all_users
-
+from umobj.key import get_metadata
 
 def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
     """List everything in a bucket"""
@@ -60,6 +60,9 @@ def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
                     for grant in k.get_acl().acl.grants:
                         grants.append("%s:%s" % (grant.id, grant.permission))
                     print '  ACLs: ' + print_word_list(grants)
+                    metadata = get_metadata(b, k.name)
+                    if metadata:
+                        print '  Metadata: %s' % (metadata)
                 except S3ResponseError:
                     pass
             if public:

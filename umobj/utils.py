@@ -108,3 +108,16 @@ def sizeof_fmt(num):
             return "%3.1f %s" % (num, x)
         num /= 1024.0
     return "%3.1f %s" % (num, x)
+
+
+def parse_key_value_pair(pair):
+    '''
+    Given a key-value string, parse the key and the value and return a
+    tuple of the two.
+
+    If it is unparasable, return pair, None
+    '''
+    parts = pair.split('=', 1)
+    if len(parts) != 2:
+        return pair, None
+    return parts[0], parts[1]

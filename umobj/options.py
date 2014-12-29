@@ -70,6 +70,11 @@ class umobj_parser(object):
         self.parser.add_argument(short, long, dest=dest, help=help,
                                  metavar=metavar, action='append')
 
+    def add_metadata(self, short='-k', long='--metadata',
+                     dest="metadata", help='Metadata', metavar="METADATA"):
+        self.parser.add_argument(short, long, dest=dest, help=help,
+                                 metavar=metavar, action='append')
+
     def add_recursive(self, short='-r', long='--recursive', dest='recursive',
                       help='Recurse', action='store_true', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
