@@ -115,7 +115,7 @@ def parse_key_value_pair(pair):
     Given a key-value string, parse the key and the value and return a
     tuple of the two.
 
-    If it is unparasable, return pair, None
+    If it is unparsable, return pair, None
     '''
     parts = pair.split('=', 1)
     if len(parts) != 2:
