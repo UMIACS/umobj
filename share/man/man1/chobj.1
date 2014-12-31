@@ -1,5 +1,5 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH chobj 1 11/25/2014 UMobj "chobj Utility"
+.TH chobj 1 12/31/2014 UMobj "chobj Utility"
 
 .SH NAME
 chobj - change permissions on keys and buckets in an Object Store
@@ -8,7 +8,7 @@ chobj - change permissions on keys and buckets in an Object Store
 chobj [-h] [--version] [-D] [-V] [-A ACCESS_KEY] [-S SECRET_KEY]
              [-H HOST] [-P PORT] [-r]
              [-m {add,remove,bucket,public,private,clear}]
-             [--no-bucket-changes] [-p POLICY]
+             [--no-bucket-changes] [-p POLICY] [-k METADATA]
              bucket[:key]+
 
 .SH DESCRIPTION
@@ -36,6 +36,10 @@ Object Store server port [Default: 443]
 .TP
 \fB-p/--policy=<policy>+\fR
 A policy consists of a username and a policy directive separated by a colon.  Policy directives include \fIREAD\fR, \fIWRITE\fR, and \fIFULL_CONTROL\fR.  For example, "-p liam:FULL_CONTROL" could be passed in to grant \fIFULL_CONTROL\fR to user liam.  This flag can be passed multiple times in the same invocation.
+
+.TP
+\fB-k/--metadata=<key=value>+\fR
+Metadata consists of a key and a value of the form "key=value".  This is the form metadata must be in when adding metadata.  Keys on a n object must be unique, so respecifying a key with a different value will overwrite the pervious value associated with that key.  When in remove mode, one may specify either the full "key=value" pair or just the key to remove.
 
 .TP
 \fB---version\fR
