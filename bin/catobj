@@ -6,7 +6,7 @@ import boto.s3
 
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string
-from umobj.transfer import cat_key
+from umobj.transfer import obj_key
 from umobj.obj import Obj
 from umobj.options import umobj_parser
 
@@ -58,9 +58,10 @@ if __name__ == "__main__":
                       (bucket_name, e.error_code))
         sys.exit(3)
 
-    mystr = cat_key(bucket_name, key_name)
-    if mystr:
-        print mystr
+    key = obj_key(bucket_name, key_name)
+    if key:
+        for bytes in key:
+            print bytes
     else:
         logging.error('No such key %s' % src)
         sys.exit(4)

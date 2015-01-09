@@ -96,14 +96,6 @@ def obj_key(bucket_name, key_name):
         return None
 
 
-def cat_key(bucket_name, key_name):
-    '''Return the string contents of a key'''
-    key = obj_key(bucket_name, key_name)
-    if key:
-        return key.get_contents_as_string()
-    else:
-        return None
-
 def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
                  multi=False, checksum=False):
     bucket = Obj.conn.get_bucket(bucket_name)
