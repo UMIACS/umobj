@@ -70,6 +70,11 @@ class umobj_parser(object):
         self.parser.add_argument(short, long, dest=dest, help=help,
                                  metavar=metavar, action='append')
 
+    def add_metadata(self, short='-k', long='--metadata',
+                     dest="metadata", help='Metadata', metavar="METADATA"):
+        self.parser.add_argument(short, long, dest=dest, help=help,
+                                 metavar=metavar, action='append')
+
     def add_recursive(self, short='-r', long='--recursive', dest='recursive',
                       help='Recurse', action='store_true', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
@@ -81,11 +86,11 @@ class umobj_parser(object):
                                action=action, default=default)
 
     def add_mode(self, short='-m', long='--mode', dest='mode',
-                 help='Mode', choices=None):
+                 help='Mode', choices=None, required=True):
         if choices is None:
             choices = ['add', 'modify', 'remove', 'delete']
         self.parser.add_argument(short, long, dest=dest, help=help,
-                                 choices=choices)
+                                 choices=choices, required=required)
 
     def add_no_bucket_changes(self, long='--no-bucket-changes',
                               dest='no_bucket_changes',

@@ -6,13 +6,14 @@ import time
 import logging
 import boto.s3
 from boto.exception import S3ResponseError
+from qav.listpack import ListPack
 
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string, print_word_list, sizeof_fmt
 from umobj.options import umobj_parser
 from umobj.obj import Obj
 from umobj.acl import all_users
-
+from umobj.key import get_metadata
 
 def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
     """List everything in a bucket"""
@@ -60,6 +61,12 @@ def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
                     for grant in k.get_acl().acl.grants:
                         grants.append("%s:%s" % (grant.id, grant.permission))
                     print '  ACLs: ' + print_word_list(grants)
+                    metadata = get_metadata(b, k.name)
+                    if metadata:
+                        data = [(k, v) for k, v in metadata.iteritems()]
+                        lp = ListPack(data, indentation=4)
+                        print '  Metadata:'
+                        print lp
                 except S3ResponseError:
                     pass
             if public:

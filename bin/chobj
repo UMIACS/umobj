@@ -6,10 +6,12 @@ import sys
 import logging
 
 from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
-    umobj_get_bucket_key_pair_from_string
+    umobj_get_bucket_key_pair_from_string, parse_key_value_pair
 from umobj.obj import Obj
 from umobj.acl import split_acl, make_private
 from umobj.options import umobj_parser
+from umobj.key import add_metadata, set_metadata, \
+    remove_metadata_by_key_value_pair
 
 
 if __name__ == "__main__":
@@ -25,6 +27,7 @@ if __name__ == "__main__":
     parser.add_mode(choices=['add', 'remove', 'bucket', 'public', 'private', 'clear'], help='Mode of operation.  Specifying "clear" will create an empty ACL to be applied.  However, if you specify policies in the same command, the ACL will contain those policies.')
     parser.add_no_bucket_changes()
     parser.add_policy()
+    parser.add_metadata()
     parser.add_s3path(number=1)
     args = parser.parse_args()
 
@@ -47,26 +50,30 @@ if __name__ == "__main__":
     no_bucket_changes = args.no_bucket_changes
     push_bucket_acls = mode == 'bucket'
     policies = args.policies
+    metadata = args.metadata
 
+    if policies is None:
+        policies = []
+    if metadata is None:
+        metadata = []
+        
     # Bucket changes are only possible if the user does not not specify
     # --no-bucket-changes and also does not specify --push-bucket-acls.
     # Whether or not the bucket is included will also depend on whether or
     # not a key_prefix is present.
     bucket_changes_possible = not no_bucket_changes and not push_bucket_acls
 
-    if not public and not private and not push_bucket_acls:
-        if policies is None:
-            if mode == 'clear':
-                policies = []
-            else:
-                logging.error('One or more ACL policies are required.')
-                parser.print_help()
-                sys.exit(1)
+    # --- guard clasuses ---
 
-    if push_bucket_acls and no_bucket_changes:
-        logging.warning('--no-bucket-changes cannot possibly have any ' +
-                        'effect when pushing bucket ACLs.')
+    # failure conditions by mode:
+    #   - add
+    #   - remove
+    #   - bucket
+    #   - public
+    #   - private
+    #   - clear
 
+    # ensure a successful connection to the object store
     if not Obj.connect(host=args.host,
                        port=args.port,
                        access_key=args.access_key,
@@ -74,9 +81,15 @@ if __name__ == "__main__":
         logging.error('Unable to contact object store.')
         sys.exit(1)
 
+    # make sure we know what objects to change
     if len(S3PATH) == 0:
         parser.print_help()
         sys.exit(1)
+    # --- end guard claseses ---
+
+    if push_bucket_acls and no_bucket_changes:
+        logging.warning('--no-bucket-changes cannot possibly have any ' +
+                        'effect when pushing bucket ACLs.')
 
     for bucket_name in S3PATH:
         bucket_name, key_name_prefix = \
@@ -119,6 +132,9 @@ if __name__ == "__main__":
                     for p in policies:
                         u, g = split_acl(p)
                         policy.acl.add_user_grant(g, u)
+                    for meta in metadata:
+                        k, v = parse_key_value_pair(meta)
+                        add_metadata(bucket, object.name, k, v)
                 elif mode == 'remove':
                     grants_to_remove = []
                     for grant in policy.acl.grants:
@@ -128,6 +144,8 @@ if __name__ == "__main__":
                                 grants_to_remove.append(grant)
                     policy.acl.grants = [gr for gr in policy.acl.grants
                                          if gr not in grants_to_remove]
+                    for meta in metadata:
+                        remove_metadata_by_key_value_pair(bucket, object.name, meta)
                 elif mode == 'clear':
                     acl = ACL()
                     for p in policies:
@@ -138,7 +156,7 @@ if __name__ == "__main__":
                         # object's owner to have FULL_CONTROL
                         acl.add_user_grant('FULL_CONTROL', object.owner.id)
                     policy.acl = acl
-
+                    set_metadata(bucket, object.name, {})
                 try:
                     object.set_acl(policy)
                 except boto.exception.S3ResponseError:
