@@ -12,7 +12,7 @@ from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
     umobj_get_bucket_key_pair_from_string, print_word_list, sizeof_fmt
 from umobj.options import umobj_parser
 from umobj.obj import Obj
-from umobj.acl import all_users
+from umobj.acl import all_users, get_formatted_grants_from_key
 from umobj.key import get_metadata
 
 def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
@@ -57,9 +57,7 @@ def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
                     print "  MD5: %s" % k.etag.strip('\"')
             if long_list:
                 try:
-                    grants = []
-                    for grant in k.get_acl().acl.grants:
-                        grants.append("%s:%s" % (grant.id, grant.permission))
+                    grants = get_formatted_grants_from_key(k)
                     print '  ACLs: ' + print_word_list(grants)
                     metadata = get_metadata(b, k.name)
                     if metadata:
@@ -94,9 +92,7 @@ def list_buckets(s3, long_list=False):
         print b.name
         if long_list:
             try:
-                grants = []
-                for grant in b.get_acl().acl.grants:
-                    grants.append("%s:%s" % (grant.id, grant.permission))
+                grants = get_formatted_grants_from_key(b)
                 print print_word_list(grants, preface=' ACLs:')
             except S3ResponseError:
                 pass
