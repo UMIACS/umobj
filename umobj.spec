@@ -9,7 +9,8 @@ License: unknown
 URL: https://gitlab.umiacs.umd.edu/staff/umobj
 Source0: %{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}
-Requires: %{python}, %{python}-boto, %{python}-progressbar, %{python}-argparse, %{python}-filechunkio, %{python}-bagit, qav
+Requires: %{python}, %{python}-boto, %{python}-progressbar, %{python}-argparse, %{python}-filechunkio, %{python}-bagit
+Requires: qav >= 0.2.7
 BuildArch: noarch
 
 %description
