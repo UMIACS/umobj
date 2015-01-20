@@ -1,30 +1,32 @@
 # umobj
-Command Line Utilties for UMIACS Object Storage Services
+Command-line utilties for UMIACS Object Storage Services
 
-They are provided to support our [Ceph](http://ceph.com) Object Stores so that
-our users may interact with them on the command line.  In addition, each Ceph
-Object Store in UMIACS has a fully-functional web application that allows
-access to your storage from a web browser.
+These utilities provide a command-line interface to an Amazon S3-compatible
+file/object storage service, which we will refer to as an Object Store.  UMIACS
+runs multiple Object Stores, but each Object Store in UMIACS has a
+fully-functional web application that allows access to your files from a web
+browser.
 
-These are a collection of utilities written in Python using the
-standard Boto library.  They all support some common environment
-variables that can be set to avoid needing to specified each
-command line.  UMIACS supported systems have these available in the standard
-paths.
+UMIACS UNIX systems have these utilities available in the standard paths.
 
 ## Setup
 
-The following environmental variables are required to be set.
+Setting a few environmental variables containing the credentials you'll need to
+use for the Object Store for convenience is a good idea.  When logged into the
+web interface, you can find these credentials on the user page.  E.g.
+https://obj.umiacs.umd.edu/obj/user/
 
- * *OBJ_ACCESS_KEY_ID* - The users access key
- * *OBJ_SECRET_ACCESS_KEY* - The users secret key
+The following environmental variables are required:
 
-This environment variable is required if you using an alternative Object Store
+ * *OBJ_ACCESS_KEY_ID* - The user's access key
+ * *OBJ_SECRET_ACCESS_KEY* - The user's secret key
+
+This environmental variable is required if you using an Object Store other
 than ```obj.umiacs.umd.edu```.
 
  * *OBJ_SERVER*  - The object server to use
 
-For example if you use the ```bash``` shell you can add the following to your
+For example, if you use the ```bash``` shell, you can add the following to your
 ```.bashrc``` or ```.bash_profile```.
 
 ```bash
@@ -44,10 +46,10 @@ and <code>--server</code> switches to the utilities to get the same behavior.
 ## Utilties
 
 These utilities use a common syntax for specifying the bucket and an optional
-key or path.  The bucket and key is separated by a ```:```.  For example,
-```my_bucket:bar.txt``` specifies the bucket ```my_bucket``` and the
-key ```bar.txt```.  For more information on a specific utility you can pass the
-flag ```-h``` or ```--help``` for help.
+key or path.  The bucket and key are separated by a ```:```.  For example,
+```my_bucket:bar.txt``` denotes the bucket ```my_bucket``` and the
+key ```bar.txt```.  For more information on a specific utility, you can pass
+the flag ```-h``` or ```--help``` for help.
 
 * lsobj
 * mkobj
@@ -55,11 +57,12 @@ flag ```-h``` or ```--help``` for help.
 * rmobj
 * chobj
 * syncobj
+* catobj
 
 ### lsobj
 
 To list buckets and keys in the Object Store you can use the <b>lsobj</b> command.  
-If given without an argument it will list your buckets (this will only list
+If given without an argument it will list your buckets (this can only list
 buckets that you created).
 
 ```bash
@@ -87,12 +90,10 @@ $ lsobj test
 ```
 
 #### Directories
-In an object store there are only buckets and keys (key=value store).  This
-means that your traditional POSIX directory structure is only emulated using
-the UNIX ```/``` character as the last character in a key name.  Any key in
-the bucket ending in a ```/``` will be interpreted by the ```lsobj``` utility and
-website as a directory.   You can also list only subdirectories with the
-```lsobj``` utility.
+In an Object Store, there are only buckets and keys.  This means that any
+apparent directory structure is only emulated using the UNIX ```/``` character
+as the last character in a key name.  Any key in the bucket ending in a ```/```
+will be interpreted as a directory.  You can also list only subdirectories with the ```lsobj``` utility.
 
 ```bash
 $ lsobj test:foo/
@@ -108,7 +109,7 @@ foo/
 mkobj creates buckets and directories in the Object Store.  
 
 <b>Please note that bucket names are unique in the Object Store, so you may
-very well get an error back that the name has already been used.</b>  
+very well get an error back that the name has already been taken.</b>
 
 ```bash
 $ mkobj foo
@@ -120,7 +121,7 @@ test
 zeta
 ```
 
-You can also create directories within your buckets to provide a way to group your data.
+You can also create directories to group your data.
 
 ```bash
 % mkobj foo:bar/
@@ -165,7 +166,7 @@ To copy a directory of files you will need to use the <code>-r</code> or <code>-
 ```
 
 ### rmobj
-You can delete your buckets and keys with ```rmobj```.  It can take a bucket and work recursively, asking you to delete all the files and the bucket itself.  It can also just delete specific files in a bucket when given on the command line.
+You can delete your buckets and keys with ```rmobj```.  It can take a bucket and work recursively, asking you to delete all the files and the bucket itself.  It can also just delete specific files in a bucket when given on the command-line.
 
 ```bash
 % rmobj -r foo
@@ -213,13 +214,12 @@ You can also remove directories within a bucket.  To do so, you will need to pas
 You can change the ACL on a specific key(s) and specify multiple canned ACL policies in a single command.
 
 ```bash
-% chobj -p liam:FULL_CONTROL -p derek:FULL_CONTROL foo:test-requirements.txt
+% chobj -m clear -p liam:FULL_CONTROL -p derek:FULL_CONTROL foo:test-requirements.txt
 ```
 
 ### syncobj
 You can use ```syncobj``` to syncronize files and directories into the object
-store.  It does this by comparing the checksum between the local and remote.  This
-does not follow symlinks and will warn when it encounters files (character,
+store.  It does this by comparing the checksum between the local and remote.  This does not follow symlinks and will warn when it encounters files (character,
 block, fifo, etc.) that it can not archive.
 
 ```bash
@@ -227,16 +227,27 @@ block, fifo, etc.) that it can not archive.
 100% |#########################################################################|
 ```
 
+### catobj
+Use ```catobj``` to print the contents of a key to the screen.  This may be
+useful to streaming the content of a file to another command for some sort of
+processing without having to write the key.  If any errors are printed in the process of running this command, you can be assured that they will be printed to stderr, and should not interfere with what's being printed to stdout.
+
+```bash
+% catobj foo:something.txt
+Fallaces sunt rerum species.  Mutantur omnia nos et mutamur in illis.
+```
+
 ## Requirements
 
-These utilties and libraries are work with Python 2.6+ (and are not tested
+These utilties and libraries all work with Python 2.6+ (and are not tested
     under Python 3.x+).  They require the following modules:
 
 - Boto > 2.5.x
 - FileChunkIO
 - Progressbar
+- qav (https://gitlab.umiacs.umd.edu/staff/qav)
 
-If running python 2.6 you need to have the following backports
+If running Python 2.6, you need to have the following backports:
 
 - argparse
 
