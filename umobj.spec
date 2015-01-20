@@ -34,6 +34,7 @@ rm -rf %{buildroot}
 %files
 %defattr(0755,root,root,-)
 %{_bindir}/bagobj
+%{_bindir}/catobj
 %{_bindir}/chobj
 %{_bindir}/cmpobj
 %{_bindir}/cpobj
