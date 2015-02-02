@@ -12,10 +12,23 @@ epilog = '''  ACCESS_KEY  - Your Access Key ID.  If not supplied, will use
 
 
 def positive_integer(value):
-    '''check that 'value' is a positive integer'''
-    ivalue = int(value)
-    if ivalue < 0:
+    '''
+    check that `value` is a positive integer
+    
+    Raises:
+        ArgumentTypeError -- in either the case where `value` can't be cast
+            to an integer or is negative.
+
+    Returns:
+        `value` as an int
+    '''
+    try:
+        ivalue = int(value)
+        if ivalue < 0:
+            raise ValueError
+    except ValueError:
         raise ArgumentTypeError("%s is an invalid value" % value)
+
     return ivalue
 
 
