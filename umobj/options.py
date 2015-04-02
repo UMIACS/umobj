@@ -1,5 +1,6 @@
 import umobj
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from argparse import ArgumentParser, RawDescriptionHelpFormatter, \
+    ArgumentTypeError
 
 epilog = '''  ACCESS_KEY  - Your Access Key ID.  If not supplied, will use
                 the value of the environment variable OBJ_ACCESS_KEY_ID.
@@ -10,16 +11,37 @@ epilog = '''  ACCESS_KEY  - Your Access Key ID.  If not supplied, will use
 '''
 
 
+def positive_integer(value):
+    '''
+    check that `value` is a positive integer
+    
+    Raises:
+        ArgumentTypeError -- in either the case where `value` can't be cast
+            to an integer or is negative.
+
+    Returns:
+        `value` as an int
+    '''
+    try:
+        ivalue = int(value)
+        if ivalue < 0:
+            raise ValueError
+    except ValueError:
+        raise ArgumentTypeError("%s is an invalid value" % value)
+
+    return ivalue
+
+
 class umobj_parser(object):
     def __init__(self, usage=None, description=None, description_epilog=None):
         description = '\n\n' + epilog
         if description_epilog is not None:
             description += description_epilog
-        self.parser = ArgumentParser(usage=usage,
-                                     description=description,
-                                     add_help=False,
-                                     formatter_class=\
-                                     RawDescriptionHelpFormatter)
+        self.parser = ArgumentParser(
+            usage=usage,
+            description=description,
+            add_help=False,
+            formatter_class=RawDescriptionHelpFormatter)
         self.parser._positionals.title = 'Positional Arguments'
         self.parser._optionals.title = 'Optional Arguments'
         self.parser.add_argument('-h', '--help', action='help',
@@ -28,19 +50,20 @@ class umobj_parser(object):
                                  version=umobj.__version__,
                                  help='Show version number and exit')
         self.parser.add_argument("-D", "--debug", dest="debug",
-                               action="store_true", default=False,
-                               help="Enable debug-level logging")
+                                 action="store_true", default=False,
+                                 help="Enable debug-level logging")
         self.parser.add_argument("-V", "--verbose", action="store_true",
-                               dest="verbose", default=False,
-                               help="Enable vebose logging")
+                                 dest="verbose", default=False,
+                                 help="Enable vebose logging")
         self.parser.add_argument("-A", "--access-key", dest="access_key",
-                               help="Object Store Access Key")
+                                 help="Object Store Access Key")
         self.parser.add_argument("-S", "--secret-key", dest="secret_key",
-                               help="Object Store Secret Key")
+                                 help="Object Store Secret Key")
         self.parser.add_argument("-H", "--host", dest="host",
-                               help="Object Store Host")
+                                 help="Object Store Host")
         self.parser.add_argument("-P", "--port", dest="port",
-                               help="Object Store Port")
+                                 help="Object Store Port",
+                                 type=positive_integer)
 
     def print_help(self):
         self.parser.print_help()
@@ -63,7 +86,7 @@ class umobj_parser(object):
                  help='Show long information', action="store_true",
                  default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
-                               action=action, default=default)
+                                 action=action, default=default)
 
     def add_policy(self, short='-p', long='--policy', dest='policies',
                    help='ACL Policy(s)', metavar="POLICY"):
@@ -78,12 +101,12 @@ class umobj_parser(object):
     def add_recursive(self, short='-r', long='--recursive', dest='recursive',
                       help='Recurse', action='store_true', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
-                               action=action, default=default)
+                                 action=action, default=default)
 
     def add_delete(self, short='-d', long='--delete', dest='delete',
                    help='Delete', action='store_true', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
-                               action=action, default=default)
+                                 action=action, default=default)
 
     def add_mode(self, short='-m', long='--mode', dest='mode',
                  help='Mode', choices=None, required=True):
@@ -94,7 +117,9 @@ class umobj_parser(object):
 
     def add_no_bucket_changes(self, long='--no-bucket-changes',
                               dest='no_bucket_changes',
-                              help="Don't make any changes to the bucket, only to the keys underneath.  You must also specify the recursive option.",
+                              help="Don't make any changes to the bucket, " +
+                                   "only to the keys underneath.  You " +
+                                   "must also specify the recursive option.",
                               action='store_true', default=False):
         self.parser.add_argument(long, dest=dest, help=help, action=action,
                                  default=default)
@@ -109,16 +134,15 @@ class umobj_parser(object):
         self.parser.add_argument(long, dest=dest, help=help,
                                  action=action, default=default)
 
-
     def add_md5(self, short='-m', long='--md5', dest='md5', help='MD5 Sum',
                 action='store_true', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
-                               action=action, default=default)
+                                 action=action, default=default)
 
     def add_force(self, short='-f', long='--force', dest='force', help='Force',
-                action='store_true', default=False):
+                  action='store_true', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
-                               action=action, default=default)
+                                 action=action, default=default)
 
     def add_interactive(self, short='-i', long='--interactive',
                         dest='interactive',
@@ -132,4 +156,4 @@ class umobj_parser(object):
                       help='Multipart upload and downloads',
                       action='store_true', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
-                               action=action, default=default)
+                                 action=action, default=default)
