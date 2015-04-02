@@ -23,8 +23,7 @@ endif
 
 BUILDROOT := /fs/UMbuild/$(OS)
 
-.PHONY: rpm package build
-
+.PHONY: rpm
 rpm:
 	$(eval TEMPDIR := $(shell mktemp -d /tmp/tmp.XXXXX))
 	mkdir -p $(TEMPDIR)/$(NAME)-$(VERSION)
@@ -43,9 +42,11 @@ rpm:
 		--define "python ${PYTHON}"
 	rm -rf $(TEMPDIR)
 
+.PHONY: package
 package:
 	@echo ================================================================
 	@echo cp /fs/UMbuild/$(OS)/RPMS/$(ARCH)/$(NAME)-$(VERSION)-$(RELEASE).$(ARCH).rpm $(YUMREPO_LOCATION)
 	@echo createrepo /fs/UMyumrepos/$(OS)/stable
 
+.PHONY: build
 build: rpm package
