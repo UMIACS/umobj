@@ -23,6 +23,8 @@ endif
 
 BUILDROOT := /fs/UMbuild/$(OS)
 
+.PHONY: rpm package build
+
 rpm:
 	$(eval TEMPDIR := $(shell mktemp -d /tmp/tmp.XXXXX))
 	mkdir -p $(TEMPDIR)/$(NAME)-$(VERSION)
