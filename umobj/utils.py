@@ -7,16 +7,18 @@ import signal
 
 from handler_queue import HandlerQueue
 
+IO_ERROR_VALUE_REGEX = re.compile('[Errno \d+] (.*)')
 
-def umobj_excepthook(type, value, traceback):
-    '''Override sys.excepthook to handle a few uncaught exceptions'''
-    if type == IOError:
-        logging.error('Ran out of local disk space.')
+
+def umobj_excepthook(error_type, ex, traceback):
+    '''Override sys.excepthook to handle any interesting uncaught exceptions'''
+    if error_type == IOError:
+        logging.error('Encountered an I/O error: %s' % ex.strerror)
         sys.exit(1)
 
     # if we didn't have a special reason to handle an exception above, pass
     # through to the default excepthook
-    sys.__excepthook__(type, value, traceback)
+    sys.__excepthook__(type, ex, traceback)
 
 
 def umobj_set_excepthook():
