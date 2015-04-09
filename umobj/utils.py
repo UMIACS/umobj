@@ -7,8 +7,6 @@ import signal
 
 from handler_queue import HandlerQueue
 
-IO_ERROR_VALUE_REGEX = re.compile('[Errno \d+] (.*)')
-
 
 def umobj_excepthook(error_type, ex, traceback):
     '''Override sys.excepthook to handle any interesting uncaught exceptions'''
