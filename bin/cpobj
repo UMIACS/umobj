@@ -5,7 +5,7 @@ import sys
 import logging
 import boto.s3
 
-from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
+from umobj.utils import umobj_logging, umobj_init, \
     umobj_get_bucket_key_pair_from_string
 from umobj.transfer import obj_upload, obj_download
 from umobj.obj import Obj
@@ -15,8 +15,7 @@ pbar = None
 
 
 if __name__ == "__main__":
-
-    umobj_init_keyboard_interrupt()
+    umobj_init()
 
     description = 'Copy Object(s) - ' + \
                   'Copy objects to and from object store'

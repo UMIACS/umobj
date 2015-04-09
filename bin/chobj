@@ -5,7 +5,7 @@ from boto.s3.acl import ACL
 import sys
 import logging
 
-from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
+from umobj.utils import umobj_logging, umobj_init, \
     umobj_get_bucket_key_pair_from_string, parse_key_value_pair
 from umobj.obj import Obj
 from umobj.acl import split_acl, make_private
@@ -15,7 +15,7 @@ from umobj.key import add_metadata, set_metadata, \
 
 
 if __name__ == "__main__":
-    umobj_init_keyboard_interrupt()
+    umobj_init()
 
     description = 'Change Object - ' + \
                   'Modify Access Control lists for a set of buckets and/or keys'

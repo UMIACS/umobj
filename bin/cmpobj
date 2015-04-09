@@ -4,7 +4,7 @@ import boto.s3
 import sys
 import logging
 
-from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
+from umobj.utils import umobj_logging, umobj_init, \
     umobj_get_bucket_key_pair_from_string
 from umobj.obj import Obj
 from umobj.options import umobj_parser
@@ -13,7 +13,7 @@ from umobj.verify import load_bag_checksums, get_bag_checksumming_algorithm
 
 
 if __name__ == "__main__":
-    umobj_init_keyboard_interrupt()
+    umobj_init()
 
     description = 'List Object(s)'
     parser = umobj_parser(description=description)
