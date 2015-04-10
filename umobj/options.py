@@ -1,3 +1,4 @@
+import logging
 import umobj
 from argparse import ArgumentParser, RawDescriptionHelpFormatter, \
     ArgumentTypeError
@@ -158,3 +159,18 @@ class umobj_parser(object):
                       action='store_true', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
                                  action=action, default=default)
+
+    def get_logging_level(args):
+        '''
+        Take an args object and tease out if we were called with verbose or
+        debug flags.
+
+        `args` is the object returned by parse_args()
+        '''
+        if args.debug:
+            logging_level = logging.DEBUG
+        elif args.verbose:
+            logging_level = logging.INFO
+        else:
+            logging_level = logging.WARNING
+        return logging_level

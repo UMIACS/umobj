@@ -10,7 +10,7 @@ from qav.listpack import ListPack
 
 from umobj.utils import umobj_logging, umobj_init, \
     umobj_get_bucket_key_pair_from_string, print_word_list, sizeof_fmt
-from umobj.options import umobj_parser
+from umobj.options import umobj_parser, get_logging_level
 from umobj.obj import Obj
 from umobj.acl import all_users, get_formatted_grants_from_key
 from umobj.key import get_metadata
@@ -109,14 +109,8 @@ if __name__ == "__main__":
     parser.add_md5(help='Show MD5 sum if available')
     parser.add_s3path(number='?', help='<BUCKET>[:KEY_PREFIX]')
     args = parser.parse_args()
-    # setup logging
-    if args.debug:
-        logging_level = logging.DEBUG
-    elif args.verbose:
-        logging_level = logging.INFO
-    else:
-        logging_level = logging.WARNING
-    umobj_logging(logging_level)
+
+    umobj_logging(get_logging_level(args))  # set up logging
 
     logging.info("Running %s" % sys.argv)
 

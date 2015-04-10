@@ -9,7 +9,7 @@ from umobj.utils import umobj_logging, umobj_init, \
     umobj_get_bucket_key_pair_from_string
 from umobj.transfer import obj_upload, obj_download
 from umobj.obj import Obj
-from umobj.options import umobj_parser
+from umobj.options import umobj_parser, get_logging_level
 
 
 if __name__ == "__main__":
@@ -26,14 +26,8 @@ if __name__ == "__main__":
     parser.add_s3path(name='DESTINATION', number=1,
                       help='DEST or BUCKET[:DEST]')
     args = parser.parse_args()
-    # setup logging
-    if args.debug:
-        logging_level = logging.DEBUG
-    elif args.verbose:
-        logging_level = logging.INFO
-    else:
-        logging_level = logging.WARNING
-    umobj_logging(logging_level)
+
+    umobj_logging(get_logging_level(args))  # set up logging
 
     logging.info("Running %s" % sys.argv)
 

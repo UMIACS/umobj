@@ -15,7 +15,7 @@ from umobj.tar import make_tarfile_from_files
 from umobj.transfer import obj_upload, obj_key
 from umobj.email_utils import send_email
 from umobj.obj import Obj
-from umobj.options import umobj_parser
+from umobj.options import umobj_parser, get_logging_level
 from qav.questions import Question, QuestionSet
 from qav.validators import EmailValidator
 
@@ -51,14 +51,8 @@ if __name__ == "__main__":
     parser.add_s3path(name='DESTINATION', number=1,
                       help='Destination Bucket')
     args = parser.parse_args()
-    # setup logging
-    if args.debug:
-        logging_level = logging.DEBUG
-    elif args.verbose:
-        logging_level = logging.INFO
-    else:
-        logging_level = logging.WARNING
-    umobj_logging(logging_level)
+
+    umobj_logging(get_logging_level(args))  # set up logging
 
     logging.info("Running %s" % sys.argv)
 
