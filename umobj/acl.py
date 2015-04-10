@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 def get_formatted_grants(grants):
     '''
     Return a list of formatted grant strings
-    
+
     This will pair the grantee with the permission given to the grantee.  The
     grantee may be represented by id (e.g. liam) or by group grantees set forth
     by the Amazon S3 API such as AllUsers and AuthenticatedUsers.

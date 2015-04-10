@@ -11,6 +11,7 @@ import progressbar
 
 
 class UploadThread(threading.Thread):
+
     def __init__(self, mp, queue):
         threading.Thread.__init__(self)
         self.mp = mp
@@ -36,12 +37,12 @@ class UploadThread(threading.Thread):
                                      bytes=bytes) as fp:
                         mp.upload_part_from_file(fp=fp, part_num=part_num)
                         break
-        except Exception, exc:
+        except Exception as exc:
             print exc
             if retries:
-                logging.info('%s : retrying with %d retries left' % retries-1)
-                self._upload_part(part_num, offset,
-                                  bytes, retries=retries-1)
+                logging.info(
+                    '%s : retrying with %d retries left' % retries - 1)
+                self._upload_part(part_num, offset, bytes, retries=retries - 1)
             else:
                 logging.error('%s : Failed uploading part %d' %
                               (self.mp.mp_id, part_num))
@@ -51,6 +52,7 @@ class UploadThread(threading.Thread):
 
 
 class DownloadThread(threading.Thread):
+
     def __init__(self, mp, queue):
         threading.Thread.__init__(self)
         self.mp = mp
@@ -75,21 +77,21 @@ class DownloadThread(threading.Thread):
             filename = self.mp.filename
             fd = os.open(filename, os.O_WRONLY)
             logging.debug("Opening file descriptor %d, seeking to %d" %
-                         (fd, start_byte))
+                          (fd, start_byte))
             os.lseek(fd, start_byte, os.SEEK_SET)
-            chunk_size = min((end_byte-start_byte), 32 * 1024 * 1024)
+            chunk_size = min((end_byte - start_byte), 32 * 1024 * 1024)
             while True:
                 data = key_range.read(chunk_size)
                 if data == "":
                     break
                 os.write(fd, data)
-        except Exception, exc:
+        except Exception as exc:
             print exc
 
 
 class MultiPart:
 
-    ### code adapted from https://gist.github.com/fabiant7t/924094
+    # code adapted from https://gist.github.com/fabiant7t/924094
     def __init__(self):
         self.mp_id = None
         self.bucketname = None
@@ -156,7 +158,7 @@ class MultiPart:
         logging.info("%s : Starting a pool with %d threads." %
                      (mp.id, threads))
 
-        ### putting all the tasks together in a queue
+        # putting all the tasks together in a queue
         for i in range(chunk_amount):
             offset = i * bytes_per_chunk
             remaining_bytes = source_size - offset

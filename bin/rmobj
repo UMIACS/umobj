@@ -12,7 +12,7 @@ from umobj.options import umobj_parser
 
 if __name__ == "__main__":
     umobj_init()
-    
+
     description = 'Remove Bucket(s) and Object(s)'
     parser = umobj_parser(description=description)
     parser.add_recursive()
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser.add_interactive()
     parser.add_s3path(number='+', help='BUCKET:KEY', name='S3PATH')
     args = parser.parse_args()
-    ## setup logging
+    # setup logging
     if args.debug:
         logging_level = logging.DEBUG
     elif args.verbose:

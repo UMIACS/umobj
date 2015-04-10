@@ -17,7 +17,7 @@ def send_email(send_from, send_to, subject, body_text, files=None,
                server='smtp.umiacs.umd.edu'):
     '''
     Send an email that can take an attachment
-    
+
     The following args are required:
         send_from - a string
         send_to - a list of recipients
@@ -44,7 +44,7 @@ def send_email(send_from, send_to, subject, body_text, files=None,
             part.set_payload(open(f, "rb").read())
             encoders.encode_base64(part)
             part.add_header('Content-Disposition',
-                        'attachment; filename="%s"' % os.path.basename(f))
+                            'attachment; filename="%s"' % os.path.basename(f))
             msg.attach(part)
 
     smtp = smtplib.SMTP(server)

@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parser.add_s3path(number=1, help='BUCKET:KEY', name='SRC')
     parser.add_s3path(number=1, help='BUCKET:KEY', name='DEST')
     args = parser.parse_args()
-    ## setup logging
+    # setup logging
     if args.debug:
         logging_level = logging.DEBUG
     elif args.verbose:
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     if src_bucket_name and src_key_name and dest_bucket_name and dest_key_name:
         try:
             dest_bucket = Obj.conn.get_bucket(dest_bucket_name)
-        except boto.exception.S3ResponseError, e:
+        except boto.exception.S3ResponseError as e:
             logging.error("Cannot access bucket %s, %s." %
                           (dest_bucket_name, e.error_code))
             sys.exit(1)
@@ -56,12 +56,12 @@ if __name__ == "__main__":
                           dest_bucket_name, dest_key_name))
             # be very sure that the object copied before we delete the original
             Obj.conn.get_bucket(src_bucket_name).get_key(src_key_name).delete()
-        except boto.exception.S3ResponseError, e:
+        except boto.exception.S3ResponseError as e:
             logging.error("SRC %s:%s does not exist" %
                           (src_bucket_name, src_key_name))
-        except NameError, e:
+        except NameError as e:
             logging.error("DEST bucket %s does not exist" % dest_bucket_name)
-        except boto.exception.BotoClientError, e:
+        except boto.exception.BotoClientError as e:
             logging.error("Failed to copy %s:%s to %s:%s" %
                           (src_bucket_name, src_key_name,
                            dest_bucket_name, dest_key_name))

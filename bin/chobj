@@ -18,13 +18,24 @@ if __name__ == "__main__":
     umobj_init()
 
     description = 'Change Object - ' + \
-                  'Modify Access Control lists for a set of buckets and/or keys'
+                  'Modify Access Control lists for a set of buckets ' + \
+                  'and/or keys'
     description_epilog = '''  POLICY      - username:ACL where ACL is one of
                 FULL_CONTROL, READ, WRITE, READ_ACL, WRITE_ACL'''
     parser = umobj_parser(description=description,
                           description_epilog=description_epilog)
     parser.add_recursive(help='Recursively apply ACL to keys')
-    parser.add_mode(choices=['add', 'remove', 'bucket', 'public', 'private', 'clear'], help='Mode of operation.  Specifying "clear" will create an empty ACL to be applied.  However, if you specify policies in the same command, the ACL will contain those policies.')
+    parser.add_mode(
+        choices=[
+            'add',
+            'remove',
+            'bucket',
+            'public',
+            'private',
+            'clear'],
+        help='Mode of operation.  Specifying "clear" will create an empty ' +
+             'ACL to be applied.  However, if you specify policies in the ' +
+             'same command, the ACL will contain those policies.')
     parser.add_no_bucket_changes()
     parser.add_policy()
     parser.add_metadata()
@@ -56,7 +67,7 @@ if __name__ == "__main__":
         policies = []
     if metadata is None:
         metadata = []
-        
+
     # Bucket changes are only possible if the user does not not specify
     # --no-bucket-changes and also does not specify --push-bucket-acls.
     # Whether or not the bucket is included will also depend on whether or
@@ -96,7 +107,7 @@ if __name__ == "__main__":
             umobj_get_bucket_key_pair_from_string(bucket_name)
         try:
             bucket = Obj.conn.get_bucket(bucket_name)
-        except boto.exception.S3ResponseError, e:
+        except boto.exception.S3ResponseError as e:
             logging.error("Can not access bucket %s, %s." %
                           (bucket_name, e.error_code))
             continue
@@ -145,7 +156,10 @@ if __name__ == "__main__":
                     policy.acl.grants = [gr for gr in policy.acl.grants
                                          if gr not in grants_to_remove]
                     for meta in metadata:
-                        remove_metadata_by_key_value_pair(bucket, object.name, meta)
+                        remove_metadata_by_key_value_pair(
+                            bucket,
+                            object.name,
+                            meta)
                 elif mode == 'clear':
                     acl = ACL()
                     for p in policies:

@@ -28,7 +28,7 @@ if __name__ == "__main__":
     parser.add_s3path(name='DESTINATION', number=1,
                       help='DEST or BUCKET[:DEST]')
     args = parser.parse_args()
-    ## setup logging
+    # setup logging
     if args.debug:
         logging_level = logging.DEBUG
     elif args.verbose:
@@ -90,14 +90,14 @@ if __name__ == "__main__":
 
     try:
         bucket = Obj.conn.get_bucket(bucket_name)
-    except boto.exception.S3ResponseError, e:
+    except boto.exception.S3ResponseError as e:
         logging.error("Unable to access bucket %s, %s." %
                       (bucket_name, e.error_code))
         sys.exit(1)
 
     if upload:
         obj_upload(bucket_name, src, dest_name, args.recursive,
-                       args.multipart)
+                   args.multipart)
     if download:
         obj_download(bucket_name, dest, key_name, args.force, args.recursive,
                      args.multipart)

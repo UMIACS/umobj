@@ -7,7 +7,8 @@ log = logging.getLogger(__name__)
 
 def get_bag_checksumming_algorithm(bucket_name, key_path):
     for algo in bagit.checksum_algos:
-        manifest = obj_key(bucket_name, '%s/manifest-%s.txt' % (key_path, algo))
+        manifest = obj_key(
+            bucket_name, '%s/manifest-%s.txt' % (key_path, algo))
         if manifest is not None:
             return algo
     return None
@@ -15,7 +16,9 @@ def get_bag_checksumming_algorithm(bucket_name, key_path):
 
 def obj_checksums(bucket_name, key_path):
     for algo in bagit.checksum_algos:
-        manifest = obj_key(bucket_name, '%s/manifest-%s.txt' % (key_path, algo))
+        manifest = obj_key(
+            bucket_name, '%s/manifest-%s.txt' %
+            (key_path, algo))
         if manifest is not None:
             checksums = manifest.get_contents_as_string().strip()
             tagmanifest = obj_key(bucket_name, '%s/tagmanifest-%s.txt' %
@@ -23,7 +26,8 @@ def obj_checksums(bucket_name, key_path):
             if tagmanifest is None:
                 log.critical('Bag tag manifest is not found in object store.')
             else:
-                checksums += '\n' + tagmanifest.get_contents_as_string().strip()
+                checksums += '\n' + \
+                    tagmanifest.get_contents_as_string().strip()
             log.debug('Retrieved %d checksums from object store.' %
                       len(checksums))
             return algo, checksums
@@ -35,7 +39,8 @@ def load_bag_checksums(bucket_name, key_path):
     algo, checksums = obj_checksums(bucket_name, key_path)
     for line in checksums.split('\n'):
         line = line.strip()
-        if line == "" or line.startswith("#"): continue
+        if line == "" or line.startswith("#"):
+            continue
         entry = line.split(None, 1)
         obj_entries[entry[1]] = {}
         obj_entries[entry[1]][algo] = entry[0]

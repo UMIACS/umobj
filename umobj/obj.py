@@ -7,6 +7,7 @@ log = logging.getLogger(__name__)
 
 
 class Obj(object):
+
     def __init__(self, access_key, secret_key, host='obj.umiacs.umd.edu',
                  port=443, is_secure=True, calling_format=None):
         if calling_format is None:

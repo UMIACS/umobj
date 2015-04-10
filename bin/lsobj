@@ -15,6 +15,7 @@ from umobj.obj import Obj
 from umobj.acl import all_users, get_formatted_grants_from_key
 from umobj.key import get_metadata
 
+
 def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
     """List everything in a bucket"""
     from boto.s3.prefix import Prefix
@@ -77,12 +78,12 @@ def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
                 except S3ResponseError:
                     pass
         else:
-            #If it's not a Key object, it doesn't have a last_modified time, so
-            #print nothing instead
-            print "%s\t%s\t%010s\t%s" % (mode, ' '*24,
+            # If it's not a Key object, it doesn't have a last_modified time,
+            # so print nothing instead
+            print "%s\t%s\t%010s\t%s" % (mode, ' ' * 24,
                                          sizeof_fmt(size), k.name)
         total += size
-    print "="*80
+    print "=" * 80
     print "\t\tTOTAL:  \t%010s \t%i Files" % (sizeof_fmt(total), num)
 
 
@@ -108,7 +109,7 @@ if __name__ == "__main__":
     parser.add_md5(help='Show MD5 sum if available')
     parser.add_s3path(number='?', help='<BUCKET>[:KEY_PREFIX]')
     args = parser.parse_args()
-    ## setup logging
+    # setup logging
     if args.debug:
         logging_level = logging.DEBUG
     elif args.verbose:

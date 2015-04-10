@@ -2,6 +2,7 @@
 import tarfile
 import os.path
 
+
 def make_tarfile_from_files(output_filename, source_filenames,
                             squash_hierarchy=False):
     '''

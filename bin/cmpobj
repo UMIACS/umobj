@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser.add_verify_bag()
     args = parser.parse_args()
 
-    ## setup logging
+    # setup logging
     if args.debug:
         logging_level = logging.DEBUG
     elif args.verbose:
@@ -39,17 +39,17 @@ if __name__ == "__main__":
         logging.error('Unable to contact object store.')
         sys.exit(1)
 
-    S3PATH=args.S3PATH[0]
+    S3PATH = args.S3PATH[0]
     bucket_name, key_name = umobj_get_bucket_key_pair_from_string(S3PATH)
 
     try:
         bucket = Obj.conn.get_bucket(bucket_name)
-    except boto.exception.S3ResponseError, e:
+    except boto.exception.S3ResponseError as e:
         logging.error("Can not access bucket %s, %s." %
                       (bucket_name, e.error_code))
         sys.exit(1)
 
-    if args.verify_bag:  # comparing/verifying a bagit archive 
+    if args.verify_bag:  # comparing/verifying a bagit archive
         intact = True
         logging.debug("Verifying the integrity of bag %s in bucket %s." %
                       (key_name, bucket_name))

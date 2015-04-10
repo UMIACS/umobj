@@ -12,7 +12,7 @@ from umobj.utils import umobj_logging, umobj_init, \
     umobj_get_bucket_key_pair_from_string
 from umobj.verify import obj_checksums, load_bag_checksums
 from umobj.tar import make_tarfile_from_files
-from umobj.transfer import obj_upload, obj_download, obj_key
+from umobj.transfer import obj_upload, obj_key
 from umobj.email_utils import send_email
 from umobj.obj import Obj
 from umobj.options import umobj_parser
@@ -20,7 +20,8 @@ from qav.questions import Question, QuestionSet
 from qav.validators import EmailValidator
 
 body_text = '''
-This is a report of the following BagIt run.  Please find attached the manifest from the job that just completed.
+This is a report of the following BagIt run.  Please find attached the
+manifest from the job that just completed.
 
 Details
 =======
@@ -33,6 +34,7 @@ Description: %(External-Description)s
 '''
 
 pbar = None
+
 
 def diff(a, b):
     b = set(b)
@@ -49,7 +51,7 @@ if __name__ == "__main__":
     parser.add_s3path(name='DESTINATION', number=1,
                       help='Destination Bucket')
     args = parser.parse_args()
-    ## setup logging
+    # setup logging
     if args.debug:
         logging_level = logging.DEBUG
     elif args.verbose:
@@ -77,7 +79,7 @@ if __name__ == "__main__":
 
     try:
         bucket = Obj.conn.get_bucket(bucket_name)
-    except boto.exception.S3ResponseError, e:
+    except boto.exception.S3ResponseError as e:
         logging.error("Unable to access bucket %s, %s." %
                       (bucket_name, e.error_code))
         sys.exit(1)
@@ -108,11 +110,11 @@ if __name__ == "__main__":
     if bagit_txt is not None:   # bag may already exist
         obj_entries = load_bag_checksums(bucket_name, key_path)
         if cmp(obj_entries, bag.entries) != 0:
-            logging.error('Conflict between manifest in filesystem and ' + \
-                          'object store.  Please remove or rename the bag ' + \
+            logging.error('Conflict between manifest in filesystem and ' +
+                          'object store.  Please remove or rename the bag ' +
                           'in the object store before trying to continue.')
             sys.exit(1)
-        logging.info('Bag is already uploaded.  You can do a full ' + \
+        logging.info('Bag is already uploaded.  You can do a full ' +
                      'validation with the cmpobj command.')
     else:  # bag does not appear to exist
         obj_upload(bucket_name, src, dest_key_name, True, args.multipart)

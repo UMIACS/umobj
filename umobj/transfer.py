@@ -16,7 +16,7 @@ pbar = None
 def transfer_stats(trans_bytes, total_bytes):
     try:
         pbar.update(trans_bytes)
-    except AssertionError, e:
+    except AssertionError as e:
         print e
 
 
@@ -48,7 +48,7 @@ def upload_file(key, filename, progress=True):
                                            num_cb=100)
         else:
             key.set_contents_from_filename(filename)
-    except IOError, e:
+    except IOError as e:
         print e
         return 0
     if progress:
@@ -65,7 +65,8 @@ def download_file(key, filename, progress=True):
         if filename.endswith('/'):
             if not os.path.isdir(filename):
                 if os.path.isfile(filename.rstrip('/')):
-                    logging.critical('%s already a file can not make directory')
+                    logging.critical(
+                        '%s already a file can not make directory')
                     sys.exit(1)
                 logging.info("Creating directory %s" % filename)
                 os.makedirs(filename)
@@ -134,7 +135,7 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
                 return
             if checksum and not check_key_download(bucket, key.name, dest):
                 return
-            ## only multipart if we specify and the key is >5MB
+            # only multipart if we specify and the key is >5MB
             if multi and key.size > 5 * 1024 * 1024:
                 logging.info("Downloading key %s (%d) to %s" %
                              (key, key.size, dest))
@@ -175,8 +176,8 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
             directory = directory + '/'
             if not check_directory(bucket, directory):
                 create_directory(bucket, directory)
-        operations = sum([len(files) for r, d, files in \
-                         os.walk(src.rstrip(os.sep))])
+        operations = sum([len(files) for r, d, files in
+                          os.walk(src.rstrip(os.sep))])
         pbar = progressbar.ProgressBar(maxval=operations)
         pbar.start()
         count = 0
@@ -204,11 +205,12 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
                                             f)
                 else:
                     keyname = '%s/%s' % (prefix, f)
-                if checksum and not check_key_upload(bucket, keyname, filename):
+                if checksum and not check_key_upload(
+                        bucket, keyname, filename):
                     continue
                 logging.info("Upload key %s from file %s" %
                              (keyname, filename))
-                if (multi and size > 0) or (size > (1024*1024*1024)):
+                if (multi and size > 0) or (size > (1024 * 1024 * 1024)):
                     m = MultiPart()
                     m.start_upload(bucket_name, keyname, filename, policy)
                 else:
@@ -239,7 +241,7 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
             key_name = os.path.basename(src)
         if checksum and not check_key_upload(bucket, key_name, src):
             return
-        if multi or (size > (1024*1024*1024)):
+        if multi or (size > (1024 * 1024 * 1024)):
             logging.info("Starting a multipart upload.")
             m = MultiPart()
             m.start_upload(bucket_name, key_name, src, policy)

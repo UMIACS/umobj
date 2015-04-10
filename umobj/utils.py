@@ -114,7 +114,7 @@ def walk_path(path, character='/'):
     '''Generator that returns each part of a file like path'''
     parts = path.strip(character).split(character)
     for x, y in enumerate(parts):
-        yield '/'.join(parts[0:x+1])
+        yield '/'.join(parts[0:x + 1])
 
 
 def print_word_list(words, preface=None):

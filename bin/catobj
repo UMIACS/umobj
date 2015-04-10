@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     try:
         bucket = Obj.conn.get_bucket(bucket_name)
-    except boto.exception.S3ResponseError, e:
+    except boto.exception.S3ResponseError as e:
         logging.error("Unable to access bucket %s: %s." %
                       (bucket_name, e.error_code))
         sys.exit(3)
