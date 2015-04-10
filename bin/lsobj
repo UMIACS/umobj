@@ -8,7 +8,7 @@ import boto.s3
 from boto.exception import S3ResponseError
 from qav.listpack import ListPack
 
-from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
+from umobj.utils import umobj_logging, umobj_init, \
     umobj_get_bucket_key_pair_from_string, print_word_list, sizeof_fmt
 from umobj.options import umobj_parser
 from umobj.obj import Obj
@@ -99,7 +99,7 @@ def list_buckets(s3, long_list=False):
 
 
 if __name__ == "__main__":
-    umobj_init_keyboard_interrupt()
+    umobj_init()
 
     description = 'List Object(s)'
     parser = umobj_parser(description=description)

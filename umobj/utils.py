@@ -8,6 +8,22 @@ import signal
 from handler_queue import HandlerQueue
 
 
+def umobj_excepthook(error_type, ex, traceback):
+    '''Override sys.excepthook to handle any interesting uncaught exceptions'''
+    if error_type == IOError:
+        logging.error('Encountered an I/O error: %s' % ex.strerror)
+        sys.exit(1)
+
+    # if we didn't have a special reason to handle an exception above, pass
+    # through to the default excepthook
+    sys.__excepthook__(type, ex, traceback)
+
+
+def umobj_set_excepthook():
+    '''Set a custom excepthook for umobj'''
+    sys.excepthook = umobj_excepthook
+
+
 def umobj_logging(level, filename=None):
     ''' Set up logging for the umobj utilties.  '''
     if filename is None:
@@ -46,6 +62,22 @@ def umobj_add_handler(signal, handler):
     '''A passthrough function to adding a handler to the global HandlerQueue'''
     HandlerQueue.add_handler(signal, handler)
 
+
+def umobj_init():
+    '''
+    Set some sensible initialization defaults for all umobj utilities
+
+    This initiates common initialization tasks, like:
+      * setting up a custom keyboard intrerrupt handler
+      * providing a custom sys.excepthook function to handle specific uncaught
+        errors wherever they appear without having to resort to littering the
+        code with redundant try/except blocks.
+    '''
+    umobj_set_excepthook()
+    umobj_init_keyboard_interrupt()
+
+
+# Key/Bucket-specific manipulation
 
 def umobj_get_bucket_key_pair_from_string(bucket_and_key):
     '''Return a tuple consisting of the bucket and then the key that are

@@ -8,7 +8,7 @@ import bagit
 import shutil
 from tempfile import mkdtemp
 
-from umobj.utils import umobj_logging, umobj_init_keyboard_interrupt, \
+from umobj.utils import umobj_logging, umobj_init, \
     umobj_get_bucket_key_pair_from_string
 from umobj.verify import obj_checksums, load_bag_checksums
 from umobj.tar import make_tarfile_from_files
@@ -39,8 +39,7 @@ def diff(a, b):
     return [aa for aa in a if aa not in b]
 
 if __name__ == "__main__":
-
-    umobj_init_keyboard_interrupt()
+    umobj_init()
 
     description = 'BagIt'
     parser = umobj_parser(description=description)
