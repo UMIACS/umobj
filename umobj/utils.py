@@ -37,12 +37,17 @@ def umobj_logging(level, filename=None):
                         format=file_fmt,
                         datefmt='%m-%d %H:%M',
                         filename=log_file,
-                        filemode='w')
+                        filemode='a')
+    rotations = logging.handlers.RotatingFileHandler(
+                log_file, 
+                maxBytes=(1024 * 1000 * 10), 
+                backupCount=5)
     console = logging.StreamHandler()
     console.setLevel(level)
     formatter = logging.Formatter(console_fmt)
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
+    logging.getLogger('').addHandler(rotations)
     logging.info('Finished setting up logging.')
 
 
