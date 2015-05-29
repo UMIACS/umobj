@@ -22,9 +22,9 @@ if __name__ == "__main__":
     parser.add_force(help='Force overwrite files when downloading')
     parser.add_multipart()
     parser.add_s3path(name='SOURCE', number=1,
-                      help='BUCKET[:SRC] or SRC')
+            help='BUCKET:[SRC] or SRC')
     parser.add_s3path(name='DESTINATION', number=1,
-                      help='DEST or BUCKET[:DEST]')
+            help='DEST or BUCKET:[DEST]')
     args = parser.parse_args()
 
     umobj_logging(get_logging_level(args))  # set up logging

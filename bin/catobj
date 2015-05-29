@@ -17,7 +17,7 @@ if __name__ == "__main__":
     description = 'Cat objects from the object store'
     parser = umobj_parser(description=description)
     parser.add_s3path(name='SOURCE', number=1,
-                      help='BUCKET[:KEY]')
+                      help='BUCKET:KEY')
     args = parser.parse_args()
 
     umobj_logging(get_logging_level(args))  # set up logging
