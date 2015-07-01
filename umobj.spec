@@ -1,5 +1,4 @@
 %{!?python_sitelib: %global python_sitelib %(%{python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-#%{!?python: %global python %(%{__python} -c "from sys import executable; print executable.split('/')[-1]")}
 Name: umobj
 Summary: Command Line Utilties for UMIACS Object Storage Services
 Version: =VERSION=
@@ -9,8 +8,14 @@ License: unknown
 URL: https://gitlab.umiacs.umd.edu/staff/umobj
 Source0: %{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}
-Requires: %{python}, %{python}-boto, %{python}-progressbar, %{python}-argparse, %{python}-filechunkio, %{python}-bagit
+Requires: %{python}
+Requires: %{python}-boto
+Requires: %{python}-progressbar
+Requires: %{python}-argparse
+Requires: %{python}-filechunkio
+Requires: %{python}-bagit
 Requires: qav >= 0.2.7
+AutoReq: no
 BuildArch: noarch
 
 %description
