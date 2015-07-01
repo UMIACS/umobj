@@ -1,7 +1,7 @@
 SED = sed
 TAR = tar
 GIT = git
-NAME = umobj
+PACKAGE = umobj
 PYTHON = python
 
 VERSION = $(shell git describe --abbrev=0 --tags)
@@ -26,27 +26,34 @@ BUILDROOT := /fs/UMbuild/$(OS)
 .PHONY: rpm
 rpm:
 	$(eval TEMPDIR := $(shell mktemp -d /tmp/tmp.XXXXX))
-	mkdir -p $(TEMPDIR)/$(NAME)-$(VERSION)
-	$(GIT) clone . $(TEMPDIR)/$(NAME)-$(VERSION)
+	mkdir -p $(TEMPDIR)/$(PACKAGE)-$(VERSION)
+	$(GIT) clone . $(TEMPDIR)/$(PACKAGE)-$(VERSION)
 	$(GIT) \
-		--git-dir=$(TEMPDIR)/$(NAME)-$(VERSION)/.git \
-		--work-tree=$(TEMPDIR)/$(NAME)-$(VERSION)/.git \
+		--git-dir=$(TEMPDIR)/$(PACKAGE)-$(VERSION)/.git \
+		--work-tree=$(TEMPDIR)/$(PACKAGE)-$(VERSION)/.git \
 		checkout tags/$(VERSION)
 	$(TAR) \
 		-C $(TEMPDIR) \
 		--exclude .git \
-		-czf $(BUILDROOT)/SOURCES/$(NAME)-$(VERSION).tar.gz \
-		$(NAME)-$(VERSION)
-	$(SED) "s/=VERSION=/$(VERSION)/" $(NAME).spec > $(BUILDROOT)/SPECS/$(NAME)-$(VERSION).spec
-	rpmbuild -bb $(BUILDROOT)/SPECS/$(NAME)-$(VERSION).spec \
+		-czf $(BUILDROOT)/SOURCES/$(PACKAGE)-$(VERSION).tar.gz \
+		$(PACKAGE)-$(VERSION)
+	$(SED) "s/=VERSION=/$(VERSION)/" $(PACKAGE).spec > $(BUILDROOT)/SPECS/$(PACKAGE)-$(VERSION).spec
+	rpmbuild -bb $(BUILDROOT)/SPECS/$(PACKAGE)-$(VERSION).spec \
 		--define "python ${PYTHON}"
 	rm -rf $(TEMPDIR)
 
 .PHONY: package
 package:
 	@echo ================================================================
-	@echo cp /fs/UMbuild/$(OS)/RPMS/$(ARCH)/$(NAME)-$(VERSION)-$(RELEASE).$(ARCH).rpm $(YUMREPO_LOCATION)
+	@echo cp /fs/UMbuild/$(OS)/RPMS/$(ARCH)/$(PACKAGE)-$(VERSION)-$(RELEASE).$(ARCH).rpm $(YUMREPO_LOCATION)
 	@echo createrepo /fs/UMyumrepos/$(OS)/stable
 
 .PHONY: build
 build: rpm package
+
+.PHONY: tag
+tag:
+	$(SED) -i 's/__version__ = .*/__version__ = "$(VERSION)"/g' $(PACKAGE)/__init__.py
+	$(GIT) add $(PACKAGE)/__init__.py
+	$(GIT) commit -m "Tagging $(VERSION)"
+	$(GIT) tag -a $(VERSION) -m "Tagging $(VERSION)"
