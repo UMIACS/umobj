@@ -1,5 +1,5 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH lsobj 1 12/31/2014 UMobj "lsobj Utility"
+.TH lsobj 1 7/6/2015 UMobj "lsobj Utility"
 
 .SH NAME
 lsobj - list buckets and keys in the given Object Store
@@ -47,7 +47,7 @@ Print the version.
 
 .TP
 \fB-p, --public\fR
-Show public URLs for the files if available.
+With \fB-l\fR, show public URLs for the files if available.
 
 .TP
 \fB-l, --long\fR
@@ -55,7 +55,7 @@ Show the full ACL and any metadata for each individual key.
 
 .TP
 \fB-m, --md5\fR
-Show the MD5 sum header for the key in the object store.  If the key was uploaded with Multipart, there is currently no way to set an MD5 sum.  This will be noted in the output.
+With \fB-l\fR, show the MD5 sum header for the key in the object store.  If the key was uploaded with Multipart, there is currently no way to set an MD5 sum.  This will be noted in the output.
 
 .TP
 \fB-h, --help\fR
