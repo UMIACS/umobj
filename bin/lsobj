@@ -29,6 +29,9 @@ def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
         print "%s" % prefix
     num = 0
     for k in query:
+        if not long_list:
+            print k.name
+            continue
         num += 1
         mode = "-rwx---"
         if isinstance(k, Prefix):
@@ -56,18 +59,17 @@ def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
                     print "  MD5: Multipart"
                 else:
                     print "  MD5: %s" % k.etag.strip('\"')
-            if long_list:
-                try:
-                    grants = get_formatted_grants_from_key(k)
-                    print '  ACLs: ' + print_word_list(grants)
-                    metadata = get_metadata(b, k.name)
-                    if metadata:
-                        data = [(k, v) for k, v in metadata.iteritems()]
-                        lp = ListPack(data, indentation=4)
-                        print '  Metadata:'
-                        print lp
-                except S3ResponseError:
-                    pass
+            try:
+                grants = get_formatted_grants_from_key(k)
+                print '  ACLs: ' + print_word_list(grants)
+                metadata = get_metadata(b, k.name)
+                if metadata:
+                    data = [(mdk, mdv) for mdk, mdv in metadata.iteritems()]
+                    lp = ListPack(data, indentation=4)
+                    print '  Metadata:'
+                    print lp
+            except S3ResponseError:
+                pass
             if public:
                 try:
                     for grant in k.get_acl().acl.grants:
@@ -83,8 +85,9 @@ def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
             print "%s\t%s\t%010s\t%s" % (mode, ' ' * 24,
                                          sizeof_fmt(size), k.name)
         total += size
-    print "=" * 80
-    print "\t\tTOTAL:  \t%010s \t%i Files" % (sizeof_fmt(total), num)
+    if long_list:
+        print "=" * 80
+        print "\t\tTOTAL:  \t%010s \t%i Files" % (sizeof_fmt(total), num)
 
 
 def list_buckets(s3, long_list=False):
