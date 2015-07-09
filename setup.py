@@ -15,11 +15,20 @@ from umobj import __version__
 
 long_description = "Command-line utilties for S3-compatible Object Storage"
 
+install_requires = [
+    'boto',
+    'filechunkio',
+    'progressbar',
+    'qav',
+]
+
 if sys.version_info <= (2, 5):
     error = "ERROR: umobj requires Python Version 2.6 or above...exiting."
     print >> sys.stderr, error
     sys.exit(1)
 
+if sys.version_info <= (2, 6):
+    install_requires.append('argparse')
 
 setup(name="umobj",
       version=__version__,
@@ -41,6 +50,7 @@ setup(name="umobj",
       ],
       url="https://github.com/UMIACS/umobj",
       packages=["umobj"],
+      install_requires=install_requires,
       license="MIT",
       platforms="Posix; MacOS X; Windows",
       classifiers=["Development Status :: 5 - Production/Stable",
