@@ -14,7 +14,7 @@ Requires: %{python}-progressbar
 Requires: %{python}-argparse
 Requires: %{python}-filechunkio
 Requires: %{python}-bagit
-Requires: qav >= 0.2.7
+Requires: qav >= 0.3.2
 AutoReq: no
 BuildArch: noarch
 
