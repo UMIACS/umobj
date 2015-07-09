@@ -13,6 +13,8 @@ import sys
 
 from umobj import __version__
 
+long_description = "Command-line utilties for S3-compatible Object Storage"
+
 if sys.version_info <= (2, 5):
     error = "ERROR: umobj requires Python Version 2.6 or above...exiting."
     print >> sys.stderr, error
@@ -22,8 +24,9 @@ if sys.version_info <= (2, 5):
 setup(name="umobj",
       version=__version__,
       description="UMIACS Object Storage Commands",
-      author="Derek Yarnell",
-      author_email="derek@umiacs.umd.edu",
+      long_description=long_description,
+      author="UMIACS Staff",
+      author_email="github@umiacs.umd.edu",
       scripts=[
            "bin/bagobj",
            "bin/catobj",
@@ -36,7 +39,7 @@ setup(name="umobj",
            "bin/rmobj",
            "bin/syncobj",
       ],
-      url="https://staff.umiacs.umd.edu/gitlab/staff/UMobj",
+      url="https://github.com/UMIACS/umobj",
       packages=["umobj"],
       platforms="Posix; MacOS X; Windows",
       classifiers=["Development Status :: 5 - Production/Stable",
