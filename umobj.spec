@@ -1,11 +1,11 @@
 %{!?python_sitelib: %global python_sitelib %(%{python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 Name: umobj
-Summary: Command Line Utilties for UMIACS Object Storage Services
+Summary: Command-line utilties for S3-compatible Object Storage
 Version: =VERSION=
 Release: 1
 Group: UMIACS
 License: unknown
-URL: https://gitlab.umiacs.umd.edu/staff/umobj
+URL: https://github.com/UMIACS/umobj
 Source0: %{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}
 Requires: %{python}
@@ -14,7 +14,7 @@ Requires: %{python}-progressbar
 Requires: %{python}-argparse
 Requires: %{python}-filechunkio
 Requires: %{python}-bagit
-Requires: qav >= 0.2.7
+Requires: qav >= 0.3.2
 AutoReq: no
 BuildArch: noarch
 

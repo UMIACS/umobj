@@ -87,7 +87,10 @@ def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
         total += size
     if long_list:
         print "=" * 80
-        print "\t\tTOTAL:  \t%010s \t%i Files" % (sizeof_fmt(total), num)
+        if num == 1:
+            print "\t\tTOTAL:  \t%010s \t%i File" % (sizeof_fmt(total), num)
+        else:
+            print "\t\tTOTAL:  \t%010s \t%i Files" % (sizeof_fmt(total), num)
 
 
 def list_buckets(s3, long_list=False):
