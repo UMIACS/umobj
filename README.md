@@ -21,7 +21,7 @@ For example, if you use the ```bash``` shell, you can add the following to your
 ```bash
 export OBJ_ACCESS_KEY_ID="31sddfadDFAHFDaN+344qOEIS"
 export OBJ_SECRET_ACCESS_KEY="NDSdnMK3233adfahadflkkPDSH092DSJKDKDJKFDLSFLNK"
-expore OBJ_SERVER="s3.amazonaws.com"
+export OBJ_SERVER="s3.amazonaws.com"
 ```
 
 You can optionally pass the <code>--access_key</code>,
