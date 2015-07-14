@@ -36,7 +36,10 @@ def positive_integer(value):
 class umobj_parser(object):
 
     def __init__(self, usage=None, description=None, description_epilog=None):
-        description = '\n\n' + epilog
+        if description:
+            description = description + '\n\n' + epilog
+        else:
+            description = epilog
         if description_epilog is not None:
             description += description_epilog
         self.parser = ArgumentParser(
