@@ -7,6 +7,7 @@ from umobj.key import check_directory, create_directory, check_key_upload
 from umobj.key import check_key_download
 from umobj.utils import umobj_add_handler, walk_path, lremove
 from umobj.multipart import MultiPart
+from umobj.streammultipart import MultiPartStream
 from umobj.obj import Obj
 
 log = logging.getLogger(__name__)
@@ -251,3 +252,66 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
             if res >= 0:
                 logging.debug("Applying bucket policy %s" % policy)
                 key.set_acl(policy)
+
+
+def obj_stream(bucket_name, src, dest_name, recursive=False, multi=False,
+               checksum=False):
+    bucket = Obj.conn.get_bucket(bucket_name)
+    policy = bucket.get_acl()
+    if dest_name:
+        current_path = ''
+        for dir_part in dest_name.lstrip(os.sep).split(os.sep):
+            current_path = current_path + dir_part + '/'
+            create_directory(bucket, current_path)
+            key_name = dest_name
+    else:
+        key_name = os.path.basename(src)
+    if checksum and not check_key_upload(bucket, key_name, src):
+        return
+
+    logging.info("Starting a multipart upload using stream.")
+    #TODO this will be the multipart stream
+    m = MultiPartStream()
+    m.start_upload(bucket_name, key_name, src, policy)
+#    else:
+#        key = bucket.new_key(key_name)
+#        res = stream_file(key, src)
+#        if res >= 0:
+#            logging.debug("Applying bucket policy %s" % policy)
+#            key.set_acl(policy)
+
+def stream_file(key, stream, progress=False):
+    global pbar
+    #if os.path.islink(filename):
+    #    logging.warning('Skipping %s, symlink.' % filename)
+    #    return -1
+    #if not os.path.isfile(filename):
+    #    logging.warning('Skipping %s, unknown file type.' % filename)
+    #    return -1
+    #file_size = os.stat(filename).st_size
+    #logging.info("Uploading %s with %d bytes." % (filename, file_size))
+    #if file_size is 0:
+    #    if progress:
+    #        pbar = progressbar.ProgressBar(maxval=100)
+    #        pbar.start()
+    #    key.set_contents_from_filename(filename)
+    #    if progress:
+    #        pbar.update(100)
+    #        pbar.finish()
+    #    return 0
+    if progress:
+        pbar = progressbar.ProgressBar(maxval=file_size)
+        pbar.start()
+    try:
+        if progress:
+            # TODO bad, loads whole stream into memory. 
+            key.set_contents_from_string(stream.read(), cb=transfer_stats,
+                                           num_cb=100)
+        else:
+            key.set_contents_from_string(stream.read())
+    except IOError as e:
+        print e
+        return 0
+    if progress:
+        pbar.finish()
+    return 0
