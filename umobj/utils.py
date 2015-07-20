@@ -39,8 +39,8 @@ def umobj_logging(level, filename=None):
                         filename=log_file,
                         filemode='a')
     rotations = logging.handlers.RotatingFileHandler(
-                log_file, 
-                maxBytes=(1024 * 1024 * 10), 
+                log_file,
+                maxBytes=(1024 * 1024 * 10),
                 backupCount=5)
     console = logging.StreamHandler()
     console.setLevel(level)

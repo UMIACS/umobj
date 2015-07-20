@@ -192,8 +192,8 @@ class MultiPart:
             logging.warning("%s : Canceling mulitpart upload." % mp.id)
             mp.cancel_upload()
 
-class MultiPartStream(MultiPart):
 
+class MultiPartStream(MultiPart):
 
     def start_upload(self, bucketname, keyname, stream, policy, threads=4):
         self.bucketname = bucketname
@@ -204,6 +204,7 @@ class MultiPartStream(MultiPart):
         mtype = mimetypes.guess_type(keyname)[0] or 'application/octet-stream'
         headers.update({'Content-Type': mtype})
         mp = bucket.initiate_multipart_upload(keyname, headers=headers)
+
         def cancel_upload_handler(signal, frame):
             self.cancel_upload(mp)
         umobj_add_handler(signal.SIGINT, cancel_upload_handler)
@@ -217,8 +218,8 @@ class MultiPartStream(MultiPart):
         logging.info("Starting multipart uploads from stream")
         try:
             while(bytes_in):
-                # bytes are read from stream as a string, wrap in StringIO object
-                # to be able to use upload_part_from_file function 
+                # bytes are read from stream as a string, wrap in StringIO
+                # object to be able to use upload_part_from_file function
                 mp.upload_part_from_file(StringIO(bytes_in), part_num=part_num)
                 part_num += 1
                 bytes_in = stream.read(bytes_per_chunk)
