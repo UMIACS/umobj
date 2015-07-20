@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     parser = umobj_parser(description=description)
     parser.add_s3path(name='DESTINATION', number=1,
-            help='tar -cvf - files/* | streamobj -n archive.tar BUCKET:[DEST]')
+            help='BUCKET:[DEST]')
     parser.add_filename()
     args = parser.parse_args()
 

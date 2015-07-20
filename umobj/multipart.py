@@ -6,9 +6,11 @@ import os
 import time
 import math
 import sys
+import signal
+from umobj.obj import Obj
+from umobj.utils import umobj_add_handler
 from StringIO import StringIO
 from filechunkio import FileChunkIO
-from umobj.obj import Obj
 import progressbar
 
 
@@ -202,6 +204,9 @@ class MultiPartStream(MultiPart):
         mtype = mimetypes.guess_type(keyname)[0] or 'application/octet-stream'
         headers.update({'Content-Type': mtype})
         mp = bucket.initiate_multipart_upload(keyname, headers=headers)
+        def cancel_upload_handler(signal, frame):
+            self.cancel_upload(mp)
+        umobj_add_handler(signal.SIGINT, cancel_upload_handler)
         self.mp_id = mp.id
         bytes_per_chunk = (1024*1024*10)
         logging.info("Chunk Size: %16d   " % bytes_per_chunk)
@@ -218,10 +223,8 @@ class MultiPartStream(MultiPart):
                 part_num += 1
                 bytes_in = stream.read(bytes_per_chunk)
         except Exception as e:
-            print e
-            # TODO exception hook for keyboard interrupt prevents 
-            # this call when user does ctrl^c
-            cancel_upload(mp)
+            logger.error(e)
+            self.cancel_upload(mp)
             sys.exit(1)
 
         if not stream.read(1):
@@ -232,7 +235,9 @@ class MultiPartStream(MultiPart):
         else:
             cancel_upload(mp)
 
-    def cancel_upload(mp):
+    def cancel_upload(self, mp):
         logging.warning("%s : Canceling mulitpart upload." % mp.id)
-        mp.cancel_upload()
-    
+        try:
+            mp.cancel_upload()
+        except Exception, e:
+            logger.error(e)
