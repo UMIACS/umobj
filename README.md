@@ -43,6 +43,7 @@ flag ```-h``` or ```--help``` for help.
 * [chobj](#chobj)
 * [syncobj](#syncobj)
 * [catobj](#catobj)
+* [streamobj](#streamobj)
 
 <a name="lsobj"></a>
 ### lsobj
@@ -243,6 +244,19 @@ printed to stdout.
 ```bash
 % catobj foo:something.txt
 Fallaces sunt rerum species.  Mutantur omnia nos et mutamur in illis.
+```
+
+<a name="streamobj"></a>
+### streamobj
+
+Use ```streamobj``` to read the contents of a data stream that has been piped from
+stdout and upload it to a bucket. This allows you to send large amounts of data to 
+a bucket without saving it all on disk or in memory first. A name for the file
+must be specified using the -n flag because a name can't be inferred from the
+data stream. 
+
+```bash
+% stream_source | streamobj -n filename foo:somedirectory
 ```
 
 ## Requirements
