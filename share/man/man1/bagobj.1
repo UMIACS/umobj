@@ -1,13 +1,13 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH bagobj 1 9/18/2014 UMobj "bagobj Utility"
+.TH bagobj 1 7/21/2015 UMobj "bagobj Utility"
 
 .SH NAME
 bagobj - archive a directory to Object Storage using the BagIt format
 
 .SH SYNOPSIS
-bagobj [-a/--access_key=<access_key>] [-s/--secret_key=<secret_key>]
-      [-S/--server=<server>] [-P/--port=<port>] [-h/--help] [--version]
-      [-p/--policy=<policy>]+ [-V/--verbose] [-D/--debug]
+bagobj [-A/--access_key=<access_key>] [-S/--secret_key=<secret_key>]
+      [-H/--host=<host>] [-P/--port=<port>] [-h/--help] [--version]
+      [-p/--policy=<policy>]+ [-V/--verbose] [-D/--debug] [-m/--multipart]
       bucket[:key]+
 
 .SH DESCRIPTION
@@ -16,15 +16,15 @@ bagobj supports the creation of BagIt archives, which package hierarchical files
 .SH OPTIONS
 
 .TP
-\fB-a, --access_key=<access_key>\fR
+\fB-A, --access_key=<access_key>\fR
 This option allows you to specify an Object Store access key.  If not supplied, bagobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
 
 .TP 
-\fB-s, --secret_key=<secret_key>\fR
+\fB-S, --secret_key=<secret_key>\fR
 This option allows you to specify an Object Store secret key.  If not supplied, bagobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
 
 .TP
-\fB-S, --server=<server>\fR
+\fB-H, --host=<host>\fR
 This option allows you to specify an Object Store server.  If not supplied, bagobj will use the value of the environment variable \fIOBJ_SERVER\fR.
 
 .TP
@@ -47,9 +47,13 @@ Running in debug mode prints detailed information about the calls being made aga
 \fB-h, --help\fR
 Help menu
 
+.TP
+\fB-m/--multipart\fR
+This option enables multipart uploads and downloads.  Please note that MD5 checksums cannot be calculated for multipart-uploaded files.
+
 .SH AUTHOR
 UMIACS Staff
 
 .SH SEE ALSO
 catobj(1), chobj(1), cmpobj(1), cpobj(1), lsobj(1), mkobj(1), mvobj(1),
-rmobj(1), syncobj(1)
+rmobj(1), streamobj(1), syncobj(1)

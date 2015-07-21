@@ -1,12 +1,12 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH mkobj 1 9/12/2014 UMobj "mkobj Utility"
+.TH mkobj 1 7/21/2015 UMobj "mkobj Utility"
 
 .SH NAME
 mkobj - creates buckets and directories in the Object Store
 
 .SH SYNOPSIS
-mkobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
-         [-S/--server <server>] [-P/--port <port>] [-h/--help]
+mkobj [-A/--access_key <access_key>] [-S/--secret_key <secret_key>]
+         [-H/--host <host>] [-P/--port <port>] [-h/--help]
          [-V/--verbose] [-D/--debug] [--version]
          BUCKET[:PATH]+
 
@@ -16,9 +16,9 @@ mkobj [-a/--access_key <access_key>] [-s/--secret_key <secret_key>]
 .SH OPTIONS SUMMARY
 Here is a short summary of the options available in mkobj.  Please refer to the \fBOPTIONS\fR section below for more detailed descriptions.
 
- -a, --access_key=<access_key>  Object store access key
- -s, --secret_key=<secret_key>  Object store secret key
- -S, --server=<server>          Object store server name
+ -A, --access_key=<access_key>  Object store access key
+ -S, --secret_key=<secret_key>  Object store secret key
+ -H, --host=<host>              Object store server name
  -P, --port=<port>              Object store server port [Default: 443]
      --version                  Print version
  -V, --verbose                  Verbose mode
@@ -28,15 +28,15 @@ Here is a short summary of the options available in mkobj.  Please refer to the 
 .SH OPTIONS
 
 .TP
-\fB-a, --access_key=<access_key>\fR
+\fB-A, --access_key=<access_key>\fR
 This option allows you to specify an Object Store access key.  If not supplied, mkobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
 
 .TP 
-\fB-s, --secret_key=<secret_key>\fR
+\fB-S, --secret_key=<secret_key>\fR
 This option allows you to specify an Object Store secret key.  If not supplied, mkobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
 
 .TP
-\fB-S, --server=<server>\fR
+\fB-H, --host=<host>\fR
 This option allows you to specify an Object Store server.  If not supplied, mkobj will use the value of the environment variable \fIOBJ_SERVER\fR.
 
 .TP
@@ -64,4 +64,4 @@ UMIACS Staff
 
 .SH SEE ALSO
 bagobj(1), catobj(1), chobj(1), cmpobj(1), cpobj(1), lsobj(1), mvobj(1),
-rmobj(1), syncobj(1)
+rmobj(1), streamobj(1), syncobj(1)

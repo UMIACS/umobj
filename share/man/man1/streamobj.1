@@ -1,0 +1,100 @@
+./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
+.TH streamobj 1 7/21/2015 UMobj "streamobj Utility"
+
+.SH NAME
+streamobj - Stream files to an Object Store
+
+.SH SYNOPSIS
+STREAM_SRC | streamobj [OPTION] BUCKET:[DEST]
+
+.SH DESCRIPTION
+streamobj can be used to stream data to the Object Store.
+
+.TP
+STREAM_SRC
+A file stream that is sent to stdout, which will be piped and read into the streamobj utility and uploaded to the object store. 
+
+.TP
+BUCKET
+The bucket that is to be used for this copy operation. 
+
+.TP
+DEST
+An object store key. If the key does not exist, a directory will be created with the specified name.
+
+.SH OPTIONS SUMMARY
+Here is a short summary of the options available in streamobj.  Please refer to the \fBOPTIONS\fR section below for more detailed descriptions. 
+
+ -A, --access_key=<access_key>  Object store access key
+ -S, --secret_key=<secret_key>  Object store secret key
+ -H, --host=<host>              Object store server name
+ -P, --port=<port>              Object store server port [Default: 443]
+ -n, --name=<name>              File name for stream to be saved as
+     --version                  Print version
+ -V, --verbose                  Verbose mode
+ -D, --debug                    Debug mode
+ -h, --help                     Help message
+
+.SH OPTIONS
+
+.TP
+\fB-A, --access_key=<access_key>\fR
+This option allows you to specify an Object Store access key.  If not supplied, streamobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
+
+.TP 
+\fB-S, --secret_key=<secret_key>\fR
+This option allows you to specify an Object Store secret key.  If not supplied, streamobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
+
+.TP
+\fB-H, --host=<host>\fR
+This option allows you to specify an Object Store server.  If not supplied, streamobj will use the value of the environment variable \fIOBJ_SERVER\fR.
+
+.TP
+\fB-P, --port=<port>\fR
+Object Store server port [Default: 443]
+
+.TP
+\fB-n/--name\fR
+The \fB--name\fR option allows you to specify the name of the file that the stream will be saved as once it is uploaded to the object store.
+
+.TP
+\fB---version\fR
+Print the version.
+
+.TP
+\fB-V/--verbose\fR
+Allow for more verbose output.
+
+.TP
+\fB-D/--debug\fR
+Running in debug mode prints detailed information about the calls being made against the Object Store.  This debugging information can be useful to UMIACS Staff if you have encountered a problem and need assistance.
+
+.TP
+\fB-h, --help\fR
+Help menu
+
+.SH EXAMPLES
+
+.PP
+Here are some examples of how streamobj might be used to send data to the object store.
+
+.PP
+To stream a set of files from a directory named \fBmyfiles\fR to the object store and create a tar archive named \fBmyarchive.tar\fR
+.PP
+.RS
+\f(CWtar -cvf - myfiles/* | streamobj -n myarchive.tar mybucket:myfolder\fP
+.RE
+
+.PP
+To pull a file named \fBfile.txt\fR from the web and stream it to the object store as \fBinformation.txt\fR 
+.PP
+.RS
+\f(CWcurl https://example.com/file.txt | streamobj -n information.txt mybucket:mykey\fP
+.RE
+
+.SH AUTHOR
+UMIACS Staff
+
+.SH SEE ALSO
+bagobj(1), catobj(1), chobj(1), cmpobj(1), cpobj(1), lsobj(1), mkobj(1), mvobj(1),
+rmobj(1), syncobj(1)

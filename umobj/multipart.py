@@ -5,8 +5,12 @@ import mimetypes
 import os
 import time
 import math
-from filechunkio import FileChunkIO
+import sys
+import signal
 from umobj.obj import Obj
+from umobj.utils import umobj_add_handler
+from StringIO import StringIO
+from filechunkio import FileChunkIO
 import progressbar
 
 
@@ -187,3 +191,54 @@ class MultiPart:
         else:
             logging.warning("%s : Canceling mulitpart upload." % mp.id)
             mp.cancel_upload()
+
+
+class MultiPartStream(MultiPart):
+
+    def start_upload(self, bucketname, keyname, stream, policy, threads=4):
+        self.bucketname = bucketname
+        self.stream = stream
+        headers = {}
+        obj = self.connect()
+        bucket = obj.get_bucket(self.bucketname)
+        mtype = mimetypes.guess_type(keyname)[0] or 'application/octet-stream'
+        headers.update({'Content-Type': mtype})
+        mp = bucket.initiate_multipart_upload(keyname, headers=headers)
+
+        def cancel_upload_handler(signal, frame):
+            self.cancel_upload(mp)
+        umobj_add_handler(signal.SIGINT, cancel_upload_handler)
+        self.mp_id = mp.id
+        bytes_per_chunk = (1024*1024*10)
+        logging.info("Chunk Size: %16d   " % bytes_per_chunk)
+
+        # read initial bytes from data stream and upload in parts
+        bytes_in = stream.read(bytes_per_chunk)
+        part_num = 1
+        logging.info("Starting multipart uploads from stream")
+        try:
+            while(bytes_in):
+                # bytes are read from stream as a string, wrap in StringIO
+                # object to be able to use upload_part_from_file function
+                mp.upload_part_from_file(StringIO(bytes_in), part_num=part_num)
+                part_num += 1
+                bytes_in = stream.read(bytes_per_chunk)
+        except Exception as e:
+            logger.error(e)
+            self.cancel_upload(mp)
+            sys.exit(1)
+
+        if not stream.read(1):
+            mp.complete_upload()
+            key = bucket.get_key(keyname)
+            logging.debug("%s : Applying bucket policy %s" % (mp.id, policy))
+            key.set_acl(policy)
+        else:
+            cancel_upload(mp)
+
+    def cancel_upload(self, mp):
+        logging.warning("%s : Canceling mulitpart upload." % mp.id)
+        try:
+            mp.cancel_upload()
+        except Exception, e:
+            logger.error(e)

@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+import sys
+import logging
+from umobj.utils import umobj_init, umobj_logging, \
+    umobj_get_bucket_key_pair_from_string
+from umobj.options import umobj_parser, get_logging_level
+from umobj.obj import Obj
+from umobj.transfer import obj_stream
+import boto.s3
+
+
+if __name__ == "__main__":
+    umobj_init()
+    description = 'Stream Files(s) - ' + \
+                  'Save a filestream to the object store'
+
+    parser = umobj_parser(description=description)
+    parser.add_s3path(name='DESTINATION', number=1,
+                      help='BUCKET:[DEST]')
+    parser.add_filename()
+    args = parser.parse_args()
+
+    umobj_logging(get_logging_level(args))  # set up logging
+    logging.info("Running %s" % sys.argv)
+
+    if not Obj.connect(host=args.host,
+                       port=args.port,
+                       access_key=args.access_key,
+                       secret_key=args.secret_key):
+        logging.error('Unable to contact object store.')
+        sys.exit(1)
+
+    src = sys.stdin
+    dest = args.DESTINATION[0]
+    filename = args.filename
+
+    if not filename:
+        logger.error("Specify a filename for the streamed file(s) to " +
+                     "be saved as")
+        parser.print_help()
+        sys.exit(1)
+
+    dest_bucket_name, dest_key_name = \
+        umobj_get_bucket_key_pair_from_string(dest)
+
+    logging.debug("DEST Bucket Name: %s" % dest_bucket_name)
+
+    # check if not reading from pipe
+    if sys.stdin.isatty():
+        parser.print_help()
+        sys.exit(1)
+
+    bucket_name = dest_bucket_name
+    dest_name = dest_key_name
+    logging.info("Streaming file to bucket %s" % bucket_name)
+    if dest_name:
+        logging.info("Uploading to the prefix %s." % dest_name)
+    logging.info("Uploading files from stream")
+
+    try:
+        bucket = Obj.conn.get_bucket(bucket_name)
+    except boto.exception.S3ResponseError as e:
+        logging.error("Unable to access bucket %s, %s." %
+                      (bucket_name, e.error_code))
+        sys.exit(1)
+
+    obj_stream(bucket_name, src, dest_name, filename)

@@ -1,5 +1,5 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH chobj 1 12/31/2014 UMobj "chobj Utility"
+.TH chobj 1 7/21/2015 UMobj "chobj Utility"
 
 .SH NAME
 chobj - change permissions on keys and buckets in an Object Store
@@ -18,15 +18,15 @@ chobj can change the ACL on specific key(s) and buckets.
 .SH OPTIONS
 
 .TP
-\fB-a, --access_key=<access_key>\fR
+\fB-A, --access_key=<access_key>\fR
 This option allows you to specify an Object Store access key.  If not supplied, chobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
 
 .TP 
-\fB-s, --secret_key=<secret_key>\fR
+\fB-S, --secret_key=<secret_key>\fR
 This option allows you to specify an Object Store secret key.  If not supplied, chobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
 
 .TP
-\fB-S, --server=<server>\fR
+\fB-H, --host=<host>\fR
 This option allows you to specify an Object Store server.  If not supplied, chobj will use the value of the environment variable \fIOBJ_SERVER\fR.
 
 .TP
@@ -40,6 +40,10 @@ A policy consists of a username and a policy directive separated by a colon.  Po
 .TP
 \fB-k/--metadata=<key=value>+\fR
 Metadata consists of a key and a value of the form "key=value".  This is the form metadata must be in when adding metadata.  Keys on a n object must be unique, so respecifying a key with a different value will overwrite the pervious value associated with that key.  When in remove mode, one may specify either the full "key=value" pair or just the key to remove.
+
+.TP
+\fB-m, --mode\fR
+Mode of the operation being performed on the object.
 
 .TP
 \fB---version\fR
@@ -129,4 +133,4 @@ UMIACS Staff
 
 .SH SEE ALSO
 bagobj(1), catobj(1), cmpobj(1), cpobj(1), lsobj(1), mkobj(1), mvobj(1),
-rmobj(1), syncobj(1)
+rmobj(1), streamobj(1), syncobj(1)

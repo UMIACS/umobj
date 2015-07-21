@@ -6,7 +6,7 @@ import signal
 from umobj.key import check_directory, create_directory, check_key_upload
 from umobj.key import check_key_download
 from umobj.utils import umobj_add_handler, walk_path, lremove
-from umobj.multipart import MultiPart
+from umobj.multipart import MultiPart, MultiPartStream
 from umobj.obj import Obj
 
 log = logging.getLogger(__name__)
@@ -251,3 +251,20 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
             if res >= 0:
                 logging.debug("Applying bucket policy %s" % policy)
                 key.set_acl(policy)
+
+
+def obj_stream(bucket_name, src, dest_name, filename):
+    bucket = Obj.conn.get_bucket(bucket_name)
+    policy = bucket.get_acl()
+    if dest_name:
+        current_path = ''
+        for dir_part in dest_name.lstrip(os.sep).split(os.sep):
+            current_path = current_path + dir_part + '/'
+            create_directory(bucket, current_path)
+            key_name = current_path + filename
+    else:
+        key_name = filename
+    # always multipart since total size of stream is unknown
+    logging.info("Starting a multipart upload using stream.")
+    m = MultiPartStream()
+    m.start_upload(bucket_name, key_name, src, policy)

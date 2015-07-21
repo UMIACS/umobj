@@ -1,5 +1,5 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH rmobj 1 12/17/2014 UMobj "rmobj Utility"
+.TH rmobj 1 7/21/2015 UMobj "rmobj Utility"
 
 .SH NAME
 rmobj - delete buckets and keys from an Object Store
@@ -17,9 +17,9 @@ rmobj deletes keys and buckets from an Object Store.
 .SH OPTIONS SUMMARY
 Here is a short summary of the options available in rmobj.  Please refer to the \fBOPTIONS\fR section below for more detailed descriptions.
 
- -a, --access_key=<access_key>  Object store access key
- -s, --secret_key=<secret_key>  Object store secret key
- -S, --server=<server>          Object store server name
+ -A, --access_key=<access_key>  Object store access key
+ -S, --secret_key=<secret_key>  Object store secret key
+ -H, --host=<host>              Object store server name
  -P, --port=<port>              Object store server port [Default: 443]
  -r, --recursive                Delete files recursively [Default: no]
  -f, --force                    Force deletes without prompting
@@ -32,15 +32,15 @@ Here is a short summary of the options available in rmobj.  Please refer to the 
 .SH OPTIONS
 
 .TP
-\fB-a, --access_key=<access_key>\fR
+\fB-A, --access_key=<access_key>\fR
 This option allows you to specify an Object Store access key.  If not supplied, rmobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
 
 .TP 
-\fB-s, --secret_key=<secret_key>\fR
+\fB-S, --secret_key=<secret_key>\fR
 This option allows you to specify an Object Store secret key.  If not supplied, rmobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
 
 .TP
-\fB-S, --server=<server>\fR
+\fB-H, --host=<host>\fR
 This option allows you to specify an Object Store server.  If not supplied, rmobj will use the value of the environment variable \fIOBJ_SERVER\fR.
 
 .TP
@@ -81,4 +81,4 @@ UMIACS Staff
 
 .SH SEE ALSO
 bagobj(1), catobj(1), chobj(1), cmpobj(1), cpobj(1), lsobj(1), mkobj(1),
-mvobj(1), syncobj(1)
+mvobj(1), streamobj(1), syncobj(1)
