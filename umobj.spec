@@ -38,16 +38,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(0755,root,root,-)
-%{_bindir}/bagobj
-%{_bindir}/catobj
-%{_bindir}/chobj
-%{_bindir}/cmpobj
-%{_bindir}/cpobj
-%{_bindir}/lsobj
-%{_bindir}/mkobj
-%{_bindir}/mvobj
-%{_bindir}/rmobj
-%{_bindir}/syncobj
+%{_bindir}/*
 %defattr(0755,root,root,-)
 %{python_sitelib}/umobj
 %defattr(0644,root,root,-)
