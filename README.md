@@ -4,6 +4,23 @@ Command-line utilties for S3-compatible Object Storage
 These utilities provide a command-line interface to an Amazon S3-compatible
 file/object storage services, also known as an Object Store.
 
+## Installation
+
+```pip install umobj```
+
+or
+
+```python setup.py install```
+
+On Mac OSX with the [Homebrew package manager](http://brew.sh) umobj
+can be installed by adding the UMIACS tap:
+
+```bash
+brew tap ibeekman/umiacs https://gitlab.umiacs.umd.edu/ibeekman/homebrew-umiacs.git
+brew update
+brew install umobj
+```
+
 ## Setup
 
 Setting a few environmental variables containing the credentials you'll need to
@@ -92,7 +109,7 @@ foo/
 <a name="mkobj"></a>
 ### mkobj
 
-mkobj creates buckets and directories in the Object Store.  
+mkobj creates buckets and directories in the Object Store.
 
 <b>Please note that bucket names are unique in the Object Store, so you may
 very well get an error back that the name has already been taken.</b>
@@ -250,10 +267,10 @@ Fallaces sunt rerum species.  Mutantur omnia nos et mutamur in illis.
 ### streamobj
 
 Use ```streamobj``` to read the contents of a data stream that has been piped from
-stdout and upload it to a bucket. This allows you to send large amounts of data to 
+stdout and upload it to a bucket. This allows you to send large amounts of data to
 a bucket without saving it all on disk or in memory first. A name for the file
 must be specified using the -n flag because a name can't be inferred from the
-data stream. 
+data stream.
 
 ```bash
 % stream_source | streamobj -n filename foo:somedirectory
@@ -275,13 +292,6 @@ When running on Python 2.6, you need to have the following backports:
 
 These are most easily going to be satisfied with a virtualenv.
 
-## Installation
-
-```pip install umobj```
-
-or
-
-```python setup.py install```
 
 ## License
 
