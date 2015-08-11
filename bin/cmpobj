@@ -2,13 +2,14 @@
 
 import boto.s3
 import sys
+import os
 import logging
 
 from umobj.utils import umobj_logging, umobj_init, \
     umobj_get_bucket_key_pair_from_string
 from umobj.obj import Obj
 from umobj.options import umobj_parser, get_logging_level
-from umobj.md5 import compute_key_md5
+from umobj.md5 import compute_key_md5, compute_file_md5
 from umobj.verify import load_bag_checksums, get_bag_checksumming_algorithm
 
 
@@ -19,6 +20,7 @@ if __name__ == "__main__":
     parser = umobj_parser(description=description)
     parser.add_s3path(number='+', help='BUCKET:KEY')
     parser.add_verify_bag()
+    parser.add_directory()
     args = parser.parse_args()
 
     umobj_logging(get_logging_level(args))  # set up logging
@@ -33,6 +35,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     S3PATH = args.S3PATH[0]
+    directory = args.directory
     bucket_name, key_name = umobj_get_bucket_key_pair_from_string(S3PATH)
 
     try:
@@ -60,6 +63,31 @@ if __name__ == "__main__":
             logging.info('Successfully verified the integrity of the archive.')
         else:
             logging.error('The integrity of this bag is compromised')
+    elif directory:
+        #TODO go through dirs
+        if not os.path.isdir(directory):
+            logging.error('The directory %s doesn\'t exist' % directory) 
+        else:
+            bucket_keys = {} 
+            for k in bucket.list(delimiter='/'):
+                bucket_keys[k.name] = False
+            for dirpath, dirnames, filenames in os.walk(directory):
+                # check bucket against dir 
+                for f in filenames:
+                    file_md5 = compute_file_md5(dirpath + os.path.sep + f)
+                    key_md5 = compute_key_md5(bucket, f)
+                    if not key_md5:
+                        # key doesn't exist in bucket
+                        continue
+                    if file_md5 != key_md5:
+                        print "[Local %s: %s] != [Bucket %s: %s]" \
+                            % (f, file_md5, f, key_md5)
+                    del bucket_keys[f]
+                for d in dirnames:
+                    pass
+            for leftover_key in bucket_keys.keys():
+                print "The key %s was in bucket %s but not found locally" \
+                    % (leftover_key, bucket.name)
     else:  # computing md5 for a single key
         md5 = compute_key_md5(bucket, key_name)
         if md5 is not None:
