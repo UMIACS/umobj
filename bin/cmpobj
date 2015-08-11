@@ -64,15 +64,15 @@ if __name__ == "__main__":
         else:
             logging.error('The integrity of this bag is compromised')
     elif directory:
-        #TODO go through dirs
+        # TODO go through dirs
         if not os.path.isdir(directory):
-            logging.error('The directory %s doesn\'t exist' % directory) 
+            logging.error('The directory %s doesn\'t exist' % directory)
         else:
-            bucket_keys = {} 
+            bucket_keys = {}
             for k in bucket.list(delimiter='/'):
                 bucket_keys[k.name] = False
             for dirpath, dirnames, filenames in os.walk(directory):
-                # check bucket against dir 
+                # check bucket against dir
                 for f in filenames:
                     file_md5 = compute_file_md5(dirpath + os.path.sep + f)
                     key_md5 = compute_key_md5(bucket, f)

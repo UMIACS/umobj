@@ -164,8 +164,8 @@ class umobj_parser(object):
                                  action=action, default=default)
 
     def add_filename(self, short='-n', long='--name', dest='filename',
-                 help='The name that the file should be saved as in the '
-                      'destionation bucket.', default=False):
+                     help='The name that the file should be saved as in the '
+                     'destionation bucket.', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
                                  default=default)
 
@@ -174,6 +174,7 @@ class umobj_parser(object):
                       'destination bucket', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
                                  default=default)
+
 
 def get_logging_level(args):
     '''
