@@ -280,7 +280,7 @@ data stream.
 <a name="cmpobj"></a>
 ### cmpobj
 
-Use ```cmpobj``` to check the md5 sum of a key in a bucket or compare the md5 sums of a local directory to a bucket. The key is downloaded in order for the correct md5 hash to be generated. Bagit archives can also be verified, which is done by retrieving the manifest and comparing the expected checksums to the ones computed by ech key.
+Use ```cmpobj``` to check the md5 sum of a key in a bucket or compare the md5 sums of a local directory to a bucket. The key is downloaded in order for the correct md5 hash to be generated. Bagit archives can also be verified, which is done by retrieving the manifest and comparing the expected checksums to the ones computed by downloading each key.
 
 ```bash
 % cmpobj mybucket:foo.txt
