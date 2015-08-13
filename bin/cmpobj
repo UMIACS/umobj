@@ -16,38 +16,41 @@ from umobj.verify import load_bag_checksums, get_bag_checksumming_algorithm
 def compare_bucket_to_directory(bucket, directory, prefix=None):
     if not os.path.isdir(directory):
         logging.error('The directory %s doesn\'t exist' % directory)
-    else:
-        bucket_keys = {}
-        for k in bucket.list(prefix=prefix):
-            if not k.name.endswith(os.path.sep):
-                bucket_keys[k.name] = False
+        return
+    bucket_keys = {}
+    for k in bucket.list(prefix=prefix):
+        if not k.name.endswith(os.path.sep):
+            bucket_keys[k.name] = False
 
-        paths = []
-        for dirpath, dirnames, filenames in os.walk(directory):
-            for filename in [f for f in filenames]:
-                path = os.path.join(dirpath, filename)
-                paths.append(os.path.join(dirpath, filename))
+    paths = []
+    for dirpath, dirnames, filenames in os.walk(directory):
+        for filename in [f for f in filenames]:
+            path = os.path.join(dirpath, filename)
+            paths.append(os.path.join(dirpath, filename))
 
-        for f in paths:
-            offset = len(directory)
-            offset += 1 if directory[-1] != os.path.sep else 0
-            # format path to look like key
-            formatted_path = f[f.index(directory) + offset:]
-            if prefix:
-                formatted_path = prefix + formatted_path
-            file_md5 = compute_file_md5(f)
-            key_md5 = compute_key_md5(bucket, formatted_path)
-            if not key_md5:
-                # key doesn't exist in bucket
-                continue
-            if file_md5 != key_md5:
-                print "[Local %s: %s] != [Bucket %s: %s]" \
-                    % (formatted_path, file_md5, formatted_path, key_md5)
-            del bucket_keys[formatted_path]
+    offset = len(directory)
+    offset += 1 if directory[-1] != os.path.sep else 0
+    for f in paths:
+        # format path to look like key
+        formatted_path = f[f.index(directory) + offset:]
+        if prefix:
+            formatted_path = prefix + formatted_path
+        file_md5 = compute_file_md5(f)
+        key = boto.s3.key.Key(bucket, formatted_path)
+        if not key.exists():
+            print "The key %s does not exist in the bucket %s" % \
+                (formatted_path, bucket.name)
+            continue
+        key_md5 = compute_key_md5(bucket, formatted_path)
+            
+        if file_md5 != key_md5:
+            print "[Local %s: %s] != [Bucket %s: %s]" \
+                % (formatted_path, file_md5, formatted_path, key_md5)
+        del bucket_keys[formatted_path]
 
-        for leftover_key in bucket_keys.keys():
-            print "The key %s was in bucket %s but not found locally" \
-                % (leftover_key, bucket.name)
+    for leftover_key in bucket_keys.keys():
+        print "The key %s was in bucket %s but not found locally" \
+            % (leftover_key, bucket.name)
 
 
 if __name__ == "__main__":
