@@ -29,7 +29,7 @@ def compare_bucket_to_directory(bucket, directory, prefix=None):
                 paths.append(os.path.join(dirpath, filename))
 
         for f in paths:
-            offset = len(directory) 
+            offset = len(directory)
             offset += 1 if directory[-1] != os.path.sep else 0
             # format path to look like key
             formatted_path = f[f.index(directory) + offset:]
