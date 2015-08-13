@@ -1,5 +1,5 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH cmpobj 1 7/21/2015 UMobj "cmpobj Utility"
+.TH cmpobj 1 8/13/2015 UMobj "cmpobj Utility"
 
 .SH NAME
 cmpobj - retrieve md5 sum for keys in the Object Store / Verify Bagit Archive
@@ -7,7 +7,8 @@ cmpobj - retrieve md5 sum for keys in the Object Store / Verify Bagit Archive
 .SH SYNOPSIS
 cmpobj [-A/--access_key=<access_key>] [-S/--secret_key=<secret_key>]
        [-H/--host=<host>] [-P/--port=<port>] [-h/--help]
-       [-V/--verbose] [-D/--debug] [--version] [-v/--verify-bag]
+       [-V/--verbose] [-D/--debug] [--version] [-v/--verify-bag] 
+       [-d/--directory=<directory>]
        bucket:key
 
 .SH DESCRIPTION
@@ -52,6 +53,10 @@ Running in debug mode prints detailed information about the calls being made aga
 .TP
 \fB-h, --help\fR
 Help menu
+
+.TP
+\fB-d/--directory=<directory>\fR
+The directory that will be compared against the given bucket.
 
 .SH AUTHOR
 UMIACS Staff

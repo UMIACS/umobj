@@ -61,6 +61,7 @@ flag ```-h``` or ```--help``` for help.
 * [syncobj](#syncobj)
 * [catobj](#catobj)
 * [streamobj](#streamobj)
+* [cmpobj](#cmpobj)
 
 <a name="lsobj"></a>
 ### lsobj
@@ -274,6 +275,16 @@ data stream.
 
 ```bash
 % stream_source | streamobj -n filename foo:somedirectory
+```
+
+<a name="cmpobj"></a>
+### cmpobj
+
+Use ```cmpobj``` to check the md5 sum of a key in a bucket or compare the md5 sums of a local directory to a bucket. The key is downloaded in order for the correct md5 hash to be generated. Bagit archives can also be verified, which is done by retrieving the manifest and comparing the expected checksums to the ones computed by downloading each key.
+
+```bash
+% cmpobj mybucket:foo.txt
+9029668a43dfa60f1f267eea59111bbc
 ```
 
 ## Requirements

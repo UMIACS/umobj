@@ -163,12 +163,18 @@ class umobj_parser(object):
         self.parser.add_argument(short, long, dest=dest, help=help,
                                  action=action, default=default)
 
-    def add_filename(self, short='-n', long='--name', dest='filename', 
-                 help='The name that the file should be saved as in the '
-                      'destionation bucket.', default=False):
+    def add_filename(self, short='-n', long='--name', dest='filename',
+                     help='The name that the file should be saved as in the '
+                     'destionation bucket.', default=False):
         self.parser.add_argument(short, long, dest=dest, help=help,
                                  default=default)
-                        
+
+    def add_directory(self, short='-d', long='--directory', dest='directory',
+                      help='The local directory to compare against the '
+                      'destination bucket', default=False):
+        self.parser.add_argument(short, long, dest=dest, help=help,
+                                 default=default)
+
 
 def get_logging_level(args):
     '''
