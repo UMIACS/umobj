@@ -4,6 +4,8 @@ import boto.s3
 import sys
 import logging
 
+from umobj.bucket import delete_bucket
+from umobj.key import delete_key
 from umobj.utils import umobj_logging, umobj_init, \
     umobj_get_bucket_key_pair_from_string
 from umobj.obj import Obj
@@ -61,8 +63,7 @@ if __name__ == "__main__":
                                      "bucket %s" % bucket_name)
                         sys.exit(0)
                 for key in bucket.list():
-                    logging.info("Deleting key %s" % key.name)
-                    bucket.delete_key(key.name)
+                    delete_key(bucket, key.name)
 
                 # removing the bucket itself
                 if interactive:
@@ -72,7 +73,7 @@ if __name__ == "__main__":
                     if ans != 'yes':
                         logging.info("Not deleting bucket %s" % bucket_name)
                         sys.exit(0)
-                Obj.conn.delete_bucket(bucket.name)
+                delete_bucket(Obj.conn, bucket.name)
                 logging.info("Deleting the bucket %s" % bucket_name)
                 sys.exit(0)
 
@@ -83,12 +84,10 @@ if __name__ == "__main__":
                                             key.name).lower()
                     if del_key_ans != 'y':
                         continue
-                    logging.info("Deleting key %s" % key.name)
-                    bucket.delete_key(key.name)
+                    delete_key(bucket, key.name)
             else:
                 for key in bucket.list(prefix=key_name):
-                    logging.info("Deleting key %s" % key.name)
-                    bucket.delete_key(key.name)
+                    delete_key(bucket, key.name)
         else:  # non-recursive
             if key_name is None:
                 logging.error('Can not delete bucket %s, ' % bucket.name +
@@ -97,5 +96,4 @@ if __name__ == "__main__":
             elif key_name.endswith('/'):
                 logging.error('Please use the recursive option to delete a ' +
                               'directory.')
-            logging.info("Deleting key %s" % key_name)
-            bucket.delete_key(key_name)
+            delete_key(bucket, key_name)

@@ -1,6 +1,8 @@
 import os
 import logging
 
+from boto.exception import S3ResponseError
+
 from umobj.md5 import compute_key_md5, compute_file_md5
 from umobj.utils import parse_key_value_pair
 
@@ -8,9 +10,7 @@ log = logging.getLogger(__name__)
 
 
 def create_directory(bucket, directory):
-    """
-        Create a directry (key will always end in a /)
-    """
+    '''Create a directry (key will always end in a /)'''
     if not directory.endswith('/'):
         directory += '/'
     log.info("Create directory %s" % directory)
@@ -28,10 +28,10 @@ def create_directory(bucket, directory):
 
 
 def check_directory(bucket, directory):
-    """
-        Given a S3 bucket object and a directory path check to see
-        if the directory exists in the S3 bucket.
-    """
+    '''
+    Given a S3 bucket object and a directory path check to see if the directory
+    exists in the S3 bucket.
+    '''
     key = bucket.get_key(directory)
     if key is not None and key.size == 0 and key.name.endswith('/'):
         return True
@@ -40,8 +40,9 @@ def check_directory(bucket, directory):
 
 
 def check_key_upload(bucket, key_name, filename):
-    '''Given a bucket, key_name and the filename locally check for update
-       via MD5 sum'''
+    '''
+    Given a bucket, key_name and a local filename, check for MD5 sum match
+    '''
     key = bucket.get_key(key_name)
     if key is not None:
         file_md5 = compute_file_md5(filename)
@@ -66,8 +67,10 @@ def check_key_upload(bucket, key_name, filename):
 
 
 def check_key_download(bucket, key_name, filename):
-    '''Given a bucket, key_name and the filename check to see if we need to
-       update via the MD5 sum'''
+    '''
+    Given a bucket, key_name and the filename check to see if we need to
+    update via the MD5 sum
+    '''
     if os.path.exists(filename):
         if key_name.endswith('/') and os.path.isdir(filename):
             log.info('Directory already exists %s' % filename)
@@ -123,9 +126,7 @@ def set_metadata(bucket, key_name, metadata):
 
 
 def add_metadata(bucket, key_name, key, val):
-    '''
-    Add {key: val} to the metadata for the given key
-    '''
+    '''Add {key: val} to the metadata for the given key'''
     log.info(
         'Adding metadata %s=%s to %s:%s' %
         (key, val, bucket.name, key_name))
@@ -135,9 +136,7 @@ def add_metadata(bucket, key_name, key, val):
 
 
 def remove_metadata_by_key(bucket, key_name, key):
-    '''
-    Remove the metadata key-value pair by key.
-    '''
+    '''Remove the metadata key-value pair by key.'''
     log.info(
         'Removing metadata key %s from %s:%s' %
         (key, bucket.name, key_name))
@@ -157,3 +156,18 @@ def remove_metadata_by_key_value_pair(bucket, key_name, key_value_string):
     '''
     k, v = parse_key_value_pair(key_value_string)
     remove_metadata_by_key(bucket, key_name, k)
+
+
+def delete_key(bucket, key):
+    '''
+    Given a boto bucket and a string naming the key to delete, attempt to
+    delete, catching any exceptions that may occur.
+    '''
+    log.info('Deleting key %s' % key)
+    try:
+        return bucket.delete_key(key)
+    except S3ResponseError as e:
+        log.error('Unable to delete %s:%s (Reason: %s)' %
+                  (bucket.name, key, e.reason))
+    except:
+        log.error('Unable to delete %s:%s' % (bucket.name, key))
