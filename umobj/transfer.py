@@ -128,6 +128,7 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
                           "please force flag to overwrite.")
             return
         else:
+            key_name = key_name.rstrip(os.path.sep)
             key = bucket.get_key(key_name)
             if key is None:
                 logging.error("Key does not exist or if this is a prefix" +
