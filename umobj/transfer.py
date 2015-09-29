@@ -56,6 +56,20 @@ def upload_file(key, filename, progress=True):
     return file_size
 
 
+def _create_needed_parent_directories(filename):
+    '''
+    Given a filename, create all the parent directories needed to write
+    the file if the parent directory does not exist already.
+
+    Given /foo/bar/baz.txt, this method will check if /foo/bar/ exists
+    and create it if it does not.
+    '''
+    if not os.path.exists(os.path.dirname(filename)):
+        logging.info('Recursively creating needed directory structure for %s' %
+                     filename)
+        os.makedirs(os.path.dirname(filename))
+
+
 def download_file(key, filename, progress=True):
     logging.info("Downloading to %s with %d bytes." % (filename, key.size))
     global pbar
@@ -74,6 +88,7 @@ def download_file(key, filename, progress=True):
                 logging.info("Directory %s already exists, skipping." %
                              filename)
         else:
+            _create_needed_parent_directories(filename)
             key.get_contents_to_filename(filename)
         pbar.update(100)
         pbar.finish()
@@ -82,6 +97,7 @@ def download_file(key, filename, progress=True):
     pbar.start()
     if os.path.isdir(filename):
         filename = filename + os.sep + os.path.basename(key.name)
+    _create_needed_parent_directories(filename)
     f = open(filename, 'w')
     key.get_contents_to_file(f, cb=transfer_stats, num_cb=100)
     f.close()
