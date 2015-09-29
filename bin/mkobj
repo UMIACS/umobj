@@ -39,7 +39,11 @@ if __name__ == "__main__":
             try:
                 bucket = Obj.conn.get_bucket(bucket_name)
             except boto.exception.S3ResponseError as e:
-                logging.error("Can not access bucket %s, %s." %
+                logging.error("Can not access bucket %s: %s." %
+                              (bucket_name, e.error_code))
+                sys.exit(1)
+            except Exception as e:
+                logging.error("Can not access bucket %s: %s." $
                               (bucket_name, e.error_code))
                 sys.exit(1)
             current_path = ''
@@ -51,8 +55,11 @@ if __name__ == "__main__":
                 bucket = Obj.conn.create_bucket(bucket_name)
                 print "Created bucket %s." % bucket_name
             except boto.exception.S3CreateError as e:
-                logging.error("Cannot create bucket %s, %s.",
+                logging.error("Cannot create bucket %s: %s.",
                               bucket_name, e.error_code)
             except boto.exception.BotoClientError as e:
-                logging.error("Cannot create bucket %s, %s.",
+                logging.error("Cannot create bucket %s: %s.",
+                              bucket_name, e)
+            except Exception as e:
+                logging.error("Cannot create bucket %s: %s.",
                               bucket_name, e)
