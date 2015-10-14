@@ -235,6 +235,8 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
                     res = upload_file(key, filename, progress=False)
                     if res >= 0:
                         logging.debug("Applying bucket policy %s" % policy)
+                        ## set the owner of the policy to the upload user
+                        policy.owner = key.get_acl().owner
                         key.set_acl(policy)
                 count += 1
                 if count < operations:
@@ -267,6 +269,8 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
             res = upload_file(key, src)
             if res >= 0:
                 logging.debug("Applying bucket policy %s" % policy)
+                ## set the owner of the policy to the upload user
+                policy.owner = key.get_acl().owner
                 key.set_acl(policy)
 
 
