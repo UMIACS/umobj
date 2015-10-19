@@ -119,16 +119,21 @@ if __name__ == "__main__":
 
         if push_bucket_acls:
             bucket_policy = bucket.get_acl()
+            logging.debug("Got bucket policy: %s" % bucket_policy)
+            if bucket_policy.owner.id != Obj.conn.get_canonical_user_id():
+                logging.error("Can not push bucket ACLs to a bucket " +
+                              "(%s) you don't own." % bucket_name)
+                continue
 
         for object in objects:
             if public:
-                logging.debug('Making %s public' % object.name)
+                logging.info('Making %s public' % object.name)
                 object.make_public()
             elif private:
-                logging.debug('Making %s private' % object.name)
+                logging.info('Making %s private' % object.name)
                 make_private(object)
             elif push_bucket_acls:
-                logging.debug('Pushing bucket acls to %s' % object.name)
+                logging.info('Pushing bucket acls to %s' % object.name)
                 object.set_acl(bucket_policy)
             else:
                 policy = object.get_acl()
@@ -167,4 +172,5 @@ if __name__ == "__main__":
                 try:
                     object.set_acl(policy)
                 except boto.exception.S3ResponseError:
-                    pass
+                    logging.warning('Unable to set policy (%s) on bucket %s' %
+                                    (policy, bucket_name))
