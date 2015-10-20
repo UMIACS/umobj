@@ -13,6 +13,8 @@ from StringIO import StringIO
 from filechunkio import FileChunkIO
 import progressbar
 
+log = logging.getLogger(__name__)
+
 
 class UploadThread(threading.Thread):
 
@@ -187,6 +189,7 @@ class MultiPart:
             mp.complete_upload()
             key = bucket.get_key(keyname)
             logging.debug("%s : Applying bucket policy %s" % (mp.id, policy))
+            policy.owner = key.get_acl().owner
             key.set_acl(policy)
         else:
             logging.warning("%s : Canceling mulitpart upload." % mp.id)
@@ -224,7 +227,7 @@ class MultiPartStream(MultiPart):
                 part_num += 1
                 bytes_in = stream.read(bytes_per_chunk)
         except Exception as e:
-            logger.error(e)
+            log.error(e)
             self.cancel_upload(mp)
             sys.exit(1)
 
@@ -232,13 +235,14 @@ class MultiPartStream(MultiPart):
             mp.complete_upload()
             key = bucket.get_key(keyname)
             logging.debug("%s : Applying bucket policy %s" % (mp.id, policy))
+            policy.owner = key.get_acl().owner
             key.set_acl(policy)
         else:
-            cancel_upload(mp)
+            self.cancel_upload(mp)
 
     def cancel_upload(self, mp):
         logging.warning("%s : Canceling mulitpart upload." % mp.id)
         try:
             mp.cancel_upload()
         except Exception, e:
-            logger.error(e)
+            log.error(e)

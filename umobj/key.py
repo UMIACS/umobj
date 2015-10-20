@@ -18,9 +18,10 @@ def create_directory(bucket, directory):
     try:
         dir_key.set_contents_from_string('')
         log.info("Created directory %s" % directory)
-        acl = bucket.get_acl()
+        policy = bucket.get_acl()
+        policy.owner = dir_key.get_acl().owner
         dir_key.set_acl(bucket.get_acl())
-        log.debug("Applied bucket policy %s" % acl)
+        log.debug("Applied bucket policy %s" % policy)
     except IOError as e:
         print e
         return False
