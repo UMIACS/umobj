@@ -10,15 +10,19 @@ OS_MAJOR_VERSION = $(shell lsb_release -rs | cut -f1 -d.)
 OS := rhel$(OS_MAJOR_VERSION)
 ARCH = noarch
 
+CREATEREPO_WORKERS=4
 ifeq ($(OS),rhel7)
 	YUMREPO_LOCATION=/fs/UMyumrepos/rhel7/stable/Packages/$(ARCH)
+	CREATEREPO_WORKERS_CMD=--workers=$(CREATEREPO_WORKERS)
 endif
 ifeq ($(OS),rhel6)
 	YUMREPO_LOCATION=/fs/UMyumrepos/rhel6/stable/Packages/$(ARCH)
+	CREATEREPO_WORKERS_CMD=--workers=$(CREATEREPO_WORKERS)
 endif
 ifeq ($(OS),rhel5)
 	PYTHON=python26
 	YUMREPO_LOCATION=/fs/UMyumrepos/rhel5/stable/$(ARCH)
+	CREATEREPO_WORKERS_CMD=
 endif
 
 BUILDROOT := /fs/UMbuild/$(OS)
@@ -46,7 +50,7 @@ rpm:
 package:
 	@echo ================================================================
 	@echo cp /fs/UMbuild/$(OS)/RPMS/$(ARCH)/$(PACKAGE)-$(VERSION)-$(RELEASE).$(ARCH).rpm $(YUMREPO_LOCATION)
-	@echo createrepo /fs/UMyumrepos/$(OS)/stable
+	@echo createrepo $(CREATEREPO_WORKERS_CMD) /fs/UMyumrepos/$(OS)/stable
 
 .PHONY: build
 build: rpm package
