@@ -20,7 +20,7 @@ def create_directory(bucket, directory):
         log.info("Created directory %s" % directory)
         policy = bucket.get_acl()
         policy.owner = dir_key.get_acl().owner
-        dir_key.set_acl(bucket.get_acl())
+        dir_key.set_acl(policy)
         log.debug("Applied bucket policy %s" % policy)
     except IOError as e:
         print e
