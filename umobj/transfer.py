@@ -252,10 +252,13 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
             return
         if dest_name:
             current_path = ''
-            for dir_part in dest_name.lstrip(os.sep).split(os.sep):
+            for dir_part in dest_name.lstrip(os.sep).split(os.sep)[:-1]:
                 current_path = current_path + dir_part + '/'
                 create_directory(bucket, current_path)
+            if dest_name.endswith('/'):
                 key_name = current_path + os.path.basename(src)
+            else:
+                key_name = dest_name
         else:
             key_name = os.path.basename(src)
         if checksum and not check_key_upload(bucket, key_name, src):
