@@ -121,7 +121,6 @@ def obj_key(bucket_name, key_name):
 
 def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
                  multi=False, checksum=False, progress=True):
-    print progress
     bucket = Obj.conn.get_bucket(bucket_name)
     if recursive:
         logging.info("Starting recursive download %s to %s prefix %s" %
