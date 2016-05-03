@@ -74,8 +74,9 @@ def download_file(key, filename, progress=True):
     logging.info("Downloading to %s with %d bytes." % (filename, key.size))
     global pbar
     if key.size is 0:
-        pbar = progressbar.ProgressBar(maxval=100)
-        pbar.start()
+        if progress:
+            pbar = progressbar.ProgressBar(maxval=100)
+            pbar.start()
         if filename.endswith('/'):
             if not os.path.isdir(filename):
                 if os.path.isfile(filename.rstrip('/')):
@@ -90,18 +91,23 @@ def download_file(key, filename, progress=True):
         else:
             _create_needed_parent_directories(filename)
             key.get_contents_to_filename(filename)
-        pbar.update(100)
-        pbar.finish()
+        if progress:
+            pbar.update(100)
+            pbar.finish()
         return
-    pbar = progressbar.ProgressBar(maxval=key.size)
-    pbar.start()
     if os.path.isdir(filename):
         filename = filename + os.sep + os.path.basename(key.name)
     _create_needed_parent_directories(filename)
     f = open(filename, 'w')
-    key.get_contents_to_file(f, cb=transfer_stats, num_cb=100)
+    if progress:
+        pbar = progressbar.ProgressBar(maxval=key.size)
+        pbar.start()
+        key.get_contents_to_file(f, cb=transfer_stats, num_cb=100)
+    else:
+        key.get_contents_to_file(f)
     f.close()
-    pbar.finish()
+    if progress:
+        pbar.finish()
 
 
 def obj_key(bucket_name, key_name):
@@ -114,7 +120,7 @@ def obj_key(bucket_name, key_name):
 
 
 def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
-                 multi=False, checksum=False):
+                 multi=False, checksum=False, progress=True):
     bucket = Obj.conn.get_bucket(bucket_name)
     if recursive:
         logging.info("Starting recursive download %s to %s prefix %s" %
@@ -133,7 +139,7 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
                     m = MultiPart()
                     m.start_download(bucket_name, key.name, dest)
                 else:
-                    download_file(key, filename)
+                    download_file(key, filename, progress=progress)
     else:
         if not key_name:
             logging.error("Must specify a key to download or use " +
@@ -164,7 +170,7 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
 
 
 def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
-               checksum=False):
+               checksum=False, progress=True):
     # retranslate to the full absolute path
     src = os.path.abspath(src)
     # retieve the bucket
@@ -195,8 +201,9 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
                 create_directory(bucket, directory)
         operations = sum([len(files) for r, d, files in
                           os.walk(src.rstrip(os.sep))])
-        pbar = progressbar.ProgressBar(maxval=operations)
-        pbar.start()
+        if progress:
+            pbar = progressbar.ProgressBar(maxval=operations)
+            pbar.start()
         count = 0
         for root, dirs, files in os.walk(src.rstrip(os.sep)):
             # we will not create the base directory
@@ -239,9 +246,10 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
                         policy.owner = key.get_acl().owner
                         key.set_acl(policy)
                 count += 1
-                if count < operations:
+                if count < operations and progress:
                     pbar.update(count)
-        pbar.finish()
+        if progress:
+            pbar.finish()
     else:
         if os.path.isdir(src):
             logging.warning("Skipping directory %s, " % src +
