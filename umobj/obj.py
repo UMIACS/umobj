@@ -19,14 +19,18 @@ class Obj(object):
                                 calling_format=calling_format)
 
     @staticmethod
-    def connect(host=None, port=None, access_key=None, secret_key=None):
+    def connect(host=None, port=None, is_secure=True, access_key=None,
+                secret_key=None):
         if host is None:
             try:
                 host = os.environ['OBJ_SERVER']
             except:
                 host = 'obj.umiacs.umd.edu'
         if port is None:
-            port = 443
+            if is_secure:
+                port = 443
+            else:
+                port = 80
         if access_key is None:
             try:
                 access_key = os.environ['OBJ_ACCESS_KEY_ID']
@@ -39,6 +43,6 @@ class Obj(object):
             except:
                 logging.error("Please provide secret_key")
                 return False
-        Obj(host=host, port=port, access_key=access_key,
+        Obj(host=host, port=port, access_key=access_key, is_secure=is_secure,
             secret_key=secret_key)
         return True

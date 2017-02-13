@@ -18,6 +18,8 @@ if __name__ == "__main__":
     description = 'Copy Object(s) - ' + \
                   'Copy objects to and from object store'
     parser = umobj_parser(description=description)
+    parser.add_insecure()
+
     parser.add_recursive(help='Copy files recursively')
     parser.add_force(help='Force overwrite files when downloading')
     parser.add_multipart()
@@ -33,6 +35,7 @@ if __name__ == "__main__":
 
     if not Obj.connect(host=args.host,
                        port=args.port,
+                       is_secure=(not args.insecure),
                        access_key=args.access_key,
                        secret_key=args.secret_key):
         logging.error('Unable to contact object store.')

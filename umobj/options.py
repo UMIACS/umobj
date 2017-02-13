@@ -175,6 +175,11 @@ class umobj_parser(object):
         self.parser.add_argument(short, long, dest=dest, help=help,
                                  default=default)
 
+    def add_insecure(self, long='--insecure', dest='insecure',
+                     help='Disable SSL/TLS', default=False):
+        self.parser.add_argument(long, dest=dest, help=help,
+                                 action='store_true', default=default)
+
 
 def get_logging_level(args):
     '''
