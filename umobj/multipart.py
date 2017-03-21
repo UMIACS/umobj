@@ -47,7 +47,9 @@ class UploadThread(threading.Thread):
             print exc
             if retries:
                 logging.info(
-                    '%s : retrying with %d retries left' % retries - 1)
+                    '%s part %d : retrying with %d retries left' %
+                    (self.mp.mp_id, part_num, retries - 1)
+                )
                 self._upload_part(part_num, offset, bytes, retries=retries - 1)
             else:
                 logging.error('%s : Failed uploading part %d' %
