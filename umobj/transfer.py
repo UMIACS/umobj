@@ -171,12 +171,6 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
 
 def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
                checksum=False, progress=True):
-
-    if src.endswith(os.sep) or src == '.':
-        end_sep = True
-    else:
-        end_sep = False
-
     # retranslate to the full absolute path
     src = os.path.abspath(src)
     # retieve the bucket
@@ -198,19 +192,13 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
     umobj_add_handler(signal.SIGINT, cancel_multipart_handler)
 
     if recursive and os.path.isdir(src):
-        prefix = None
-        if not end_sep:
-            prefix = src.split(os.sep)[-1]
+        prefix = src.split(os.sep)[-1]
         if dest_name:
-            if prefix:
-                prefix = dest_name.rstrip(os.sep) + '/' + prefix
-            else:
-                prefix = dest_name.rstrip(os.sep) + '/'
-        if prefix:
-            for directory in walk_path(prefix):
-                directory = directory + '/'
-                if not check_directory(bucket, directory):
-                    create_directory(bucket, directory)
+            prefix = dest_name.rstrip(os.sep) + '/' + prefix
+        for directory in walk_path(prefix):
+            directory = directory + '/'
+            if not check_directory(bucket, directory):
+                create_directory(bucket, directory)
         operations = sum([len(files) for r, d, files in
                           os.walk(src.rstrip(os.sep))])
         if progress:
@@ -220,11 +208,8 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
         for root, dirs, files in os.walk(src.rstrip(os.sep)):
             # we will not create the base directory
             if root != src:
-                if prefix:
-                    directory = '%s/%s/' % (prefix,
-                                            lremove(src, root).lstrip(os.sep))
-                else:
-                    directory = '%s/' % (lremove(src, root).lstrip(os.sep))
+                directory = '%s/%s/' % (prefix,
+                                        lremove(src, root).lstrip(os.sep))
                 if not check_directory(bucket, directory):
                     create_directory(bucket, directory)
                     count += 1
@@ -239,20 +224,11 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
                     logging.error(e)
                     continue
                 if root != src:
-                    if prefix:
-                        keyname = ('%s/%s/%s' %
-                                   (prefix,
-                                    lremove(src, root).lstrip(os.sep),
-                                    f))
-                    else:
-                        keyname = ('%s/%s' %
-                                   (lremove(src, root).lstrip(os.sep), f))
+                    keyname = '%s/%s/%s' % (prefix,
+                                            lremove(src, root).lstrip(os.sep),
+                                            f)
                 else:
-                    if prefix:
-                        keyname = '%s/%s' % (prefix, f)
-                    else:
-                        keyname = '%s' % f
-
+                    keyname = '%s/%s' % (prefix, f)
                 if checksum and not check_key_upload(
                         bucket, keyname, filename):
                     continue
