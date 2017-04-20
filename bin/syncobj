@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
     if upload:
         obj_upload(bucket_name, src, dest_name, args.recursive, args.multipart,
-                   True)
+                   True, True, True)
     if download:
         obj_download(bucket_name, dest, key_name, args.force, args.recursive,
                      args.multipart, True)
