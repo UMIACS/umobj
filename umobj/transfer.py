@@ -171,6 +171,12 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
 
 def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
                checksum=False, progress=True):
+
+    if src.endswith(os.sep) or src == '.':
+        end_sep = True
+    else:
+        end_sep = False
+
     # retranslate to the full absolute path
     src = os.path.abspath(src)
     # retieve the bucket
@@ -192,7 +198,10 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
     umobj_add_handler(signal.SIGINT, cancel_multipart_handler)
 
     if recursive and os.path.isdir(src):
-        prefix = src.split(os.sep)[-1]
+        if end_sep:
+            prefix = ''
+        else:
+            prefix = src.split(os.sep)[-1]
         if dest_name:
             prefix = dest_name.rstrip(os.sep) + '/' + prefix
         for directory in walk_path(prefix):
