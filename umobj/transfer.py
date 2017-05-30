@@ -213,6 +213,9 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
                     create_directory(bucket, directory)
         operations = sum([len(files) for r, d, files in
                           os.walk(src.rstrip(os.sep))])
+        if operations < 1:
+            # we can not start a progress bar with less than 1 operation
+            progress = False
         if progress:
             pbar = progressbar.ProgressBar(maxval=operations)
             pbar.start()
