@@ -24,9 +24,13 @@ def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
     query = b
     if prefix:
         if not prefix.endswith("/"):
-            prefix = prefix + "/"
-        query = b.list(prefix=prefix, delimiter="/")
-        print "%s" % prefix
+            key = b.get_key(prefix)
+            if key:
+                query = [key]
+            else:
+                query = []
+        else:
+            query = b.list(prefix=prefix, delimiter="/")
     num = 0
     for k in query:
         if not long_list:
@@ -49,7 +53,10 @@ def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
             except S3ResponseError:
                 mode = "-------"
         if isinstance(k, Key):
-            d = time.strptime(k.last_modified, "%Y-%m-%dT%H:%M:%S.%fZ")
+            try:
+                d = time.strptime(k.last_modified, "%Y-%m-%dT%H:%M:%S.%fZ")
+            except:
+                d = time.strptime(k.last_modified, "%a, %d %b %Y %H:%M:%S GMT")
             print "%s\t%s\t%010s\t%s" % \
                   (mode, time.strftime("%m/%d/%Y %H:%M:%S", d),
                    sizeof_fmt(size), k.name)
