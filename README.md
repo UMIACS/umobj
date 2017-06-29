@@ -16,7 +16,7 @@ On Mac OSX with the [Homebrew package manager](http://brew.sh) umobj
 can be installed by adding the UMIACS tap:
 
 ```bash
-brew tap ibeekman/umiacs https://github.com/UMIACS/homebrew-umiacs.git
+brew tap UMIACS/umiacs https://github.com/UMIACS/homebrew-umiacs.git
 brew update
 brew install umobj
 ```
