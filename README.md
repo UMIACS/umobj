@@ -310,7 +310,7 @@ The official repository for umobj is hosted in the [UMIACS Gitlab](https://gitla
 ## License
 
     umobj - Command-line utilties for S3-compatible Object Storage
-    Copyright (C) 2015  UMIACS
+    Copyright (C) 2017  UMIACS
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
