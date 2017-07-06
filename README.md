@@ -303,6 +303,9 @@ When running on Python 2.6, you need to have the following backports:
 
 These are most easily going to be satisfied with a virtualenv.
 
+## Report an issue
+
+The official repository for umobj is hosted in the [UMIACS Gitlab](https://gitlab.umiacs.umd.edu/staff/umobj} service. Please open new issues there.
 
 ## License
 
