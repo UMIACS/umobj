@@ -10,7 +10,7 @@ OS_MAJOR_VERSION = $(shell lsb_release -rs | cut -f1 -d.)
 OS := rhel$(OS_MAJOR_VERSION)
 ARCH = noarch
 
-BUILDROOT := /srv/UMbuild/$(OS)
+BUILDROOT := /srv/build/$(OS)
 
 .PHONY: rpm
 rpm:
