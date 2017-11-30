@@ -7,7 +7,7 @@ cmpobj - retrieve md5 sum for keys in the Object Store / Verify Bagit Archive
 .SH SYNOPSIS
 cmpobj [-A/--access_key=<access_key>] [-S/--secret_key=<secret_key>]
        [-H/--host=<host>] [-P/--port=<port>] [-h/--help]
-       [-V/--verbose] [-D/--debug] [--version] [-v/--verify-bag] 
+       [-V/--verbose] [-D/--debug] [--version] [-v/--verify-bag]
        [-d/--directory=<directory>]
        bucket:key
 
@@ -22,7 +22,7 @@ Secondly, cmpobj can verify the contents of a Bagit archive.  It does this by re
 \fB-A, --access_key=<access_key>\fR
 This option allows you to specify an Object Store access key.  If not supplied, chobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
 
-.TP 
+.TP
 \fB-S, --secret_key=<secret_key>\fR
 This option allows you to specify an Object Store secret key.  If not supplied, chobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
 
@@ -39,7 +39,7 @@ Object Store server port [Default: 443]
 Verify bagit archive.  You will still need to pass in the \fIBUCKET\fR:\fIKEY\R combination that contains the archive.
 
 .TP
-\fB---version\fR
+\fB--version\fR
 Print the version.
 
 .TP
@@ -63,4 +63,4 @@ UMIACS Staff
 
 .SH SEE ALSO
 bagobj(1), catobj(1), chobj(1), cpobj(1), lsobj(1), mkobj(1), mvobj(1),
-rmobj(1), streamobj(1), syncobj(1)
+rmobj(1), streamobj(1), syncobj(1), webobj(1)

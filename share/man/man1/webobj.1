@@ -1,0 +1,93 @@
+./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
+.TH mkobj 1 7/21/2015 UMobj "webobj Utility"
+
+.SH NAME
+webobj - create, examine, and delete website configurations in the Object Store
+
+.SH SYNOPSIS
+webobj [-A/--access_key <access_key>] [-S/--secret_key <secret_key>]
+         [-H/--host <host>] [-P/--port <port>] [-h/--help]
+         [-V/--verbose] [-D/--debug] [--version] -m/--mode <mode>
+         -a/--attribute <attribute> [--index <index>] [--error <error>]
+         BUCKET
+
+.SH DESCRIPTION
+\fBwebobj\fR manage bucket web configurations in the given Object Store. \fIBUCKET\fR represents the bucket that is to be operated on.
+
+.SH OPTIONS SUMMARY
+Here is a short summary of the options available in webobj.  Please refer to the \fBOPTIONS\fR section below for more detailed descriptions.
+
+ -A, --access_key=<access_key>  Object store access key
+ -S, --secret_key=<secret_key>  Object store secret key
+ -H, --host=<host>              Object store server name
+ -P, --port=<port>              Object store server port [Default: 443]
+ -m, --mode=<mode>              Mode of the operation
+ -a, --attribute=<attribute>    Bucket attribute to modify
+ -f, --force                    Force an action without warnings
+     --index                    Index suffix 
+     --error                    Key to use as an error page
+     --version                  Print version
+ -V, --verbose                  Verbose mode
+ -D, --debug                    Debug mode
+ -h, --help                     Help message
+
+.SH OPTIONS
+
+.TP
+\fB-A, --access_key=<access_key>\fR
+This option allows you to specify an Object Store access key.  If not supplied, webobj will use the value of the environment variable \fIOBJ_ACCESS_KEY_ID\fR.
+
+.TP
+\fB-S, --secret_key=<secret_key>\fR
+This option allows you to specify an Object Store secret key.  If not supplied, webobj will use the value of the environment variable \fIOBJ_SECRET_ACCESS_KEY\fR.
+
+.TP
+\fB-H, --host=<host>\fR
+This option allows you to specify an Object Store server.  If not supplied, webobj will use the value of the environment variable \fIOBJ_SERVER\fR.
+
+.TP
+\fB-P, --port=<port>\fR
+Object Store server port [Default: 443]
+
+.TP
+\fB-m, --mode=<mode>\fR
+Mode of the operation on the bucket attribute. Available options are 'create', 'delete', and 'examine.'
+
+.TP
+\fB-a, --attribute=<attribute>\fR
+Attribute of the bucket to operate on. Currently the only option is 'website'
+
+.TP
+\fB-f, --force\fR
+Force an action while overwriting without warning.
+
+.TP
+\fB--index=<index>\fR
+The suffix of the index key that will be applied when requesting a "directory" in the site. If not supplied, webobj will use 'index.html'.
+
+.TP
+\fB--error=<error>\fR
+The name of the key that will be served when the server presents an error. If not supplied, the Object Store's default will be used.
+
+.TP
+\fB--version\fR
+Print the version.
+
+.TP
+\fB-V/--verbose\fR
+Allow for more verbose output.
+
+.TP
+\fB-D/--debug\fR
+Running in debug mode prints detailed information about the calls being made against the Object Store.  This debugging information can be useful to UMIACS Staff if you have encountered a problem and need assistance.
+
+.TP
+\fB-h, --help\fR
+Help menu
+
+.SH AUTHOR
+UMIACS Staff
+
+.SH SEE ALSO
+bagobj(1), catobj(1), chobj(1), cmpobj(1), cpobj(1), lsobj(1), mvobj(1),
+rmobj(1), streamobj(1), syncobj(1)

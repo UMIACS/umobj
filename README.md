@@ -62,6 +62,7 @@ flag ```-h``` or ```--help``` for help.
 * [catobj](#catobj)
 * [streamobj](#streamobj)
 * [cmpobj](#cmpobj)
+* [webobj](#webobj)
 
 <a name="lsobj"></a>
 ### lsobj
@@ -285,6 +286,22 @@ Use ```cmpobj``` to check the md5 sum of a key in a bucket or compare the md5 su
 ```bash
 % cmpobj mybucket:foo.txt
 9029668a43dfa60f1f267eea59111bbc
+```
+
+<a name="webobj"></a>
+### webobj
+
+Use ```webobj``` to configure web configurations of a bucket. Currently, this
+supports setting a S3 website configuration such that bucket can be served as a
+static site.
+
+```bash
+% webobj -m create -a website --index=index.html --error=error.html mybucket
+% webobj -m examine -a website mybucket
+Index: index.html
+Error Key: error.html
+% webobj -m delete -a website mybucket
+
 ```
 
 ## Requirements
