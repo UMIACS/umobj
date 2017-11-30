@@ -180,9 +180,9 @@ class umobj_parser(object):
         self.parser.add_argument(long, dest=dest, help=help,
                                  action='store_true', default=default)
 
-    def add_attribute(self, short='-a', long='--attribute', dest='attribute',
-                      help='Choose an atrribute to act on.', choices=None,
-                      required=True):
+    def add_config_type(self, short='-c', long='--config_type',
+                        dest='config_type', required=True,
+                        help='Choose an atrribute to act on.', choices=None):
         self.parser.add_argument(short, long, dest=dest, help=help,
                                  choices=None, required=required)
 

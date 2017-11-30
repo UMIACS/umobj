@@ -91,7 +91,7 @@ class TestWebobj(unittest.TestCase):
 
     def test_create_website(self):
         # Create website configuration
-        command = ("../bin/webobj -m create -a website --index=index.html " +
+        command = ("../bin/webobj -m create -c website --index=index.html " +
                    "--error=error.html %s" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 0)
 
@@ -117,7 +117,7 @@ class TestWebobj(unittest.TestCase):
         except Exception as e:
             self.fail("Could not read from bucket site: %s" % str(e))
 
-        command = ("../bin/webobj -f -m create -a website " +
+        command = ("../bin/webobj -f -m create -c website " +
                    "--index=index1.html --error=error1.html %s"
                    % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 0,
@@ -144,43 +144,43 @@ class TestWebobj(unittest.TestCase):
             self.fail("Could not read from bucket site: %s" % str(e))
 
     def test_invalid_create_website_params(self):
-        command = ("../bin/webobj -m create -a website --index=index.html " +
+        command = ("../bin/webobj -m create -c website --index=index.html " +
                    "--error=error.html %s" % self.gen_bucket_name())
         self.assertEqual(subprocess.call(command.split(" ")), 1,
                          "Failed to return error with no bucket.")
 
-        command = ("../bin/webobj -m create -a website --index=index.html " +
+        command = ("../bin/webobj -m create -c website --index=index.html " +
                    "--error=error.html %s" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 0,
                          "Failed to create website conf when expected.")
 
-        command = ("../bin/webobj -m create -a website --index=index1.html " +
+        command = ("../bin/webobj -m create -c website --index=index1.html " +
                    "--error=error1.html %s" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 1,
                          "Failed to return error with preexisting website  " +
                          "conf and no force option.")
 
-        command = ("../bin/webobj -m create -a website --index=index1.html " +
+        command = ("../bin/webobj -m create -c website --index=index1.html " +
                    "--error=error1.html %s:somepath" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 1,
                          "Failed detect key path as invalid")
 
     def test_examine(self):
-        command = ("../bin/webobj -m create -a website --index=index.html " +
+        command = ("../bin/webobj -m create -c website --index=index.html " +
                    "--error=error.html %s" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 0)
 
-        command = "../bin/webobj -m examine -a website %s" % self.bucket_name
+        command = "../bin/webobj -m examine -c website %s" % self.bucket_name
         self.assertEqual(subprocess.check_output(command.split(" ")),
                          "Index: index.html\nError Key: error.html\n",
                          "Invalid examine output.")
 
     def test_delete(self):
-        command = ("../bin/webobj -m create -a website --index=index.html " +
+        command = ("../bin/webobj -m create -c website --index=index.html " +
                    "--error=error.html %s" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 0)
 
-        command = "../bin/webobj -m delete -a website %s" % self.bucket_name
+        command = "../bin/webobj -m delete -c website %s" % self.bucket_name
         self.assertEqual(subprocess.call(command.split(" ")), 0,
                          "Failed to delete website config.")
 

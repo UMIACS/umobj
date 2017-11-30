@@ -17,19 +17,19 @@ webobj [-A/--access_key <access_key>] [-S/--secret_key <secret_key>]
 .SH OPTIONS SUMMARY
 Here is a short summary of the options available in webobj.  Please refer to the \fBOPTIONS\fR section below for more detailed descriptions.
 
- -A, --access_key=<access_key>  Object store access key
- -S, --secret_key=<secret_key>  Object store secret key
- -H, --host=<host>              Object store server name
- -P, --port=<port>              Object store server port [Default: 443]
- -m, --mode=<mode>              Mode of the operation
- -a, --attribute=<attribute>    Bucket attribute to modify
- -f, --force                    Force an action without warnings
-     --index                    Index suffix 
-     --error                    Key to use as an error page
-     --version                  Print version
- -V, --verbose                  Verbose mode
- -D, --debug                    Debug mode
- -h, --help                     Help message
+ -A, --access_key=<access_key>    Object store access key
+ -S, --secret_key=<secret_key>    Object store secret key
+ -H, --host=<host>                Object store server name
+ -P, --port=<port>                Object store server port [Default: 443]
+ -m, --mode=<mode>                Mode of the operation
+ -c, --config_type=<config_type>  Bucket attribute to modify
+ -f, --force                      Force an action without warnings
+     --index                      Index suffix
+     --error                      Key to use as an error page
+     --version                    Print version
+ -V, --verbose                    Verbose mode
+ -D, --debug                      Debug mode
+ -h, --help                       Help message
 
 .SH OPTIONS
 
@@ -54,8 +54,8 @@ Object Store server port [Default: 443]
 Mode of the operation on the bucket attribute. Available options are 'create', 'delete', and 'examine.'
 
 .TP
-\fB-a, --attribute=<attribute>\fR
-Attribute of the bucket to operate on. Currently the only option is 'website'
+\fB-c, --config_type=<config_type>\fR
+Type of bucket configuration to modify or operate on. Currently the only option is 'website'
 
 .TP
 \fB-f, --force\fR

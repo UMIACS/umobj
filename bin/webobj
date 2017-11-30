@@ -26,7 +26,7 @@ if __name__ == "__main__":
             # 'clear',
             'examine'],
         help='Mode of operation.')
-    parser.add_attribute(
+    parser.add_config_type(
         choices=[
             'website',
             # 'cors'
@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     S3PATH = args.S3PATH
     mode = args.mode
-    attribute = args.attribute
+    config_type = args.config_type
     force = args.force
     index = args.index
     error = args.error
@@ -58,19 +58,19 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if (mode not in ['create', 'delete', 'examine']
-            and attribute == 'website'):
+            and config_type == 'website'):
         logging.error('Websites can only be used with ' +
                       '"create", "delete", or "examine"')
 
     if (mode not in ['add', 'remove', 'clear', 'examine']
-            and attribute == 'cors'):
+            and config_type == 'cors'):
         logging.error('CORS rules can only be used with ' +
                       '"add", "remove", "clear", or "examine"')
 
     bucket_name, key_name = \
         umobj_get_bucket_key_pair_from_string(S3PATH[0])
 
-    if attribute == 'website':
+    if config_type == 'website':
         if key_name:
             logging.error('Website requires a bucket name, not a key path.')
             sys.exit(1)

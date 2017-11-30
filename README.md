@@ -296,11 +296,11 @@ supports setting a S3 website configuration such that bucket can be served as a
 static site.
 
 ```bash
-% webobj -m create -a website --index=index.html --error=error.html mybucket
-% webobj -m examine -a website mybucket
+% webobj -m create -c website --index=index.html --error=error.html mybucket
+% webobj -m examine -c website mybucket
 Index: index.html
 Error Key: error.html
-% webobj -m delete -a website mybucket
+% webobj -m delete -c website mybucket
 
 ```
 
