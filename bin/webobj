@@ -13,7 +13,7 @@ from umobj.bucket import get_website, set_website, delete_website
 if __name__ == "__main__":
     umobj_init()
 
-    description = 'Web Obj- ' + \
+    description = 'Web Obj - ' + \
                   'Manipulate web based attributes of buckets' + \
                   'and/or keys'
     parser = umobj_parser(description=description)

@@ -10,22 +10,7 @@ OS_MAJOR_VERSION = $(shell lsb_release -rs | cut -f1 -d.)
 OS := rhel$(OS_MAJOR_VERSION)
 ARCH = noarch
 
-CREATEREPO_WORKERS=4
-ifeq ($(OS),rhel7)
-	YUMREPO_LOCATION=/fs/UMyumrepos/rhel7/stable/Packages/$(ARCH)
-	CREATEREPO_WORKERS_CMD=--workers=$(CREATEREPO_WORKERS)
-endif
-ifeq ($(OS),rhel6)
-	YUMREPO_LOCATION=/fs/UMyumrepos/rhel6/stable/Packages/$(ARCH)
-	CREATEREPO_WORKERS_CMD=--workers=$(CREATEREPO_WORKERS)
-endif
-ifeq ($(OS),rhel5)
-	PYTHON=python26
-	YUMREPO_LOCATION=/fs/UMyumrepos/rhel5/stable/$(ARCH)
-	CREATEREPO_WORKERS_CMD=
-endif
-
-BUILDROOT := /fs/UMbuild/$(OS)
+BUILDROOT := /srv/UMbuild/$(OS)
 
 .PHONY: rpm
 rpm:
@@ -34,26 +19,15 @@ rpm:
 	$(GIT) clone . $(TEMPDIR)/$(PACKAGE)-$(VERSION)
 	$(GIT) \
 		--git-dir=$(TEMPDIR)/$(PACKAGE)-$(VERSION)/.git \
-		--work-tree=$(TEMPDIR)/$(PACKAGE)-$(VERSION)/.git \
+		--work-tree=$(TEMPDIR)/$(PACKAGE)-$(VERSION) \
 		checkout tags/$(VERSION)
-	$(TAR) \
-		-C $(TEMPDIR) \
-		--exclude .git \
-		-czf $(BUILDROOT)/SOURCES/$(PACKAGE)-$(VERSION).tar.gz \
-		$(PACKAGE)-$(VERSION)
+	$(TAR) -C $(TEMPDIR) --exclude .git -czf $(BUILDROOT)/SOURCES/$(PACKAGE)-$(VERSION).tar.gz $(PACKAGE)-$(VERSION)
 	$(SED) "s/=VERSION=/$(VERSION)/" $(PACKAGE).spec > $(BUILDROOT)/SPECS/$(PACKAGE)-$(VERSION).spec
-	rpmbuild -bb $(BUILDROOT)/SPECS/$(PACKAGE)-$(VERSION).spec \
-		--define "python ${PYTHON}"
+	rpmbuild -bb $(BUILDROOT)/SPECS/$(PACKAGE)-$(VERSION).spec --define "python ${PYTHON}"
 	rm -rf $(TEMPDIR)
 
-.PHONY: package
-package:
-	@echo ================================================================
-	@echo cp /fs/UMbuild/$(OS)/RPMS/$(ARCH)/$(PACKAGE)-$(VERSION)-$(RELEASE).$(ARCH).rpm $(YUMREPO_LOCATION)
-	@echo createrepo $(CREATEREPO_WORKERS_CMD) /fs/UMyumrepos/$(OS)/stable
-
 .PHONY: build
-build: rpm package
+build: rpm
 
 .PHONY: tag
 tag:
@@ -62,11 +36,9 @@ tag:
 	$(GIT) commit -m "Tagging $(VERSION)"
 	$(GIT) tag -a $(VERSION) -m "Tagging $(VERSION)"
 
-.PHONY: upload
-upload: clean
+.PHONY: sdist
+sdist:
 	python setup.py sdist
-	twine upload dist/*
-
 
 .PHONY: clean
 clean:

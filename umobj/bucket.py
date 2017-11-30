@@ -70,12 +70,14 @@ def get_website(connection, bucket):
             return None
         else:
             log.error('Unable to fetch bucket %s website config.' % bucket)
+            return None
     return ws_obj
 
 
 def delete_website(connection, bucket):
     '''
-    Given a connection and a bucket name, get the s3 configuration of a bucket.
+    Given a connection and a bucket name, delete the s3 configuration of a
+    bucket.
     '''
     log.info('Deleting S3 Website configuration for bucket %s' % bucket)
     try:
