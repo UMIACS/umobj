@@ -10,16 +10,6 @@ OS_MAJOR_VERSION = $(shell lsb_release -rs | cut -f1 -d.)
 OS := rhel$(OS_MAJOR_VERSION)
 ARCH = noarch
 
-CREATEREPO_WORKERS=4
-ifeq ($(OS),rhel7)
-	YUMREPO_LOCATION=/fs/UMyumrepos/rhel7/stable/Packages/$(ARCH)
-	CREATEREPO_WORKERS_CMD=--workers=$(CREATEREPO_WORKERS)
-endif
-ifeq ($(OS),rhel6)
-	YUMREPO_LOCATION=/fs/UMyumrepos/rhel6/stable/Packages/$(ARCH)
-	CREATEREPO_WORKERS_CMD=--workers=$(CREATEREPO_WORKERS)
-endif
-
 BUILDROOT := /srv/UMbuild/$(OS)
 
 .PHONY: rpm
@@ -36,14 +26,8 @@ rpm:
 	rpmbuild -bb $(BUILDROOT)/SPECS/$(PACKAGE)-$(VERSION).spec --define "python ${PYTHON}"
 	rm -rf $(TEMPDIR)
 
-.PHONY: package
-package:
-	@echo ================================================================
-	@echo cp /fs/UMbuild/$(PACKAGE)/dist/$(OS)/$(PACKAGE)-$(VERSION)-$(RELEASE).noarch.rpm $(YUMREPO_LOCATION)
-	@echo "createrepo $(CREATEREPO_WORKERS_CMD) /fs/UMyumrepos/$(OS)/stable"
-
 .PHONY: build
-build: rpm package
+build: rpm
 
 .PHONY: tag
 tag:
@@ -55,10 +39,6 @@ tag:
 .PHONY: sdist
 sdist:
 	python setup.py sdist
-
-.PHONY: upload
-upload:
-	twine upload -r umiacs dist/$(PACKAGE)-$(VERSION).tar.gz
 
 .PHONY: clean
 clean:

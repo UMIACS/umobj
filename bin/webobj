@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+
+import sys
+import logging
+
+from umobj.utils import umobj_logging, umobj_init, \
+    umobj_get_bucket_key_pair_from_string
+from umobj.obj import Obj
+from umobj.options import umobj_parser, get_logging_level
+from umobj.bucket import get_website, set_website, delete_website
+
+
+if __name__ == "__main__":
+    umobj_init()
+
+    description = 'Web Obj - ' + \
+                  'Manipulate web based attributes of buckets' + \
+                  'and/or keys'
+    parser = umobj_parser(description=description)
+    parser.add_mode(
+        choices=[
+            'create',
+            'delete',
+            # 'remove',
+            # 'add',
+            # 'clear',
+            'examine'],
+        help='Mode of operation.')
+    parser.add_config_type(
+        choices=[
+            'website',
+            # 'cors'
+        ]
+    )
+    parser.add_s3path(number=1)
+    parser.add_force()
+    parser.add_error()
+    parser.add_index()
+    args = parser.parse_args()
+
+    umobj_logging(get_logging_level(args))  # set up logging
+
+    logging.info("Running %s" % sys.argv)
+
+    S3PATH = args.S3PATH
+    mode = args.mode
+    config_type = args.config_type
+    force = args.force
+    index = args.index
+    error = args.error
+
+    if not Obj.connect(host=args.host,
+                       port=args.port,
+                       is_secure=True,
+                       access_key=args.access_key,
+                       secret_key=args.secret_key):
+        logging.error('Unable to contact object store.')
+        sys.exit(1)
+
+    if (mode not in ['create', 'delete', 'examine']
+            and config_type == 'website'):
+        logging.error('Websites can only be used with ' +
+                      '"create", "delete", or "examine"')
+
+    if (mode not in ['add', 'remove', 'clear', 'examine']
+            and config_type == 'cors'):
+        logging.error('CORS rules can only be used with ' +
+                      '"add", "remove", "clear", or "examine"')
+
+    bucket_name, key_name = \
+        umobj_get_bucket_key_pair_from_string(S3PATH[0])
+
+    if config_type == 'website':
+        if key_name:
+            logging.error('Website requires a bucket name, not a key path.')
+            sys.exit(1)
+        existing_ws = get_website(Obj.conn, bucket_name)
+
+        if mode == 'create':
+            if existing_ws:
+                if not force:
+                    logging.error('Website configuration already exists, ' +
+                                  'remove or use -f to force overwrite.')
+                    sys.exit(1)
+                else:
+                    if existing_ws:
+                        delete_website(Obj.conn, bucket_name)
+                        logging.info('Deleting old website configuration.')
+            if set_website(Obj.conn, bucket_name, index, error):
+                logging.info('Website successfully configured.')
+            else:
+                logging.error('Error configuring website.')
+                sys.exit(1)
+        elif mode == 'delete':
+            if existing_ws:
+                if delete_website(Obj.conn, bucket_name):
+                    logging.info('Website configuration successfully deleted.')
+                else:
+                    sys.exit(1)
+                    logging.error('Error deleting website configuration.')
+            else:
+                logging.info('No website configuration exists.')
+                sys.exit(2)
+        elif mode == 'examine':
+            if existing_ws:
+                print "Index: %s\nError Key: %s" % (existing_ws.suffix,
+                                                    existing_ws.error_key)
+            else:
+                logging.info('No website configuration found.')
+                sys.exit(2)
+
+    elif attribute == 'cors':
+        pass

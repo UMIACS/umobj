@@ -20,6 +20,7 @@ install_requires = [
     'filechunkio',
     'progressbar',
     'qav',
+    'bagit'
 ]
 
 if sys.version_info <= (2, 5):
@@ -48,6 +49,7 @@ setup(name="umobj",
            "bin/rmobj",
            "bin/syncobj",
            "bin/streamobj",
+           "bin/webobj",
       ],
       url="https://github.com/UMIACS/umobj",
       packages=["umobj"],

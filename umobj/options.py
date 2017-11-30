@@ -180,6 +180,22 @@ class umobj_parser(object):
         self.parser.add_argument(long, dest=dest, help=help,
                                  action='store_true', default=default)
 
+    def add_config_type(self, short='-c', long='--config_type',
+                        dest='config_type', required=True,
+                        help='Choose an atrribute to act on.', choices=None):
+        self.parser.add_argument(short, long, dest=dest, help=help,
+                                 choices=None, required=required)
+
+    def add_index(self, long='--index', dest='index',
+                  help='Index path', default='index.html'):
+        self.parser.add_argument(long, dest=dest, help=help,
+                                 default=default)
+
+    def add_error(self, long='--error', dest='error',
+                  help='Error page path', default=None):
+        self.parser.add_argument(long, dest=dest, help=help,
+                                 default=default)
+
 
 def get_logging_level(args):
     '''
