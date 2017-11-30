@@ -20,6 +20,7 @@ install_requires = [
     'filechunkio',
     'progressbar',
     'qav',
+    'bagit'
 ]
 
 if sys.version_info <= (2, 5):
