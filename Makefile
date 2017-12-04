@@ -38,7 +38,8 @@ tag:
 
 .PHONY: sdist
 sdist:
-	python setup.py sdist
+	/usr/bin/virtualenv /tmp/buildenv
+	/tmp/buildenv/bin/python setup.py sdist
 
 .PHONY: clean
 clean:
