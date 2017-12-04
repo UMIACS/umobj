@@ -39,6 +39,7 @@ tag:
 .PHONY: sdist
 sdist:
 	/usr/bin/virtualenv /tmp/buildenv
+	/tmp/buildenv/bin/pip install --upgrade setuptools
 	/tmp/buildenv/bin/python setup.py sdist
 
 .PHONY: clean
