@@ -23,10 +23,7 @@ brew install umobj
 
 ## Setup
 
-Setting a few environmental variables containing the credentials you'll need to
-use for the Object Store for convenience is a good idea.
-
-The following environmental variables are required:
+For convenience, consider setting a few environmental variables that umobj will use to authenticate you.
 
  * *OBJ_ACCESS_KEY_ID* - The user's access key
  * *OBJ_SECRET_ACCESS_KEY* - The user's secret key
@@ -36,8 +33,8 @@ For example, if you use the ```bash``` shell, you can add the following to your
 ```.bashrc``` or ```.bash_profile```.
 
 ```bash
-export OBJ_ACCESS_KEY_ID="31sddfadDFAHFDaN+344qOEIS"
-export OBJ_SECRET_ACCESS_KEY="NDSdnMK3233adfahadflkkPDSH092DSJKDKDJKFDLSFLNK"
+export OBJ_ACCESS_KEY_ID="<YOUR_ACCESS_KEY>"
+export OBJ_SECRET_ACCESS_KEY="<YOUR_SECRET_KEY>"
 export OBJ_SERVER="s3.amazonaws.com"
 ```
 
