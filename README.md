@@ -319,7 +319,7 @@ These are most easily going to be satisfied with a virtualenv.
 
 ## Report an issue
 
-The official repository for umobj is hosted in the [UMIACS Gitlab](https://gitlab.umiacs.umd.edu/staff/umobj} service. Please open new issues in the Gitlab tracker.
+The official repository for umobj is hosted in the [UMIACS Gitlab](https://gitlab.umiacs.umd.edu/staff/umobj) service. Please open new issues in the Gitlab tracker.
 
 ## License
 
