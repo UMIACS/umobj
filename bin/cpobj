@@ -24,7 +24,7 @@ if __name__ == "__main__":
     parser.add_recursive(help='Copy files recursively')
     parser.add_force(help='Force overwrite files when downloading')
     parser.add_multipart()
-    parser.add_s3path(name='SOURCE', number=1,
+    parser.add_s3path(name='SOURCE', number='+',
                       help='BUCKET:[SRC] or SRC')
     parser.add_s3path(name='DESTINATION', number=1,
                       help='DEST or BUCKET:[DEST]')
@@ -42,58 +42,65 @@ if __name__ == "__main__":
         logging.error('Unable to contact object store.')
         sys.exit(1)
 
-    src = args.SOURCE[0]
+    sources = args.SOURCE
     dest = args.DESTINATION[0]
-    upload = False
-    download = False
-    src_bucket_name, src_key_name = \
-        umobj_get_bucket_key_pair_from_string(src)
     dest_bucket_name, dest_key_name = \
         umobj_get_bucket_key_pair_from_string(dest)
-    logging.debug("SRC Bucket Name: %s" % src_bucket_name)
-    logging.debug("SRC Key Name: %s" % src_key_name)
     logging.debug("DEST Bucket Name: %s" % dest_bucket_name)
     logging.debug("DEST Key Name: %s" % dest_key_name)
 
-    if ':' in dest:
-        if ':' in src:
-            if not os.path.exists(src):
-                logging.error("Can not copy from a bucket to a bucket.")
-                parser.print_help()
-                sys.exit(1)
-        bucket_name = dest_bucket_name
-        dest_name = dest_key_name
-        upload = True
-        logging.info("Upload mode with bucket %s" % bucket_name)
-        if dest_name:
-            logging.info("Uploading to the prefix %s." % dest_name)
-        logging.info("Uploading files %s." % src)
-    else:
-        if ':' in src:
-            bucket_name = src_bucket_name
-            key_name = src_key_name
-            download = True
-            logging.info("Download mode with bucket %s." % bucket_name)
-            if key_name:
-                logging.info("Downloading with the key name/prefix %s." %
-                             key_name)
-            logging.info("Downloading to the local directory %s." % dest)
+    for src in sources:
+        upload = False
+        download = False
+        src_bucket_name, src_key_name = \
+            umobj_get_bucket_key_pair_from_string(src)
+
+        logging.debug("SRC Bucket Name: %s" % src_bucket_name)
+        logging.debug("SRC Key Name: %s" % src_key_name)
+
+        if ':' in dest:
+            if ':' in src:
+                if not os.path.exists(src):
+                    logging.error("Can not copy from a bucket (%s) to a bucket \
+                                 (%s)" % (src_bucket_name, dest_bucket_name))
+                    parser.print_help()
+                    continue
+            bucket_name = dest_bucket_name
+            dest_name = dest_key_name
+            upload = True
+            logging.info("Upload mode with bucket %s" % bucket_name)
+            if dest_name:
+                logging.info("Uploading to the prefix %s." % dest_name)
+            logging.info("Uploading files %s." % src)
         else:
-            logging.error("You need to provide a bucket in either SRC " +
-                          "or DEST.")
-            parser.print_help()
-            sys.exit(1)
+            if ':' in src:
+                bucket_name = src_bucket_name
+                key_name = src_key_name
+                download = True
+                logging.info("Download mode with bucket %s." % bucket_name)
+                if key_name:
+                    logging.info("Downloading with the key name/prefix %s." %
+                                 key_name)
+                logging.info("Downloading to the local directory %s." % dest)
+            else:
+                logging.error("You need to provide a bucket in either SRC " +
+                              "or DEST.")
+                parser.print_help()
+                continue
 
-    try:
-        bucket = Obj.conn.get_bucket(bucket_name)
-    except boto.exception.S3ResponseError as e:
-        logging.error("Unable to access bucket %s, %s." %
-                      (bucket_name, e.error_code))
-        sys.exit(1)
+        try:
+            bucket = Obj.conn.get_bucket(bucket_name)
+        except boto.exception.S3ResponseError as e:
+            logging.error("Unable to access bucket %s, %s." %
+                          (bucket_name, e.error_code))
+            if upload:
+                sys.exit(1)
+            else:
+                continue
 
-    if upload:
-        obj_upload(bucket_name, src, dest_name, args.recursive,
-                   args.multipart)
-    if download:
-        obj_download(bucket_name, dest, key_name, args.force, args.recursive,
-                     args.multipart)
+        if upload:
+            obj_upload(bucket_name, src, dest_name, args.recursive,
+                       args.multipart)
+        if download:
+            obj_download(bucket_name, dest, key_name, args.force, args.recursive,
+                         args.multipart)
