@@ -2,6 +2,7 @@ import os
 import logging
 from boto.s3.connection import S3Connection
 from boto.s3.connection import OrdinaryCallingFormat
+from boto.exception import S3ResponseError
 
 log = logging.getLogger(__name__)
 
