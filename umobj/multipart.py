@@ -8,7 +8,7 @@ import math
 import sys
 import signal
 from umobj.obj import Obj
-from umobj.utils import umobj_add_handler, parse_body
+from umobj.utils import umobj_add_handler
 from StringIO import StringIO
 from filechunkio import FileChunkIO
 import progressbar
@@ -45,7 +45,7 @@ class UploadThread(threading.Thread):
                         mp.upload_part_from_file(fp=fp, part_num=part_num)
                         break
         except S3ResponseError as e:
-                logging.critical(parse_body(e))
+                logging.critical('%d %s: %s' % (e.status, e.reason, e.error_code))
                 sys.exit(1)
         except Exception as exc:
             print exc
