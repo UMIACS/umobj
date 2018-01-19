@@ -8,10 +8,11 @@ import math
 import sys
 import signal
 from umobj.obj import Obj
-from umobj.utils import umobj_add_handler
+from umobj.utils import umobj_add_handler, parse_body
 from StringIO import StringIO
 from filechunkio import FileChunkIO
 import progressbar
+from boto.exception import S3ResponseError
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +44,9 @@ class UploadThread(threading.Thread):
                                      bytes=bytes) as fp:
                         mp.upload_part_from_file(fp=fp, part_num=part_num)
                         break
+        except S3ResponseError as e:
+                logging.critical(parse_body(e))
+                sys.exit(1)
         except Exception as exc:
             print exc
             if retries:

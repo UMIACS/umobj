@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import signal
+import re
 
 from handler_queue import HandlerQueue
 
@@ -158,3 +159,12 @@ def parse_key_value_pair(pair):
     if len(parts) != 2:
         return pair, None
     return parts[0], parts[1]
+
+def parse_body(error):
+    if error.body:
+        match = re.search('(<Code>)(.*)(</Code>)', error.body).group(2)
+        if match != None:
+            return '%d %s: %s' % (error.status,
+                                  error.reason,
+                                  match)
+    return '%d %s' % (error.status, error.reason)
