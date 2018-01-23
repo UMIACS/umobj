@@ -3,7 +3,7 @@ import os
 import sys
 import progressbar
 import signal
-from umobj.key import check_directory, create_directory, check_key_upload
+from umobj.key import directory_file_exists, create_directory, check_key_upload
 from umobj.key import check_key_download
 from umobj.utils import umobj_add_handler, walk_path, lremove, parse_body
 from umobj.multipart import MultiPart, MultiPartStream
@@ -39,7 +39,7 @@ def upload_file(key, filename, progress=True):
             key.set_contents_from_filename(filename)
         except S3ResponseError as e:
                 logging.critical(parse_body(e))
-                sys.exit(1) 
+                sys.exit(1)
         if progress:
             pbar.update(100)
             pbar.finish()
@@ -222,7 +222,7 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
         if prefix:
             for directory in walk_path(prefix):
                 directory = directory + '/'
-                if not check_directory(bucket, directory):
+                if not directory_file_exists(bucket, directory):
                     create_directory(bucket, directory)
         operations = sum([len(files) for r, d, files in
                           os.walk(src.rstrip(os.sep))])
@@ -241,7 +241,7 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
                                             lremove(src, root).lstrip(os.sep))
                 else:
                     directory = '%s/' % (lremove(src, root).lstrip(os.sep))
-                if not check_directory(bucket, directory):
+                if not directory_file_exists(bucket, directory):
                     create_directory(bucket, directory)
                     count += 1
                     if count < operations:

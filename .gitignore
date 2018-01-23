@@ -2,3 +2,4 @@
 umobj.egg-info
 dist
 build
+env/

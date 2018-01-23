@@ -28,10 +28,32 @@ def create_directory(bucket, directory):
     return True
 
 
-def check_directory(bucket, directory):
+def is_directory(bucket, path):
+    '''
+    Return True if the path given is a directory.
+
+    The existence check goes something like this:
+        0) for key under consideration foo/bar/
+        1) if a zero-length key exists for "foo/bar/", then True.
+        2) if a bucket listing with prefix "foo/bar/" returns one or more
+           objects, then True.
+        3) else False.
+    '''
+    if not path.endswith('/'):
+        path = path + '/'
+    for key in bucket.list(prefix=path):
+        return True
+    return False
+
+
+def directory_file_exists(bucket, directory):
     '''
     Given a S3 bucket object and a directory path check to see if the directory
     exists in the S3 bucket.
+
+    In order for the directory to exist, there must be a zero-length key with
+    that name present.  Some S3 clients do not put this file in place to
+    represent the directory, but we do.
     '''
     key = bucket.get_key(directory)
     if key is not None and key.size == 0 and key.name.endswith('/'):
@@ -159,16 +181,29 @@ def remove_metadata_by_key_value_pair(bucket, key_name, key_value_string):
     remove_metadata_by_key(bucket, key_name, k)
 
 
-def delete_key(bucket, key):
+def key_exists(bucket, key):
+    '''Given a bucket and a key name, return True if the key exists.'''
+    return bucket.get_key(key) is not None
+
+
+def delete_key(bucket, key, check_exists=False):
     '''
     Given a boto bucket and a string naming the key to delete, attempt to
     delete, catching any exceptions that may occur.
+
+    Return True if delete was successful; False otherwise.
     '''
     log.info('Deleting key %s' % key)
     try:
-        return bucket.delete_key(key)
+        if check_exists:
+            if not key_exists(bucket, key):
+                return False
+        bucket.delete_key(key)
+        return True
     except S3ResponseError as e:
         log.error('Unable to delete %s:%s (Reason: %s)' %
                   (bucket.name, key, e.reason))
+        return False
     except:
         log.error('Unable to delete %s:%s' % (bucket.name, key))
+        return False
