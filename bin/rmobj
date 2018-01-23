@@ -116,6 +116,7 @@ if __name__ == "__main__":
                         continue
                 delete_bucket(Obj.conn, bucket.name)
                 logging.info("Deleting the bucket %s" % bucket_name)
+                continue
 
             # removing a directory
             was_something_to_list = False
