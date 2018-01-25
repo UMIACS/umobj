@@ -55,7 +55,7 @@ Remove directories and their contents recursively.  Mandatory for removing direc
 
 .TP
 \fB-f/--force\fR
-Ignore any nonexistant keys, and never prompt the user.  Overrides the \fB--interactive\fR (\fB-i\fR) option.  The force flag will always cause the status code at program exit to be zero for key operation failures.
+Ignore any nonexistant keys, and never prompt the user.  Overrides the \fB--interactive\fR (\fB-i\fR) option.  The force flag will always cause the status code at program exit to be zero for key operation failures.  Note that misuse of the API (e.g. not specifying \fB-r\fR for directory deletion) will still result in a non-zero exit code.
 
 .TP
 \fB-i/--interactive\fR
