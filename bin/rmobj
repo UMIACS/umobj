@@ -43,16 +43,26 @@ if __name__ == "__main__":
     force = args.force
 
     _exit_status = [0]
+    _file_existence_error = [False]
 
     def set_exit_status(status):
         _exit_status[0] = status
+
+    def exit_status():
+        return _exit_status[0]
+
+    def flag_file_existence_error():
+        _file_existence_error[0] = True
+
+    def file_existence_error():
+        return _file_existence_error[0]
 
     def delete_key_with_status(bucket, key_name, check_exists=False):
         status = delete_key(bucket, key_name, check_exists=check_exists)
         if status is False:
             logging.error("rmobj: cannot remove '%s:%s': No such key" % \
                           (bucket.name, key_name))
-            set_exit_status(1)
+            flag_file_existence_error()
 
     prompt_once = False
 
@@ -88,7 +98,7 @@ if __name__ == "__main__":
             bucket = Obj.conn.get_bucket(bucket_name)
         except boto.exception.S3ResponseError:
             logging.error("Bucket %s does not exist." % bucket_name)
-            set_exit_status(1)
+            flag_file_existence_error()
             continue
 
         logging.info("Working on bucket %s" % bucket_name)
@@ -118,16 +128,24 @@ if __name__ == "__main__":
                 logging.info("Deleting the bucket %s" % bucket_name)
                 continue
 
-            # removing a directory
-            was_something_to_list = False
-            for key in bucket.list(prefix=key_name):
-                was_something_to_list = True
-                if interactive and no_to_question("rmobj: delete '%s'?" % key.name):
+            # removing a directory or file
+            if is_directory(bucket, key_name):
+                # ensure trailing slash
+                if not key_name.endswith('/'):
+                    key_name = key_name + '/'
+                was_something_to_list = False
+                for key in bucket.list(prefix=key_name):
+                    was_something_to_list = True
+                    if interactive and no_to_question("rmobj: delete '%s'?" % key.name):
+                        continue
+                    delete_key_with_status(bucket, key.name)
+                if not was_something_to_list and not force:
+                    logging.error("rmobj: cannot remove '%s': No such key" % arg)
+                    flag_file_existence_error()
+            else:  # individal file
+                if interactive and no_to_question("rmobj: delete '%s'?" % key_name):
                     continue
-                delete_key_with_status(bucket, key.name)
-            if not was_something_to_list and not force:
-                logging.error("rmobj: cannot remove '%s': No such key" % arg)
-                set_exit_status(1)
+                delete_key_with_status(bucket, key_name, check_exists=True)
         else:  # non-recursive
             if key_name is None:
                 logging.error('Cannot delete bucket %s, ' % bucket.name +
@@ -141,7 +159,16 @@ if __name__ == "__main__":
             logging.info('Deleting %s...' % arg)
             delete_key_with_status(bucket, key_name, check_exists=True)
 
-    if force:
-        sys.exit(0)  # always exit cleanly if force flag is present
+    # this can be a little confusing...  If someone used the API wrong, we
+    # will ALWAYS exit non-zero regardless of if the force flag was present.
+    # Otherwise, we exit non-zero if there were file existence errors  unless
+    # the force flag was given.
+    if exit_status() != 0:
+        sys.exit(exit_status())
+    elif force:
+        sys.exit(0)
     else:
-        sys.exit(_exit_status[0])
+        if file_existence_error():
+            sys.exit(1)
+        else:
+            sys.exit(0)

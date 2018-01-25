@@ -85,7 +85,7 @@ def check_key_upload(bucket, key_name, filename):
         else:
             return False
     else:
-        log.info('Key doet not exist, need to upload.')
+        log.info('Key does not exist, need to upload.')
         return True
 
 
