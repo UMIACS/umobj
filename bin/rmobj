@@ -96,9 +96,12 @@ if __name__ == "__main__":
 
         try:
             bucket = Obj.conn.get_bucket(bucket_name)
-        except boto.exception.S3ResponseError:
-            logging.error("Bucket %s does not exist." % bucket_name)
-            flag_file_existence_error()
+        except boto.exception.S3ResponseError as e:
+            if e.status == 404:
+                logging.error("Bucket %s does not exist." % bucket_name)
+                flag_file_existence_error()
+            else:
+                logging.error("Insufficient permissions.")
             continue
 
         logging.info("Working on bucket %s" % bucket_name)
