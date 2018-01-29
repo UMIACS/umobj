@@ -41,7 +41,7 @@ if __name__ == "__main__":
                        secret_key=args.secret_key):
         logging.error('Unable to contact object store.')
         sys.exit(1)
-
+    exit_status = 0
     sources = args.SOURCE
     dest = args.DESTINATION[0]
     dest_bucket_name, dest_key_name = \
@@ -64,6 +64,7 @@ if __name__ == "__main__":
                     logging.error("Can not copy from a bucket (%s) to a bucket \
                                  (%s)" % (src_bucket_name, dest_bucket_name))
                     parser.print_help()
+                    exit_status = 1
                     continue
             bucket_name = dest_bucket_name
             dest_name = dest_key_name
@@ -86,6 +87,7 @@ if __name__ == "__main__":
                 logging.error("You need to provide a bucket in either SRC " +
                               "or DEST.")
                 parser.print_help()
+                exit_status = 1
                 continue
 
         try:
@@ -96,6 +98,7 @@ if __name__ == "__main__":
             if upload:
                 sys.exit(1)
             else:
+                exit_status = 1
                 continue
 
         if upload:
@@ -104,3 +107,4 @@ if __name__ == "__main__":
         if download:
             obj_download(bucket_name, dest, key_name, args.force, args.recursive,
                          args.multipart)
+    exit(exit_status)
