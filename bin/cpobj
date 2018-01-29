@@ -107,4 +107,4 @@ if __name__ == "__main__":
         if download:
             obj_download(bucket_name, dest, key_name, args.force, args.recursive,
                          args.multipart)
-    exit(exit_status)
+    sys.exit(exit_status)
