@@ -77,7 +77,7 @@ def _create_needed_parent_directories(filename):
     Given /foo/bar/baz.txt, this method will check if /foo/bar/ exists
     and create it if it does not.
     '''
-    if not os.path.exists(os.path.dirname(filename)):
+    if not os.path.exists(os.path.dirname(filename)) and os.path.dirname(filename) != '':
         logging.info('Recursively creating needed directory structure for %s' %
                      filename)
         os.makedirs(os.path.dirname(filename))
