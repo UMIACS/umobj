@@ -5,7 +5,7 @@ import progressbar
 import signal
 from umobj.key import check_directory, create_directory, check_key_upload
 from umobj.key import check_key_download
-from umobj.utils import umobj_add_handler, walk_path, lremove, parse_body
+from umobj.utils import umobj_add_handler, walk_path, lremove
 from umobj.multipart import MultiPart, MultiPartStream
 from umobj.obj import Obj
 from boto.exception import S3ResponseError
@@ -38,7 +38,7 @@ def upload_file(key, filename, progress=True):
         try:
             key.set_contents_from_filename(filename)
         except S3ResponseError as e:
-                logging.critical(parse_body(e))
+                logging.critical('%d %s: %s' % (e.status, e.reason, e.error_code))
                 sys.exit(1) 
         if progress:
             pbar.update(100)
@@ -53,13 +53,13 @@ def upload_file(key, filename, progress=True):
                 key.set_contents_from_filename(filename, cb=transfer_stats,
                                                num_cb=100)
             except S3ResponseError as e:
-                logging.critical(parse_body(e))
+                logging.critical('%d %s: %s' % (e.status, e.reason, e.error_code))
                 sys.exit(1)
         else:
             try:
                 key.set_contents_from_filename(filename)
             except S3ResponseError as e:
-                logging.critical(parse_body(e))
+                logging.critical('%d %s: %s' % (e.status, e.reason, e.error_code))
                 sys.exit(1)
     except IOError as e:
         print e
