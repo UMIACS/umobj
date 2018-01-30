@@ -2,3 +2,6 @@
 umobj.egg-info
 dist
 build
+env/
+.cache/
+.ropeproject/

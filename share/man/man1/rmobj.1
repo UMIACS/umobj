@@ -1,5 +1,5 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH rmobj 1 7/21/2015 UMobj "rmobj Utility"
+.TH rmobj 1 1/23/2018 UMobj "rmobj Utility"
 
 .SH NAME
 rmobj - delete buckets and keys from an Object Store
@@ -12,7 +12,9 @@ rmobj [-h] [--version] [-D] [-V] [-A ACCESS_KEY] [-S SECRET_KEY]
 .SH DESCRIPTION
 rmobj deletes keys and buckets from an Object Store.
 
-\fBBUCKET\fR is the bucket to remove itself and/or the bucket from which to remove files.  Specifying a \fBKEY\fR will allow keys with that prefix to be deleted.  In general, if you are trying to remove a directory, make sure it ends in a '/' character.  Otherwise, if one was trying to remove everything under foo/ and another key called foobar/ existed, it would also be removed unless foo/ was passed as the \fBKEY\fR.
+\fBBUCKET\fR is mandatory.  Specifying a \fBKEY\fR will allow keys with that prefix to be deleted.
+
+rmobj will not delete directories unless the recursive option is specified.
 
 .SH OPTIONS SUMMARY
 Here is a short summary of the options available in rmobj.  Please refer to the \fBOPTIONS\fR section below for more detailed descriptions.
@@ -21,9 +23,9 @@ Here is a short summary of the options available in rmobj.  Please refer to the 
  -S, --secret_key=<secret_key>  Object store secret key
  -H, --host=<host>              Object store server name
  -P, --port=<port>              Object store server port [Default: 443]
- -r, --recursive                Delete files recursively [Default: no]
- -f, --force                    Force deletes without prompting
- -i, --interactive              Prompt before each deletion (default)
+ -r, --recursive                Delete files and directories recursively
+ -f, --force                    Ignore nonexistent keys, and never prompt
+ -i, --interactive              Prompt before each deletion
      --version                  Print version
  -V, --verbose                  Verbose mode
  -D, --debug                    Debug mode
@@ -49,16 +51,15 @@ Object Store server port [Default: 443]
 
 .TP
 \fB-r/--recursive\fR
-This specifies that files should be removed recursively.  If you are removing directories and not just individual files, this option needs to be passed.
+Remove directories and their contents recursively.  Mandatory for removing directories or the bucket.  Specifying recursive will prompt once for the whole delete operation.
 
 .TP
 \fB-f/--force\fR
-The \fB--force\fR option will allow files to be deleted without prompting for each.
+Ignore any nonexistant keys, and never prompt the user.  Overrides the \fB--interactive\fR (\fB-i\fR) option.  The force flag will always cause the status code at program exit to be zero for key operation failures.  Note that misuse of the API (e.g. not specifying \fB-r\fR for directory deletion) will still result in a non-zero exit code.
 
 .TP
 \fB-i/--interactive\fR
-The \fB-i\fR option will prompt for confirmation before deleting each file.
-This option overrides a \fB-f\fR option.
+Prompt for confirmation before deleting each file.  This option will be ignored if \fB-f\fR is given.
 
 .TP
 \fB--version\fR

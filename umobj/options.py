@@ -202,12 +202,11 @@ def get_logging_level(args):
     Take an args object and tease out if we were called with verbose or
     debug flags.
 
-    `args` is the object returned by parse_args()
+    `args` is expected to be the object returned by parse_args()
     '''
     if args.debug:
-        logging_level = logging.DEBUG
+        return logging.DEBUG
     elif args.verbose:
-        logging_level = logging.INFO
+        return logging.INFO
     else:
-        logging_level = logging.WARNING
-    return logging_level
+        return logging.WARNING

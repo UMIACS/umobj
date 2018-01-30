@@ -5,11 +5,22 @@ import sys
 import logging
 
 from umobj.bucket import delete_bucket
-from umobj.key import delete_key
+from umobj.key import delete_key, is_directory
 from umobj.utils import umobj_logging, umobj_init, \
     umobj_get_bucket_key_pair_from_string
 from umobj.obj import Obj
 from umobj.options import umobj_parser, get_logging_level
+
+
+def ask_yes_no(question):
+    """Ask a yes or no question and return True if yes."""
+    ans = raw_input('%s [yes/no] ' % question).lower()
+    return ans == 'yes' or ans == 'y'
+
+
+def no_to_question(question):
+    """Return True if the answer to the yes/no question is no."""
+    return not ask_yes_no(question)
 
 
 if __name__ == "__main__":
@@ -27,11 +38,43 @@ if __name__ == "__main__":
 
     logging.info("Running %s" % sys.argv)
 
-    interactive = True
-    if args.force:
+    recursive = args.recursive
+    interactive = args.interactive
+    force = args.force
+
+    _exit_status = [0]
+    _file_existence_error = [False]
+
+    def set_exit_status(status):
+        _exit_status[0] = status
+
+    def exit_status():
+        return _exit_status[0]
+
+    def flag_file_existence_error():
+        _file_existence_error[0] = True
+
+    def file_existence_error():
+        return _file_existence_error[0]
+
+    def delete_key_with_status(bucket, key_name, check_exists=False):
+        status = delete_key(bucket, key_name, check_exists=check_exists)
+        if status is False:
+            logging.error("rmobj: cannot remove '%s:%s': No such key" % \
+                          (bucket.name, key_name))
+            flag_file_existence_error()
+
+    prompt_once = False
+
+    if recursive:
+        prompt_once = True
+    if interactive:
+        prompt_once = False
+        # note that force is last since it is King arbiter of whether or not
+        # we can be interactive.
+    if force:
         interactive = False
-    if args.interactive:
-        interactive = True
+        prompt_once = False
 
     if not Obj.connect(host=args.host,
                        port=args.port,
@@ -40,60 +83,95 @@ if __name__ == "__main__":
         logging.error('Unable to contact object store.')
         sys.exit(1)
 
+    if prompt_once and recursive:
+        if len(args.S3PATH) == 1:
+            question = 'Remove 1 argument recursively?'
+        else:
+            question = 'Remove %s arguments recursively?' % len(args.S3PATH)
+        if no_to_question(question):
+            sys.exit(0)
+
     for arg in args.S3PATH:
         bucket_name, key_name = umobj_get_bucket_key_pair_from_string(arg)
 
         try:
             bucket = Obj.conn.get_bucket(bucket_name)
-        except boto.exception.S3ResponseError:
-            logging.error("Bucket %s does not exist." % bucket_name)
-            sys.exit(1)
+        except boto.exception.S3ResponseError as e:
+            if e.status == 404:
+                logging.error("Bucket %s does not exist." % bucket_name)
+                flag_file_existence_error()
+            else:
+                logging.error("Insufficient permissions.")
+            continue
 
         logging.info("Working on bucket %s" % bucket_name)
 
-        if args.recursive:
+        if recursive:
+
             # removing all content inside bucket
             if not key_name:
                 if interactive:
-                    ans = raw_input(' Are you sure you want to remove all ' +
-                                    'the contents of the bucket ' +
-                                    '\'%s\'? [yes/no] ' % bucket.name).lower()
-                    if ans != 'yes':
-                        logging.info("Aborting recursive deletion of " +
-                                     "bucket %s" % bucket_name)
-                        sys.exit(0)
+                    question = " Are you sure you want to remove all the ' + \
+                               'contents of the bucket '%s'?" % bucket.name
+                    if no_to_question(question):
+                        logging.info("Skipping recursive deletion of " +
+                                     "bucket %s contents" % bucket_name)
+                        continue
                 for key in bucket.list():
-                    delete_key(bucket, key.name)
+                    delete_key_with_status(bucket, key.name)
 
                 # removing the bucket itself
                 if interactive:
-                    ans = raw_input(' Do you want to remove the bucket ' +
-                                    '\'%s\'?' % bucket.name +
-                                    ' [yes/no] ').lower()
-                    if ans != 'yes':
+                    question = " Do you want to remove the bucket '%s'?" % \
+                        bucket.name
+                    if no_to_question(question):
                         logging.info("Not deleting bucket %s" % bucket_name)
-                        sys.exit(0)
+                        continue
                 delete_bucket(Obj.conn, bucket.name)
                 logging.info("Deleting the bucket %s" % bucket_name)
-                sys.exit(0)
+                continue
 
-            # removing a directory
-            if interactive:
+            # removing a directory or file
+            if is_directory(bucket, key_name):
+                # ensure trailing slash
+                if not key_name.endswith('/'):
+                    key_name = key_name + '/'
+                was_something_to_list = False
                 for key in bucket.list(prefix=key_name):
-                    del_key_ans = raw_input('rmobj: delete \'%s\'? [y/n] ' %
-                                            key.name).lower()
-                    if del_key_ans != 'y':
+                    was_something_to_list = True
+                    if interactive and no_to_question("rmobj: delete '%s'?" % key.name):
                         continue
-                    delete_key(bucket, key.name)
-            else:
-                for key in bucket.list(prefix=key_name):
-                    delete_key(bucket, key.name)
+                    delete_key_with_status(bucket, key.name)
+                if not was_something_to_list and not force:
+                    logging.error("rmobj: cannot remove '%s': No such key" % arg)
+                    flag_file_existence_error()
+            else:  # individal file
+                if interactive and no_to_question("rmobj: delete '%s'?" % key_name):
+                    continue
+                delete_key_with_status(bucket, key_name, check_exists=True)
         else:  # non-recursive
             if key_name is None:
-                logging.error('Can not delete bucket %s, ' % bucket.name +
-                              'please use recursive option.')
-                sys.exit(1)
-            elif key_name.endswith('/'):
-                logging.error('Please use the recursive option to delete a ' +
-                              'directory.')
-            delete_key(bucket, key_name)
+                logging.error('Cannot delete bucket %s, ' % bucket.name +
+                              'please use the recursive option.')
+                set_exit_status(1)
+                continue
+            elif is_directory(bucket, key_name):
+                logging.error("rmobj: cannot remove '%s': Is a directory" % arg)
+                set_exit_status(1)
+                continue
+            logging.info('Deleting %s...' % arg)
+            delete_key_with_status(bucket, key_name, check_exists=True)
+
+    # this can be a little confusing...  If someone used the API wrong, we
+    # will ALWAYS exit non-zero regardless of if the force flag was present.
+    # Otherwise, we exit non-zero if there were file existence errors  unless
+    # the force flag was given.
+    if exit_status() != 0:
+        sys.exit(exit_status())
+    elif force:
+        sys.exit(0)
+    else:
+        if file_existence_error():
+            sys.exit(1)
+        else:
+            sys.exit(0)

@@ -16,15 +16,6 @@ def md5sum(filename, blocksize=65536):
     return hasher.hexdigest().replace('md5sum ', '')
 
 
-def get_env():
-    return {
-        "PATH": "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin",
-        "OBJ_SERVER": os.environ.get('OBJ_SERVER'),
-        "OBJ_ACCESS_KEY_ID": os.environ.get('OBJ_ACCESS_KEY_ID'),
-        "OBJ_SECRET_ACCESS_KEY": os.environ.get('OBJ_SECRET_ACCESS_KEY')
-    }
-
-
 class TestSkeleton(unittest.TestCase):
 
     def setUp(self):
@@ -58,6 +49,7 @@ class TestSkeleton(unittest.TestCase):
         # delete
         command = "../bin/rmobj -rf %s:" % bucket_name
         self.assertEqual(subprocess.call(command.split(' ')), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

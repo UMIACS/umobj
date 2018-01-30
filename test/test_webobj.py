@@ -13,15 +13,6 @@ from boto.s3.connection import S3Connection
 log = logging.getLogger(__name__)
 
 
-def get_env():
-    return {
-        "PATH": "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin",
-        "OBJ_SERVER": os.environ.get("OBJ_SERVER"),
-        "OBJ_ACCESS_KEY_ID": os.environ.get("OBJ_ACCESS_KEY_ID"),
-        "OBJ_SECRET_ACCESS_KEY": os.environ.get("OBJ_SECRET_ACCESS_KEY")
-    }
-
-
 class TestWebobj(unittest.TestCase):
 
     @staticmethod
@@ -32,15 +23,15 @@ class TestWebobj(unittest.TestCase):
     def setUp(self):
         try:
             host = os.environ["OBJ_SERVER"]
-        except:
+        except KeyError:
             host = "obj.umiacs.umd.edu"
         try:
             access_key = os.environ["OBJ_ACCESS_KEY_ID"]
-        except:
+        except KeyError:
             log.error("Please provide access_key")
         try:
             secret_key = os.environ["OBJ_SECRET_ACCESS_KEY"]
-        except:
+        except KeyError:
             log.error("Please provide secret_key")
         self.conn = S3Connection(host=host, port=443,
                                  is_secure=True,
@@ -48,7 +39,7 @@ class TestWebobj(unittest.TestCase):
                                  aws_secret_access_key=secret_key)
         try:
             self.vhost_domain = os.environ["VHOST_DOMAIN"]
-        except:
+        except KeyError:
             self.vhost_domain = "umiacs.io"
 
         self.bucket_name = self.setUpBucket()
@@ -60,7 +51,7 @@ class TestWebobj(unittest.TestCase):
         bucket_name = self.gen_bucket_name()
         try:
             bucket = self.conn.create_bucket(bucket_name)
-        except Exception as e:
+        except Exception:
             log.exception("Failed to create bucket %s." % bucket_name)
             return False
 
