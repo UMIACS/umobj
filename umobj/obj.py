@@ -2,7 +2,6 @@ import os
 import logging
 from boto.s3.connection import S3Connection
 from boto.s3.connection import OrdinaryCallingFormat
-from boto.exception import S3ResponseError
 
 log = logging.getLogger(__name__)
 
@@ -44,10 +43,6 @@ class Obj(object):
             except:
                 logging.error("Please provide secret_key")
                 return False
-        try:
-            Obj(host=host, port=port, access_key=access_key, is_secure=is_secure,
-                secret_key=secret_key)
-        except S3ResponseError as e:
-            logging.error('%d %s: %s' % (e.status, e.reason, e.error_code))
-            return False
+        Obj(host=host, port=port, access_key=access_key, is_secure=is_secure,
+            secret_key=secret_key)
         return True

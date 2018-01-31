@@ -6,6 +6,23 @@ import sys
 import signal
 
 from handler_queue import HandlerQueue
+from contextlib import contextmanager
+from boto.exception import S3CreateError, S3ResponseError, \
+    BotoClientError, BotoServerError
+
+
+@contextmanager
+def boto_error_handler():
+    '''Errors are caught in order for most to least specific'''
+    try:
+        yield
+        return
+    except S3ResponseError as e:
+        if e.status == 403:
+            logging.error('Invalid credentials.')
+            sys.exit(1)
+        else:
+            raise e
 
 
 def umobj_excepthook(error_type, ex, traceback):
