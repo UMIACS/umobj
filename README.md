@@ -168,9 +168,8 @@ To copy a directory of files you will need to use the <code>-r</code> or
 ### rmobj
 
 You can delete your buckets and keys with ```rmobj```.  It can take a bucket
-and work recursively, asking you to delete all the files and the bucket itself.
-It can also just delete specific files in a bucket when given on the
-command-line.
+and work recursively to delete all the files and the bucket itself.
+It can also just delete specific files in a bucket.
 
 ```bash
 % rmobj -r foo
@@ -193,8 +192,9 @@ command-line.
 ```
 
 You can also remove directories within a bucket.  To do so, you will need to
-pass the <code>-r</code> flag.  This will prompt you for the removal of every
-key under that directory unless the <code>-f</code> flag is passed as well.
+pass the <code>-r</code> flag.  This will prompt once for the removal of every
+key under that directory unless the <code>-f</code> flag is passed as well.  
+Specifying <code>-i</code> will prompt for every file.
 
 ```bash
 % lsobj foo
