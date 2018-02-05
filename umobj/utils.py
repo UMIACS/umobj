@@ -18,7 +18,7 @@ def boto_error_handler():
         yield
         return
     except S3ResponseError as e:
-        if e.status == 403:
+        if e.error_code in ['InvalidAccessKeyId', 'SignatureDoesNotMatch']:
             logging.error('Invalid credentials.')
             sys.exit(1)
         else:
