@@ -9,7 +9,8 @@ from boto.exception import S3ResponseError
 from qav.listpack import ListPack
 
 from umobj.utils import umobj_logging, umobj_init, \
-    umobj_get_bucket_key_pair_from_string, print_word_list, sizeof_fmt
+    umobj_get_bucket_key_pair_from_string, print_word_list, sizeof_fmt, \
+    boto_error_handler
 from umobj.options import umobj_parser, get_logging_level
 from umobj.obj import Obj
 from umobj.acl import all_users, get_formatted_grants_from_key
@@ -102,14 +103,15 @@ def list_bucket(b, prefix=None, public=False, long_list=False, md5=False):
 
 def list_buckets(s3, long_list=False):
     """List all the buckets"""
-    for b in s3.get_all_buckets():
-        print b.name
-        if long_list:
-            try:
-                grants = get_formatted_grants_from_key(b)
-                print print_word_list(grants, preface=' ACLs:')
-            except S3ResponseError:
-                pass
+    with boto_error_handler():
+        for b in s3.get_all_buckets():
+            print b.name
+            if long_list:
+                try:
+                    grants = get_formatted_grants_from_key(b)
+                    print print_word_list(grants, preface=' ACLs:')
+                except S3ResponseError:
+                    pass
 
 
 if __name__ == "__main__":
