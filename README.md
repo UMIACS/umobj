@@ -1,4 +1,12 @@
 # umobj
+
+[![PyPI](https://img.shields.io/pypi/v/umobj.svg)](https://pypi.python.org/pypi/umobj)
+[![LGPL License badge](https://img.shields.io/badge/License-LGPL-blue.svg)](./LICENSE)
+<!-- [![GitHub tag](https://img.shields.io/github/tag/umiacs/umobj.svg)](https://github.com/umiacs/umobj/releases)
+     shields.io is having some serious problems with certain
+	 services/badges -->
+
+
 Command-line utilties for S3-compatible Object Storage
 
 These utilities provide a command-line interface to an Amazon S3-compatible
