@@ -225,6 +225,16 @@ Specifying <code>-i</code> will prompt for every file.
 		TOTAL:  	    0.0 b  	4 Files
 ```
 
+You can use a glob character to delete all bucket contents, but not the
+bucket itself.
+
+```bash
+% rmobj -rf foo:*
+% lsobj foo
+================================================================================
+		TOTAL:  	    0.0 b  	0 Files
+```
+
 <a name="chobj"></a>
 ### chobj
 

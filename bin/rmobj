@@ -94,6 +94,13 @@ if __name__ == "__main__":
     for arg in args.S3PATH:
         bucket_name, key_name = umobj_get_bucket_key_pair_from_string(arg)
 
+        delete_bucket_contents = False
+        want_delete_bucket = False
+        if key_name is None or key_name == '*':
+            delete_bucket_contents = True
+        if key_name is None:
+            want_delete_bucket = True
+
         try:
             bucket = Obj.conn.get_bucket(bucket_name)
         except boto.exception.S3ResponseError as e:
@@ -109,7 +116,7 @@ if __name__ == "__main__":
         if recursive:
 
             # removing all content inside bucket
-            if not key_name:
+            if delete_bucket_contents:
                 if interactive:
                     question = " Are you sure you want to remove all the ' + \
                                'contents of the bucket '%s'?" % bucket.name
@@ -121,14 +128,18 @@ if __name__ == "__main__":
                     delete_key_with_status(bucket, key.name)
 
                 # removing the bucket itself
-                if interactive:
-                    question = " Do you want to remove the bucket '%s'?" % \
-                        bucket.name
-                    if no_to_question(question):
-                        logging.info("Not deleting bucket %s" % bucket_name)
-                        continue
-                delete_bucket(Obj.conn, bucket.name)
-                logging.info("Deleting the bucket %s" % bucket_name)
+                if want_delete_bucket:
+                    if interactive:
+                        question = " Do you want to remove the bucket '%s'?" % \
+                            bucket.name
+                        if no_to_question(question):
+                            logging.info("Not deleting bucket %s" % bucket_name)
+                            continue
+                    delete_bucket(Obj.conn, bucket.name)
+                    logging.info("Deleting the bucket %s" % bucket_name)
+
+                # if we deleted all the keys and/or the bucket, then there's
+                # nothing left to do for individual keys below, so continue.
                 continue
 
             # removing a directory or file
@@ -150,9 +161,15 @@ if __name__ == "__main__":
                     continue
                 delete_key_with_status(bucket, key_name, check_exists=True)
         else:  # non-recursive
-            if key_name is None:
+            if want_delete_bucket:
                 logging.error('Cannot delete bucket %s, ' % bucket.name +
                               'please use the recursive option.')
+                set_exit_status(1)
+                continue
+            elif delete_bucket_contents:
+                logging.error("rmobj: cannot delete all content from "
+                              "bucket %s.  " % bucket.name +
+                              "Please use the recursive option.")
                 set_exit_status(1)
                 continue
             elif is_directory(bucket, key_name):
