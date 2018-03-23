@@ -1,5 +1,5 @@
 ./" See http://www.fnal.gov/docs/products/ups/ReferenceManual/html/manpages.html for a good reference on manpages
-.TH rmobj 1 1/23/2018 UMobj "rmobj Utility"
+.TH rmobj 1 3/23/2018 UMobj "rmobj Utility"
 
 .SH NAME
 rmobj - delete buckets and keys from an Object Store
@@ -13,6 +13,8 @@ rmobj [-h] [--version] [-D] [-V] [-A ACCESS_KEY] [-S SECRET_KEY]
 rmobj deletes keys and buckets from an Object Store.
 
 \fBBUCKET\fR is mandatory.  Specifying a \fBKEY\fR will allow keys with that prefix to be deleted.
+
+Specify the glob character (*) as the \fBKEY\fR to delete all bucket keys, but not the bucket itself.
 
 rmobj will not delete directories unless the recursive option is specified.
 

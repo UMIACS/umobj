@@ -169,6 +169,26 @@ class TestRmobj(unittest.TestCase):
         self.assertFalse(self.key_exists("foo/bar/"))
         self.assertFalse(self.key_exists("foo/"))
 
+    def test_delete_glob(self):
+        '''rmobj bucket:* should remove all keys but not the bucket.'''
+        self.assertTrue(self.bucket_exists())
+        command = ('../bin/rmobj -rf %s:*' % self.bucket_name)
+        self.assertEqual(call(command), 0)
+        self.assertTrue(self.bucket_exists())
+        self.assertFalse(self.key_exists("foobar/"))
+        self.assertFalse(self.key_exists("foobar/file0"))
+        self.assertFalse(self.key_exists("foo/bar/file1"))
+        self.assertFalse(self.key_exists("foo/bar/"))
+        self.assertFalse(self.key_exists("foo/"))
+
+    def test_delete_blog_without_recursive(self):
+        '''Removing all bucket contents should require recursive option.'''
+        self.assertTrue(self.bucket_exists())
+        command = ('../bin/rmobj -f %s:*' % self.bucket_name)
+        self.assertEqual(call(command), 1)
+        self.assertTrue(self.bucket_exists())
+        self.assertTrue(self.key_exists("foo/"))
+
     def test_delete_several_files(self):
         command = ('../bin/rmobj %s:foo/bar/file1 %s:foo/bar/file2' %
                    (self.bucket_name, self.bucket_name))
