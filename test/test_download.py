@@ -5,7 +5,6 @@ import os
 import string
 import random
 import unittest
-import urllib2
 import subprocess
 
 from boto.s3.connection import S3Connection

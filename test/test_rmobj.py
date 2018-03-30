@@ -9,7 +9,7 @@ import subprocess
 
 from boto.s3.connection import S3Connection
 
-from umobj.key import key_exists
+from umobj.key import key_exists, delete_key
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +46,11 @@ class TestRmobj(unittest.TestCase):
         self.bucket_name = self.setUpBucket()
 
     def tearDown(self):
-        self.tearDownBucket(self.bucket_name)
+        bucket = self.get_bucket()
+        if bucket:
+            for key in bucket.list():
+                delete_key(bucket, key.name)
+            self.conn.delete_bucket(self.bucket_name)
 
     def setUpBucket(self):
         bucket_name = self.gen_bucket_name()
@@ -76,20 +80,6 @@ class TestRmobj(unittest.TestCase):
         file3.set_contents_from_string("this is file3")
 
         return bucket_name
-
-    def tearDownBucket(self, bucket_name):
-        try:
-            bucket = self.conn.get_bucket(bucket_name)
-            bucket.get_key("foo/bar/file3").delete()
-            bucket.get_key("foo/bar/file2").delete()
-            bucket.get_key("foo/bar/file1").delete()
-            bucket.get_key("foobar/file0").delete()
-            bucket.get_key("foobar/").delete()
-            bucket.get_key("foo/bar/").delete()
-            bucket.get_key("foo/").delete()
-            self.conn.delete_bucket(bucket_name)
-        except:
-            pass
 
     def get_bucket(self):
         try:
