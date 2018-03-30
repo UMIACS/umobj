@@ -24,7 +24,7 @@ class TestSkeleton(unittest.TestCase):
     def test_multipart_upload_integrity(self):
         # create random file
         with open('output_file', 'wb') as fout:
-            fout.write(os.urandom(56 * 1024 * 1024))
+            fout.write(os.urandom(1024 * 1024))
         md5_on_disk = md5sum('output_file')
 
         chars = string.ascii_lowercase
@@ -33,19 +33,22 @@ class TestSkeleton(unittest.TestCase):
         # make a test bucket
         command = "../bin/mkobj %s" % bucket_name
         self.assertEqual(subprocess.call(command.split(' ')), 0)
-
+        print "1"
         # upload file to object store
         command = "../bin/cpobj -m output_file %s:" % bucket_name
         self.assertEqual(subprocess.call(command.split(' ')), 0)
 
+        print "2"
         # remove local file on disk once uploaded
         os.remove('output_file')
 
+        print "3"
         # verify
         command = "../bin/cmpobj %s:output_file" % bucket_name
         self.assertEqual(subprocess.check_output(command.split(' ')).strip(),
                          md5_on_disk)
 
+        print "4"
         # delete
         command = "../bin/rmobj -rf %s:" % bucket_name
         self.assertEqual(subprocess.call(command.split(' ')), 0)
