@@ -59,9 +59,9 @@ build_rpm_rhel7:
 
 upload_umpypi_pypi:
   stage: deploy
-  image: registry.umiacs.umd.edu/docker/build/umbuild:rhel7
+  image: python:3.6-slim
   script:
-    - virtualenv /tmp/buildenv && source /tmp/buildenv/bin/activate && pip install twine
+    - pip install -q twine
     - twine upload --repository-url $UMPYPI_REPOSITORY_URL -u $UMPYPI_USERNAME -p $UMPYPI_PASSWORD dist/$CI_PROJECT_NAME-$CI_COMMIT_TAG.tar.gz
     - twine upload -u $PYPI_USERNAME -p $PYPI_PASSWORD dist/$CI_PROJECT_NAME-$CI_COMMIT_TAG.tar.gz
   when: manual
