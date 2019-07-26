@@ -1,49 +1,49 @@
-%{!?python_sitelib: %global python_sitelib %(%{python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-Name: umobj
-Summary: Command-line utilties for S3-compatible Object Storage
-Version: =VERSION=
-Release: 1
-Group: UMIACS
-License: unknown
-URL: https://github.com/UMIACS/umobj
+%define name umobj
+%define release 1
+
+Summary: UMIACS Object Storage Commands
+Name: %{name}
+Version: %{version}
+Release: %{release}
 Source0: %{name}-%{version}.tar.gz
-Buildroot: %{_tmppath}/%{name}
+License: LGPL v2.1
+Group: Development/Libraries
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Requires: %{python}
 Requires: %{python}-boto
 Requires: %{python}-progressbar
-Requires: %{python}-argparse
 Requires: %{python}-filechunkio
 Requires: %{python}-bagit
+%if 0%{?el6}
+Requires: %{python}-argparse
 Requires: qav >= 0.3.2
+%else
+Requires: %{python}-qav >= 1.0.2
+%endif
 AutoReq: no
+Prefix: %{_prefix}
 BuildArch: noarch
+Vendor: UMIACS Staff <github@umiacs.umd.edu>
+Url: https://github.com/UMIACS/umobj
 
 %description
-UMIACS Object Storage command line utilties.
+Command-line utilties for S3-compatible Object Storage
 
 %prep
 %setup
+
 %build
 %{python} setup.py build
 
 %install
-%{python} setup.py install --skip-build --root %{buildroot}
+%{python} setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 ## install man pages
-install -m 0755 -d %{buildroot}%{_mandir}/man1
-install -Dp -m0644 share/man/man1/* \
-    %{buildroot}%{_mandir}/man1
+install -m0755 -d $RPM_BUILD_ROOT%{_mandir}/man1
+install -Dp -m0644 share/man/man1/* %{buildroot}%{_mandir}/man1
 
 %clean
-rm -rf %{buildroot}
+rm -rf $RPM_BUILD_ROOT
 
-%files
-%defattr(0755,root,root,-)
-%{_bindir}/*
-%defattr(0755,root,root,-)
-%{python_sitelib}/umobj
-%defattr(0644,root,root,-)
-%{python_sitelib}/umobj/*
-%{python_sitelib}/%{name}*.egg-info
+%files -f INSTALLED_FILES
+%defattr(-,root,root)
 %{_mandir}/man1/*.1.gz
-
-%changelog

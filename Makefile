@@ -1,8 +1,8 @@
 SED = sed
 TAR = tar
 GIT = git
+
 PACKAGE = umobj
-PYTHON = python
 
 VERSION = $(shell git describe --abbrev=0 --tags)
 RELEASE = $(shell grep '^Release: ' umobj.spec | awk '{print $$2}')
@@ -22,8 +22,7 @@ rpm:
 		--work-tree=$(TEMPDIR)/$(PACKAGE)-$(VERSION) \
 		checkout tags/$(VERSION)
 	$(TAR) -C $(TEMPDIR) --exclude .git -czf $(BUILDROOT)/SOURCES/$(PACKAGE)-$(VERSION).tar.gz $(PACKAGE)-$(VERSION)
-	$(SED) "s/=VERSION=/$(VERSION)/" $(PACKAGE).spec > $(BUILDROOT)/SPECS/$(PACKAGE)-$(VERSION).spec
-	rpmbuild -bb $(BUILDROOT)/SPECS/$(PACKAGE)-$(VERSION).spec --define "python ${PYTHON}"
+	rpmbuild -bb $(PACKAGE).spec --define "python ${PYTHON}" --define "version ${VERSION}"
 	rm -rf $(TEMPDIR)
 
 .PHONY: build
