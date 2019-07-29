@@ -5,9 +5,11 @@ stages:
 
 run_unit_tests:
   stage: test
-  image: registry.umiacs.umd.edu/docker/build/umbuild:rhel7
+  image: python:2.7-slim
   script:
-    - ./gitlab-ci-build-steps.sh
+    - python setup.py develop
+    - cd test
+    - ./run_tests.py
   tags:
     - docker
 
@@ -29,7 +31,7 @@ build_rpm_rhel6:
   stage: build
   image: registry.umiacs.umd.edu/docker/build/umbuild:rhel6
   script:
-    - make rpm
+    - make rpm PYTHON=python
     - mkdir -p dist/rhel6
     - cp /srv/build/rhel6/RPMS/noarch/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm dist/rhel6/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm
   artifacts:
@@ -45,9 +47,25 @@ build_rpm_rhel7:
   stage: build
   image: registry.umiacs.umd.edu/docker/build/umbuild:rhel7
   script:
-    - make rpm
+    - make rpm PYTHON=python
     - mkdir -p dist/rhel7
     - cp /srv/build/rhel7/RPMS/noarch/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm dist/rhel7/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm
+  artifacts:
+    expire_in: 1hr
+    paths:
+      - dist/
+  only:
+    - tags
+  tags:
+    - docker
+
+build_rpm_rhel8:
+  stage: build
+  image: registry.umiacs.umd.edu/docker/build/umbuild:rhel8
+  script:
+    - make rpm PYTHON=python2
+    - mkdir -p dist/rhel8
+    - cp /srv/build/rhel8/RPMS/noarch/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm dist/rhel8/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm
   artifacts:
     expire_in: 1hr
     paths:
@@ -72,32 +90,36 @@ upload_umpypi_pypi:
   dependencies:
     - build_python_package
 
-deploy_rpm_rhel7:
+.deploy_rpm_template: &deploy_rpm_definition
   stage: deploy
-  image: registry.umiacs.umd.edu/docker/build/umbuild:rhel7
+  image: registry.umiacs.umd.edu/docker/build/umbuild:$DISTRO
   script:
-    - sudo cp "dist/rhel7/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm" /srv/UMyumrepos/rhel7/stable/Packages/noarch
-    - sudo createrepo --workers=4 /srv/UMyumrepos/rhel7/stable
+    - sudo cp "dist/$DISTRO/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm" /srv/UMyumrepos/$DISTRO/stable/Packages/noarch
+    - sudo createrepo --workers=4 /srv/UMyumrepos/$DISTRO/stable
   when: manual
   only:
     - tags
   tags:
     - umrepos
     - docker
+
+deploy_rpm_rhel6:
+  <<: *deploy_rpm_definition
+  variables:
+    DISTRO: rhel6
+  dependencies:
+    - build_rpm_rhel6
+
+deploy_rpm_rhel7:
+  <<: *deploy_rpm_definition
+  variables:
+    DISTRO: rhel7
   dependencies:
     - build_rpm_rhel7
 
-deploy_rpm_rhel6:
-  stage: deploy
-  image: registry.umiacs.umd.edu/docker/build/umbuild:rhel6
-  script:
-    - sudo cp "dist/rhel6/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm" /srv/UMyumrepos/rhel6/stable/Packages/noarch
-    - sudo createrepo --workers=4 /srv/UMyumrepos/rhel6/stable
-  when: manual
-  only:
-    - tags
-  tags:
-    - umrepos
-    - docker
+deploy_rpm_rhel8:
+  <<: *deploy_rpm_definition
+  variables:
+    DISTRO: rhel8
   dependencies:
-    - build_rpm_rhel6
+    - build_rpm_rhel8
