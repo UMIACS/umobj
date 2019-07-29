@@ -16,9 +16,11 @@ Requires: %{python}-filechunkio
 Requires: %{python}-bagit
 %if 0%{?el6}
 Requires: %{python}-argparse
-Requires: qav >= 0.3.2
-%else
+%endif
+%if 0%{?el8}
 Requires: %{python}-qav >= 1.0.2
+%else
+Requires: qav >= 0.3.2
 %endif
 AutoReq: no
 Prefix: %{_prefix}
