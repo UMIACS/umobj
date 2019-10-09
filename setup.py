@@ -62,5 +62,6 @@ setup(name="umobj",
                    "Programming Language :: Python :: 2",
                    "Programming Language :: Python :: 2.6",
                    "Programming Language :: Python :: 2.7"],
+      python_requires='~=2.6',
       **extra
       )
