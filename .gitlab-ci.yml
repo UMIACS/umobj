@@ -35,22 +35,6 @@ build_python_package:
   tags:
     - docker
 
-build_rpm_rhel6:
-  stage: build
-  image: registry.umiacs.umd.edu/docker/build/umbuild:rhel6
-  script:
-    - make rpm PYTHON=python
-    - mkdir -p dist/rhel6
-    - cp /srv/build/rhel6/RPMS/noarch/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm dist/rhel6/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm
-  artifacts:
-    expire_in: 1hr
-    paths:
-      - dist/
-  only:
-    - tags
-  tags:
-    - docker
-
 build_rpm_rhel7:
   stage: build
   image: registry.umiacs.umd.edu/docker/build/umbuild:rhel7
@@ -110,13 +94,6 @@ upload_umpypi_pypi:
   tags:
     - umrepos
     - docker
-
-deploy_rpm_rhel6:
-  <<: *deploy_rpm_definition
-  variables:
-    DISTRO: rhel6
-  dependencies:
-    - build_rpm_rhel6
 
 deploy_rpm_rhel7:
   <<: *deploy_rpm_definition

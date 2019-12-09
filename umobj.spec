@@ -10,13 +10,11 @@ License: LGPL v2.1
 Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Requires: %{python}
-Requires: %{python}-boto
-Requires: %{python}-progressbar
+Requires: %{python}-bagit >= 1.7.0
+Requires: %{python}-boto >= 2.49.0
+Requires: %{python}-certifi >= 2019.11.28
 Requires: %{python}-filechunkio
-Requires: %{python}-bagit
-%if 0%{?el6}
-Requires: %{python}-argparse
-%endif
+Requires: %{python}-progressbar
 %if 0%{?el8}
 Requires: %{python}-qav >= 1.0.2
 %else
