@@ -55,7 +55,7 @@ build_rpm_rhel8:
   stage: build
   image: registry.umiacs.umd.edu/docker/build/umbuild:rhel8
   script:
-    - make rpm PYTHON=python2
+    - make rpm PYTHON=python3
     - mkdir -p dist/rhel8
     - cp /srv/build/rhel8/RPMS/noarch/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm dist/rhel8/$CI_PROJECT_NAME-$CI_COMMIT_TAG-1.noarch.rpm
   artifacts:
