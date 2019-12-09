@@ -8,6 +8,7 @@ import unittest
 import subprocess
 
 from boto.s3.connection import S3Connection
+from six.moves import range
 
 log = logging.getLogger(__name__)
 
@@ -79,7 +80,7 @@ class TestDownload(unittest.TestCase):
 
     def test_download_rename(self):
         # Create website configuration
-        command = ("../bin/cpobj %s:file1.txt file2.txt" % (self.bucket_name))
+        command = ("cpobj %s:file1.txt file2.txt" % (self.bucket_name))
         self.assertEqual(subprocess.call(command.split(" ")), 0)
         self.assertTrue('file1.txt' not in os.listdir('./'))
         self.assertTrue('file2.txt' in os.listdir('./'))

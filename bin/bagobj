@@ -40,6 +40,7 @@ def diff(a, b):
     b = set(b)
     return [aa for aa in a if aa not in b]
 
+
 if __name__ == "__main__":
     umobj_init()
 
@@ -103,7 +104,7 @@ if __name__ == "__main__":
     bagit_txt = obj_key(bucket_name, '%s/bagit.txt' % key_path)
     if bagit_txt is not None:   # bag may already exist
         obj_entries = load_bag_checksums(bucket_name, key_path)
-        if cmp(obj_entries, bag.entries) != 0:
+        if obj_entries != bag.entries:
             logging.error('Conflict between manifest in filesystem and ' +
                           'object store.  Please remove or rename the bag ' +
                           'in the object store before trying to continue.')
@@ -112,7 +113,7 @@ if __name__ == "__main__":
                      'validation with the cmpobj command.')
     else:  # bag does not appear to exist
         obj_upload(bucket_name, src, dest_key_name, True, args.multipart)
-        print 'Bag successfully uploaded to object store.'
+        print('Bag successfully uploaded to object store.')
 
         tmp_path = mkdtemp(prefix='umobj_bagit-', dir='/tmp')
         manifest_filename = '%s/manifest' % tmp_path
@@ -134,11 +135,11 @@ if __name__ == "__main__":
             f.write(uncompressed_manifest_content)
 
         # write bagit.txt out to a tmp file
-        with open(bagit_filename, 'w') as f:
+        with open(bagit_filename, 'wb') as f:
             f.write(bagit_key.get_contents_as_string())
 
         # write bag-info.txt out to a tmp file
-        with open(bag_info_filename, 'w') as f:
+        with open(bag_info_filename, 'wb') as f:
             f.write(bag_info_key.get_contents_as_string())
 
         make_tarfile_from_files(compressed_manifest_filename,
@@ -159,6 +160,6 @@ if __name__ == "__main__":
         # delete the temporary files/directory
         shutil.rmtree(tmp_path)
 
-        print 'Please verify the content and you may, ' + \
-              'when confident, remove the local ' + \
-              'filesystem directory: %s.' % os.path.abspath(src)
+        print('Please verify the content and you may, ' +
+              'when confident, remove the local ' +
+              'filesystem directory: %s.' % os.path.abspath(src))

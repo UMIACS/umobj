@@ -23,7 +23,7 @@ def create_directory(bucket, directory):
         dir_key.set_acl(policy)
         log.debug("Applied bucket policy %s" % policy)
     except IOError as e:
-        print e
+        print(e)
         return False
     return True
 

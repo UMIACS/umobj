@@ -8,6 +8,7 @@ import unittest
 import subprocess
 
 from boto.s3.connection import S3Connection
+from six.moves import range
 
 from umobj.key import key_exists, delete_key
 
@@ -103,7 +104,7 @@ class TestRmobj(unittest.TestCase):
 
     def test_delete_bucket(self):
         self.assertTrue(self.bucket_exists())
-        command = ("../bin/rmobj -rf %s" % self.bucket_name)
+        command = ("rmobj -rf %s" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 0)
         self.assertFalse(self.bucket_exists())
 
@@ -111,35 +112,35 @@ class TestRmobj(unittest.TestCase):
         # this command is going to ask for confirmation if we want to
         # recursively delete one keypath
         self.assertTrue(self.key_exists("foo/bar/file1"))
-        command = ('echo "no" | ../bin/rmobj -r %s:foo/bar/file1' %
+        command = ('echo "no" | rmobj -r %s:foo/bar/file1' %
                    self.bucket_name)
         self.assertEqual(call(command), 0)
         self.assertTrue(self.key_exists("foo/bar/file1"))
 
-        command = ('echo "yes" | ../bin/rmobj %s:foo/bar/file1' %
+        command = ('echo "yes" | rmobj %s:foo/bar/file1' %
                    self.bucket_name)
         self.assertEqual(call(command), 0)
         self.assertFalse(self.key_exists("foo/bar/file1"))
 
     def test_cannot_delete_bucket_without_recursive_option(self):
-        command = ('../bin/rmobj %s' % self.bucket_name)
+        command = ('rmobj %s' % self.bucket_name)
         self.assertNotEqual(call(command), 0)
         self.assertTrue(self.bucket_exists())
 
     def test_cannot_delete_directory_without_recursive_option(self):
         self.assertTrue(self.key_exists("foo/bar/"))
         # with trailing slash
-        command = ('../bin/rmobj %s:foo/bar' % self.bucket_name)
+        command = ('rmobj %s:foo/bar' % self.bucket_name)
         self.assertNotEqual(call(command), 0)
         self.assertTrue(self.key_exists("foo/bar/"))
 
         # with trailing slash...should work in either case...
-        command = ('../bin/rmobj %s:foo/bar/' % self.bucket_name)
+        command = ('rmobj %s:foo/bar/' % self.bucket_name)
         self.assertNotEqual(call(command), 0)
         self.assertTrue(self.key_exists("foo/bar/"))
 
     def test_delete_directory(self):
-        command = ('../bin/rmobj -rf %s:foo/bar/' % self.bucket_name)
+        command = ('rmobj -rf %s:foo/bar/' % self.bucket_name)
         self.assertEqual(call(command), 0)
         self.assertTrue(self.key_exists("foo/"))
         self.assertFalse(self.key_exists("foo/bar/file1"))
@@ -151,7 +152,7 @@ class TestRmobj(unittest.TestCase):
         # this is to ensure that if the user says they want to recursively
         # delete bucket:foo/ we do not also delete bucket:foobar/ if the user
         # doesn't include the slash on the end of foo
-        command = ('../bin/rmobj -rf %s:foo' % self.bucket_name)
+        command = ('rmobj -rf %s:foo' % self.bucket_name)
         self.assertEqual(call(command), 0)
         self.assertTrue(self.key_exists("foobar/"))
         self.assertTrue(self.key_exists("foobar/file0"))
@@ -162,7 +163,7 @@ class TestRmobj(unittest.TestCase):
     def test_delete_glob(self):
         '''rmobj bucket:* should remove all keys but not the bucket.'''
         self.assertTrue(self.bucket_exists())
-        command = ('../bin/rmobj -rf %s:*' % self.bucket_name)
+        command = ('rmobj -rf %s:*' % self.bucket_name)
         self.assertEqual(call(command), 0)
         self.assertTrue(self.bucket_exists())
         self.assertFalse(self.key_exists("foobar/"))
@@ -174,13 +175,13 @@ class TestRmobj(unittest.TestCase):
     def test_delete_blog_without_recursive(self):
         '''Removing all bucket contents should require recursive option.'''
         self.assertTrue(self.bucket_exists())
-        command = ('../bin/rmobj -f %s:*' % self.bucket_name)
+        command = ('rmobj -f %s:*' % self.bucket_name)
         self.assertEqual(call(command), 1)
         self.assertTrue(self.bucket_exists())
         self.assertTrue(self.key_exists("foo/"))
 
     def test_delete_several_files(self):
-        command = ('../bin/rmobj %s:foo/bar/file1 %s:foo/bar/file2' %
+        command = ('rmobj %s:foo/bar/file1 %s:foo/bar/file2' %
                    (self.bucket_name, self.bucket_name))
         self.assertEqual(call(command), 0)
         self.assertFalse(self.key_exists("foo/bar/file1"))
@@ -188,7 +189,7 @@ class TestRmobj(unittest.TestCase):
         self.assertTrue(self.key_exists("foo/bar/file3"))
 
     def test_single_file_delete(self):
-        command = ('../bin/rmobj %s:foo/bar/file1' % self.bucket_name)
+        command = ('rmobj %s:foo/bar/file1' % self.bucket_name)
         self.assertEqual(call(command), 0)
         self.assertFalse(self.key_exists("foo/bar/file1"))
         self.assertTrue(self.key_exists("foo/bar/file2"))
@@ -197,24 +198,24 @@ class TestRmobj(unittest.TestCase):
         # non-existence checks should always be exit status 0 with force flag
 
         # nonexistant bucket
-        command = ('../bin/rmobj -f %saaa:' % self.bucket_name)
+        command = ('rmobj -f %saaa:' % self.bucket_name)
         self.assertEqual(call(command), 0)
 
         # missing keys
-        command = ('../bin/rmobj -f %s:file1' % self.bucket_name)
+        command = ('rmobj -f %s:file1' % self.bucket_name)
         self.assertEqual(call(command), 0)
-        command = ('../bin/rmobj -f %s:dir1/' % self.bucket_name)
+        command = ('rmobj -f %s:dir1/' % self.bucket_name)
         self.assertEqual(call(command), 0)
 
         # API usage problems should still have non-zero exit status even
         # though the force flag was given
 
         # recursive option not given for bucket delete
-        command = ('../bin/rmobj -f %s' % self.bucket_name)
+        command = ('rmobj -f %s' % self.bucket_name)
         self.assertEqual(call(command), 1)
 
         # recursive option not given for directory delete
-        command = ('../bin/rmobj -f %s:foo/' % self.bucket_name)
+        command = ('rmobj -f %s:foo/' % self.bucket_name)
         self.assertEqual(call(command), 1)
         self.assertTrue(self.key_exists("foo/"))
 
@@ -223,14 +224,14 @@ class TestRmobj(unittest.TestCase):
 
         # test that if some files do exist and some don't that we keep
         # looping over everything, but record the right exit status
-        command = ('echo yes | ../bin/rmobj -r %s:foo/bar/fi %s:foo/bar/file1' %
+        command = ('echo yes | rmobj -r %s:foo/bar/fi %s:foo/bar/file1' %
                    (self.bucket_name, self.bucket_name))
         self.assertEqual(call(command), 1)
         self.assertFalse(self.key_exists("foo/bar/file1"))
         self.assertTrue(self.key_exists("foo/bar/file2"))
 
         # force flag given, 0 exit status
-        command = ('echo yes | ../bin/rmobj -rf %s:foo/bar/fi %s:foo/bar/' %
+        command = ('echo yes | rmobj -rf %s:foo/bar/fi %s:foo/bar/' %
                    (self.bucket_name, self.bucket_name))
         self.assertEqual(call(command), 0)
         self.assertFalse(self.key_exists("foo/bar/"))

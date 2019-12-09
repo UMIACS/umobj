@@ -18,7 +18,7 @@ def transfer_stats(trans_bytes, total_bytes):
     try:
         pbar.update(trans_bytes)
     except AssertionError as e:
-        print e
+        print(e)
 
 
 def upload_file(key, filename, progress=True):
@@ -31,15 +31,15 @@ def upload_file(key, filename, progress=True):
         return -1
     file_size = os.stat(filename).st_size
     logging.info("Uploading %s with %d bytes." % (filename, file_size))
-    if file_size is 0:
+    if file_size == 0:
         if progress:
             pbar = progressbar.ProgressBar(maxval=100)
             pbar.start()
         try:
             key.set_contents_from_filename(filename)
         except S3ResponseError as e:
-                logging.critical('%d %s: %s' % (e.status, e.reason, e.error_code))
-                sys.exit(1) 
+            logging.critical('%d %s: %s' % (e.status, e.reason, e.error_code))
+            sys.exit(1)
         if progress:
             pbar.update(100)
             pbar.finish()
@@ -53,16 +53,18 @@ def upload_file(key, filename, progress=True):
                 key.set_contents_from_filename(filename, cb=transfer_stats,
                                                num_cb=100)
             except S3ResponseError as e:
-                logging.critical('%d %s: %s' % (e.status, e.reason, e.error_code))
+                logging.critical('%d %s: %s' %
+                                 (e.status, e.reason, e.error_code))
                 sys.exit(1)
         else:
             try:
                 key.set_contents_from_filename(filename)
             except S3ResponseError as e:
-                logging.critical('%d %s: %s' % (e.status, e.reason, e.error_code))
+                logging.critical('%d %s: %s' %
+                                 (e.status, e.reason, e.error_code))
                 sys.exit(1)
     except IOError as e:
-        print e
+        print(e)
         return 0
     if progress:
         pbar.finish()
@@ -77,7 +79,8 @@ def _create_needed_parent_directories(filename):
     Given /foo/bar/baz.txt, this method will check if /foo/bar/ exists
     and create it if it does not.
     '''
-    if not os.path.exists(os.path.dirname(filename)) and os.path.dirname(filename) != '':
+    if not os.path.exists(os.path.dirname(filename)) \
+            and os.path.dirname(filename) != '':
         logging.info('Recursively creating needed directory structure for %s' %
                      filename)
         os.makedirs(os.path.dirname(filename))
@@ -86,7 +89,7 @@ def _create_needed_parent_directories(filename):
 def download_file(key, filename, progress=True):
     logging.info("Downloading to %s with %d bytes." % (filename, key.size))
     global pbar
-    if key.size is 0:
+    if key.size == 0:
         if progress:
             pbar = progressbar.ProgressBar(maxval=100)
             pbar.start()
@@ -111,7 +114,7 @@ def download_file(key, filename, progress=True):
     if os.path.isdir(filename):
         filename = filename + os.sep + os.path.basename(key.name)
     _create_needed_parent_directories(filename)
-    f = open(filename, 'w')
+    f = open(filename, 'wb')
     if progress:
         pbar = progressbar.ProgressBar(maxval=key.size)
         pbar.start()
@@ -146,7 +149,7 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
                 filename = dest.rstrip(os.sep) + os.sep + key.name
                 if not check_key_download(bucket, key.name, filename):
                     continue
-                logging.info("Downloading key %s (%d) to %s" %
+                logging.info("Downloading %s (%d) to %s" %
                              (key, key.size, filename))
                 if multi and key.size > 5 * 1024 * 1024:
                     m = MultiPart()
@@ -159,8 +162,8 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
                           "recusive option")
             return
         if os.path.isfile(dest) and not force:
-            logging.error("File %s already exists " % dest +
-                          "please force flag to overwrite.")
+            logging.error("File %s already exists. " % dest +
+                          "Please use the --force flag to overwrite.")
             return
         else:
             key_name = key_name.rstrip(os.path.sep)
@@ -173,13 +176,13 @@ def obj_download(bucket_name, dest, key_name, force=False, recursive=False,
                 return
             # only multipart if we specify and the key is >5MB
             if multi and key.size > 5 * 1024 * 1024:
-                logging.info("Downloading key %s (%d) to %s" %
+                logging.info("Downloading %s (%d) to %s" %
                              (key, key.size, dest))
                 m = MultiPart()
                 m.start_download(bucket_name, key_name, dest)
             else:
                 key = bucket.get_key(key_name)
-                download_file(key, dest)
+                download_file(key, str(dest))
 
 
 def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
@@ -282,7 +285,7 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
                     res = upload_file(key, filename, progress=False)
                     if res >= 0:
                         logging.debug("Applying bucket policy %s" % policy)
-                        ## set the owner of the policy to the upload user
+                        # set the owner of the policy to the upload user
                         policy.owner = key.get_acl().owner
                         key.set_acl(policy)
                 count += 1
@@ -320,7 +323,7 @@ def obj_upload(bucket_name, src, dest_name, recursive=False, multi=False,
             res = upload_file(key, src)
             if res >= 0:
                 logging.debug("Applying bucket policy %s" % policy)
-                ## set the owner of the policy to the upload user
+                # set the owner of the policy to the upload user
                 policy.owner = key.get_acl().owner
                 key.set_acl(policy)
 

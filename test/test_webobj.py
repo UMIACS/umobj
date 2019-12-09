@@ -5,10 +5,13 @@ import os
 import string
 import random
 import unittest
-import urllib2
+import six.moves.urllib.request
+import six.moves.urllib.error
+import six.moves.urllib.parse
 import subprocess
 
 from boto.s3.connection import S3Connection
+from six.moves import range
 
 log = logging.getLogger(__name__)
 
@@ -82,7 +85,7 @@ class TestWebobj(unittest.TestCase):
 
     def test_create_website(self):
         # Create website configuration
-        command = ("../bin/webobj -m create -c website --index=index.html " +
+        command = ("webobj -m create -c website --index=index.html " +
                    "--error=error.html %s" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 0)
 
@@ -90,25 +93,24 @@ class TestWebobj(unittest.TestCase):
 
         res = None
         try:
-            res = urllib2.urlopen(url)
-            content = res.read()
+            res = six.moves.urllib.request.urlopen(url)
+            content = res.read().decode()
         except Exception as e:
             self.fail("Could not read from bucket site: %s" % str(e))
 
-        self.assertTrue(content == "Hello World!", "Did not find correct" +
-                        " index content.")
+        assert content == "Hello World!", "Did not find correct index content."
 
         res = None
         try:
-            res = urllib2.urlopen(url + "/no_page")
+            res = six.moves.urllib.request.urlopen(url + "/no_page")
             content = res.read()
-        except urllib2.HTTPError as e:
-            res = e.fp.read()
-            self.assertTrue(res == "Error", "Error page not set.")
+        except six.moves.urllib.error.HTTPError as e:
+            res = e.fp.read().decode()
+            assert res == "Error", "Error page not set."
         except Exception as e:
             self.fail("Could not read from bucket site: %s" % str(e))
 
-        command = ("../bin/webobj -f -m create -c website " +
+        command = ("webobj -f -m create -c website " +
                    "--index=index1.html --error=error1.html %s"
                    % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 0,
@@ -116,72 +118,70 @@ class TestWebobj(unittest.TestCase):
 
         res = None
         try:
-            res = urllib2.urlopen(url)
-            content = res.read()
+            res = six.moves.urllib.request.urlopen(url)
+            content = res.read().decode()
         except Exception as e:
             self.fail("Could not read from bucket site: %s" % str(e))
 
-        self.assertTrue(content == "Hello World 1!", "Did not find correct" +
-                        " index content when overwrite.")
+        assert content == "Hello World 1!"
 
         res = None
         try:
-            res = urllib2.urlopen(url + "/no_page")
+            res = six.moves.urllib.request.urlopen(url + "/no_page")
             content = res.read()
-        except urllib2.HTTPError as e:
-            res = e.fp.read()
-            self.assertTrue(res == "Error 1", "Error page not set.")
+        except six.moves.urllib.error.HTTPError as e:
+            res = e.fp.read().decode()
+            assert res == "Error 1", "Error page not set."
         except Exception as e:
             self.fail("Could not read from bucket site: %s" % str(e))
 
     def test_invalid_create_website_params(self):
-        command = ("../bin/webobj -m create -c website --index=index.html " +
+        command = ("webobj -m create -c website --index=index.html " +
                    "--error=error.html %s" % self.gen_bucket_name())
         self.assertEqual(subprocess.call(command.split(" ")), 1,
                          "Failed to return error with no bucket.")
 
-        command = ("../bin/webobj -m create -c website --index=index.html " +
+        command = ("webobj -m create -c website --index=index.html " +
                    "--error=error.html %s" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 0,
                          "Failed to create website conf when expected.")
 
-        command = ("../bin/webobj -m create -c website --index=index1.html " +
+        command = ("webobj -m create -c website --index=index1.html " +
                    "--error=error1.html %s" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 1,
                          "Failed to return error with preexisting website  " +
                          "conf and no force option.")
 
-        command = ("../bin/webobj -m create -c website --index=index1.html " +
+        command = ("webobj -m create -c website --index=index1.html " +
                    "--error=error1.html %s:somepath" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 1,
                          "Failed detect key path as invalid")
 
     def test_examine(self):
-        command = ("../bin/webobj -m create -c website --index=index.html " +
+        command = ("webobj -m create -c website --index=index.html " +
                    "--error=error.html %s" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 0)
 
-        command = "../bin/webobj -m examine -c website %s" % self.bucket_name
-        self.assertEqual(subprocess.check_output(command.split(" ")),
-                         "Index: index.html\nError Key: error.html\n",
-                         "Invalid examine output.")
+        command = "webobj -m examine -c website %s" % self.bucket_name
+        expected = "Index: index.html\nError Key: error.html\n"
+        actual = subprocess.check_output(command.split(" ")).decode()
+        self.assertEqual(expected, actual, "Invalid examine output.")
 
     def test_delete(self):
-        command = ("../bin/webobj -m create -c website --index=index.html " +
+        command = ("webobj -m create -c website --index=index.html " +
                    "--error=error.html %s" % self.bucket_name)
         self.assertEqual(subprocess.call(command.split(" ")), 0)
 
-        command = "../bin/webobj -m delete -c website %s" % self.bucket_name
+        command = "webobj -m delete -c website %s" % self.bucket_name
         self.assertEqual(subprocess.call(command.split(" ")), 0,
                          "Failed to delete website config.")
 
         url = "https://%s.%s" % (self.bucket_name, self.vhost_domain)
         try:
-            urllib2.urlopen(url)
+            six.moves.urllib.request.urlopen(url)
             self.fail("Website still returned on root of domain after delete.")
-        except urllib2.HTTPError as e:
-            self.assertTrue(e.code == 404, "Website did not 404 on root " +
-                            "of domain after delete")
+        except six.moves.urllib.error.HTTPError as e:
+            assert e.code == 404, "Website did not 404 on root after delete"
         except Exception as e:
             self.fail("Invalid error reading from site: %s" % str(e))
 

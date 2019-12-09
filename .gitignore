@@ -5,3 +5,6 @@ build
 env/
 .cache/
 .ropeproject/
+.vscode/
+.tox/
+.coverage

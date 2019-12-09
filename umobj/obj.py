@@ -24,7 +24,7 @@ class Obj(object):
         if host is None:
             try:
                 host = os.environ['OBJ_SERVER']
-            except:
+            except KeyError:
                 host = 'obj.umiacs.umd.edu'
         if port is None:
             if is_secure:
@@ -34,13 +34,13 @@ class Obj(object):
         if access_key is None:
             try:
                 access_key = os.environ['OBJ_ACCESS_KEY_ID']
-            except:
+            except KeyError:
                 logging.error("Please provide access_key")
                 return False
         if secret_key is None:
             try:
                 secret_key = os.environ['OBJ_SECRET_ACCESS_KEY']
-            except:
+            except KeyError:
                 logging.error("Please provide secret_key")
                 return False
         Obj(host=host, port=port, access_key=access_key, is_secure=is_secure,

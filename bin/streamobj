@@ -35,8 +35,8 @@ if __name__ == "__main__":
     filename = args.filename
 
     if not filename:
-        logger.error("Specify a filename for the streamed file(s) to " +
-                     "be saved as")
+        logging.error("Specify a filename for the streamed file(s) to " +
+                      "be saved as")
         parser.print_help()
         sys.exit(1)
 

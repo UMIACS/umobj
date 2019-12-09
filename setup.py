@@ -4,10 +4,8 @@ from __future__ import with_statement
 
 try:
     from setuptools import setup
-    extra = dict(test_suite="tests.test.suite", include_package_data=True)
 except ImportError:
     from distutils.core import setup
-    extra = {}
 
 import sys
 
@@ -16,11 +14,12 @@ from umobj import __version__
 long_description = "Command-line utilties for S3-compatible Object Storage"
 
 install_requires = [
-    'boto',
+    'boto >= 2.49.0',
     'filechunkio',
     'progressbar',
     'qav',
-    'bagit'
+    'bagit',
+    'certifi >= 2019.11.28',
 ]
 
 if sys.version_info <= (2, 5):
@@ -61,7 +60,8 @@ setup(name="umobj",
                    "Topic :: Internet",
                    "Programming Language :: Python :: 2",
                    "Programming Language :: Python :: 2.6",
-                   "Programming Language :: Python :: 2.7"],
-      python_requires='~=2.6',
-      **extra
+                   "Programming Language :: Python :: 2.7",
+                   "Programming Language :: Python :: 3",
+                   "Programming Language :: Python :: 3.6",
+      ],
       )

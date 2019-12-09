@@ -103,8 +103,8 @@ if __name__ == "__main__":
                 sys.exit(2)
         elif mode == 'examine':
             if existing_ws:
-                print "Index: %s\nError Key: %s" % (existing_ws.suffix,
-                                                    existing_ws.error_key)
+                print("Index: %s\nError Key: %s" % (existing_ws.suffix,
+                                                    existing_ws.error_key))
             else:
                 logging.info('No website configuration found.')
                 sys.exit(2)
