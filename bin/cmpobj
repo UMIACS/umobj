@@ -25,7 +25,6 @@ def compare_bucket_to_directory(bucket, directory, prefix=None):
     paths = []
     for dirpath, dirnames, filenames in os.walk(directory):
         for filename in [f for f in filenames]:
-            path = os.path.join(dirpath, filename)
             paths.append(os.path.join(dirpath, filename))
 
     offset = len(directory)
@@ -38,19 +37,19 @@ def compare_bucket_to_directory(bucket, directory, prefix=None):
         file_md5 = compute_file_md5(f)
         key = boto.s3.key.Key(bucket, formatted_path)
         if not key.exists():
-            print "The key %s does not exist in the bucket %s" % \
-                (formatted_path, bucket.name)
+            print("The key %s does not exist in the bucket %s" %
+                  (formatted_path, bucket.name))
             continue
         key_md5 = compute_key_md5(bucket, formatted_path)
-            
+
         if file_md5 != key_md5:
-            print "[Local %s: %s] != [Bucket %s: %s]" \
-                % (formatted_path, file_md5, formatted_path, key_md5)
+            print("[Local %s: %s] != [Bucket %s: %s]"
+                  % (formatted_path, file_md5, formatted_path, key_md5))
         del bucket_keys[formatted_path]
 
     for leftover_key in bucket_keys.keys():
-        print "The key %s was in bucket %s but not found locally" \
-            % (leftover_key, bucket.name)
+        print("The key %s was in bucket %s but not found locally"
+              % (leftover_key, bucket.name))
 
 
 if __name__ == "__main__":
@@ -110,4 +109,4 @@ if __name__ == "__main__":
     else:  # computing md5 for a single key
         md5 = compute_key_md5(bucket, key_name)
         if md5 is not None:
-            print md5
+            print(md5)

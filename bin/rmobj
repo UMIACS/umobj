@@ -4,6 +4,7 @@ import boto.s3
 import sys
 import logging
 
+from umobj.compat import PYTHON2
 from umobj.bucket import delete_bucket
 from umobj.key import delete_key, is_directory
 from umobj.utils import umobj_logging, umobj_init, \
@@ -11,10 +12,13 @@ from umobj.utils import umobj_logging, umobj_init, \
 from umobj.obj import Obj
 from umobj.options import umobj_parser, get_logging_level
 
+if PYTHON2:
+    input = raw_input  # noqa
+
 
 def ask_yes_no(question):
     """Ask a yes or no question and return True if yes."""
-    ans = raw_input('%s [yes/no] ' % question).lower()
+    ans = input('%s [yes/no] ' % question).lower()
     return ans == 'yes' or ans == 'y'
 
 
@@ -60,7 +64,7 @@ if __name__ == "__main__":
     def delete_key_with_status(bucket, key_name, check_exists=False):
         status = delete_key(bucket, key_name, check_exists=check_exists)
         if status is False:
-            logging.error("rmobj: cannot remove '%s:%s': No such key" % \
+            logging.error("rmobj: cannot remove '%s:%s': No such key" %
                           (bucket.name, key_name))
             flag_file_existence_error()
 
@@ -130,10 +134,11 @@ if __name__ == "__main__":
                 # removing the bucket itself
                 if want_delete_bucket:
                     if interactive:
-                        question = " Do you want to remove the bucket '%s'?" % \
-                            bucket.name
+                        question = (" Do you want to remove the"
+                                    " bucket '%s'?" % bucket.name)
                         if no_to_question(question):
-                            logging.info("Not deleting bucket %s" % bucket_name)
+                            logging.info("Not deleting bucket %s"
+                                         % bucket_name)
                             continue
                     delete_bucket(Obj.conn, bucket.name)
                     logging.info("Deleting the bucket %s" % bucket_name)
@@ -150,14 +155,17 @@ if __name__ == "__main__":
                 was_something_to_list = False
                 for key in bucket.list(prefix=key_name):
                     was_something_to_list = True
-                    if interactive and no_to_question("rmobj: delete '%s'?" % key.name):
+                    if interactive and no_to_question("rmobj: delete '%s'?"
+                                                      % key.name):
                         continue
                     delete_key_with_status(bucket, key.name)
                 if not was_something_to_list and not force:
-                    logging.error("rmobj: cannot remove '%s': No such key" % arg)
+                    logging.error("rmobj: cannot remove '%s': No such key"
+                                  % arg)
                     flag_file_existence_error()
             else:  # individal file
-                if interactive and no_to_question("rmobj: delete '%s'?" % key_name):
+                if interactive and no_to_question("rmobj: delete '%s'?"
+                                                  % key_name):
                     continue
                 delete_key_with_status(bucket, key_name, check_exists=True)
         else:  # non-recursive
@@ -173,7 +181,8 @@ if __name__ == "__main__":
                 set_exit_status(1)
                 continue
             elif is_directory(bucket, key_name):
-                logging.error("rmobj: cannot remove '%s': Is a directory" % arg)
+                logging.error("rmobj: cannot remove '%s': Is a directory"
+                              % arg)
                 set_exit_status(1)
                 continue
             logging.info('Deleting %s...' % arg)

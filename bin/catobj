@@ -53,7 +53,7 @@ if __name__ == "__main__":
     key = obj_key(bucket_name, key_name)
     if key:
         for buffered_bytes in key:
-            sys.stdout.write(buffered_bytes)
+            sys.stdout.write(buffered_bytes.decode())
     else:
         logging.error('No such key %s' % src)
         sys.exit(4)

@@ -1,5 +1,11 @@
 import threading
-import Queue
+
+# For python2/3 compat
+try:
+    import Queue
+except ImportError:
+    import queue as Queue
+
 import logging
 import mimetypes
 import os
@@ -9,7 +15,12 @@ import sys
 import signal
 from umobj.obj import Obj
 from umobj.utils import umobj_add_handler
-from StringIO import StringIO
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
 from filechunkio import FileChunkIO
 import progressbar
 from boto.exception import S3ResponseError
@@ -45,10 +56,10 @@ class UploadThread(threading.Thread):
                         mp.upload_part_from_file(fp=fp, part_num=part_num)
                         break
         except S3ResponseError as e:
-                logging.critical('%d %s: %s' % (e.status, e.reason, e.error_code))
-                sys.exit(1)
+            logging.critical('%d %s: %s' % (e.status, e.reason, e.error_code))
+            sys.exit(1)
         except Exception as exc:
-            print exc
+            print(exc)
             if retries:
                 logging.info(
                     '%s part %d : retrying with %d retries left' %
@@ -94,11 +105,11 @@ class DownloadThread(threading.Thread):
             chunk_size = min((end_byte - start_byte), 32 * 1024 * 1024)
             while True:
                 data = key_range.read(chunk_size)
-                if data == "":
+                if data == b"":
                     break
                 os.write(fd, data)
         except Exception as exc:
-            print exc
+            print(exc)
 
 
 class MultiPart:
@@ -139,8 +150,8 @@ class MultiPart:
         for i in range(chunk_amount):
             offset = i * bytes_per_chunk
             remaining_bytes = size - offset
-            bytes = min([bytes_per_chunk, remaining_bytes])
-            queue.put((offset, offset + bytes - 1))
+            numbytes = min([bytes_per_chunk, remaining_bytes])
+            queue.put((offset, offset + numbytes - 1))
         for i in range(threads):
             t = DownloadThread(self, queue)
             t.setDaemon(True)
@@ -174,9 +185,9 @@ class MultiPart:
         for i in range(chunk_amount):
             offset = i * bytes_per_chunk
             remaining_bytes = source_size - offset
-            bytes = min([bytes_per_chunk, remaining_bytes])
+            numbytes = min([bytes_per_chunk, remaining_bytes])
             part_num = i + 1
-            queue.put((part_num, offset, bytes))
+            queue.put((part_num, offset, numbytes))
 
         for i in range(threads):
             t = UploadThread(self, queue)
@@ -250,5 +261,5 @@ class MultiPartStream(MultiPart):
         logging.warning("%s : Canceling mulitpart upload." % mp.id)
         try:
             mp.cancel_upload()
-        except Exception, e:
+        except Exception as e:
             log.error(e)

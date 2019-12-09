@@ -41,7 +41,7 @@ def set_website(connection, bucket, index='index.html', error=None):
 
     try:
         b.configure_website(suffix=index, error_key=error)
-    except S3ResponseError as e:
+    except S3ResponseError:
         log.error('Unable to set website %s.' % bucket)
         return False
 
@@ -91,7 +91,7 @@ def delete_website(connection, bucket):
             return False
     try:
         b.delete_website_configuration()
-    except S3ResponseError as e:
+    except S3ResponseError:
         log.error('Unable to delete website %s.' % bucket)
         return False
 

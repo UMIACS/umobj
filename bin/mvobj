@@ -50,12 +50,12 @@ if __name__ == "__main__":
                           dest_bucket_name, dest_key_name))
             # be very sure that the object copied before we delete the original
             Obj.conn.get_bucket(src_bucket_name).get_key(src_key_name).delete()
-        except boto.exception.S3ResponseError as e:
+        except boto.exception.S3ResponseError:
             logging.error("SRC %s:%s does not exist" %
                           (src_bucket_name, src_key_name))
-        except NameError as e:
+        except NameError:
             logging.error("DEST bucket %s does not exist" % dest_bucket_name)
-        except boto.exception.BotoClientError as e:
+        except boto.exception.BotoClientError:
             logging.error("Failed to copy %s:%s to %s:%s" %
                           (src_bucket_name, src_key_name,
                            dest_bucket_name, dest_key_name))

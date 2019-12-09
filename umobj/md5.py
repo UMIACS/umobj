@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 def compute_file_md5(filename, block_size=2 ** 20):
     log.info('Computing MD5 hash on %s' % filename)
-    f = open(filename)
+    f = open(filename, "rb")
     md5 = hashlib.md5()
     while True:
         data = f.read(block_size)
@@ -54,7 +54,7 @@ def compute_key_md5(bucket, key_name):
             chunk_size = min((end_byte - start_byte), 32 * 1024 * 1024)
             while True:
                 data = key_range.read(chunk_size)
-                if data == "":
+                if data == b"":
                     break
                 md5.update(data)
                 # pbar.update(end_byte)

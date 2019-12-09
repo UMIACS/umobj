@@ -5,10 +5,9 @@ import os
 import sys
 import signal
 
-from handler_queue import HandlerQueue
+from umobj.handler_queue import HandlerQueue
 from contextlib import contextmanager
-from boto.exception import S3CreateError, S3ResponseError, \
-    BotoClientError, BotoServerError
+from boto.exception import S3ResponseError
 
 
 @contextmanager
@@ -70,7 +69,7 @@ def umobj_logging(level, filename=None):
 
 def umobj_keyboard_interrupt_handler(signal, frame):
     '''Print Exiting... when registered in umobj_init_keyboard_interrupt'''
-    print '\nExiting...'
+    print('\nExiting...')
     sys.exit(0)
 
 
@@ -112,13 +111,13 @@ def umobj_get_bucket_key_pair_from_string(bucket_and_key):
     values = bucket_and_key.split(":", 1)
 
     if len(values) == 2:
-        if values[0] is '':
+        if values[0] == '':
             values[0] = None
-        if values[1] is '':
+        if values[1] == '':
             values[1] = None
         return (values[0], values[1])
     elif len(values) == 1:
-        if values[0] is '':
+        if values[0] == '':
             return (None, None)
         else:
             return (values[0], None)
@@ -175,4 +174,3 @@ def parse_key_value_pair(pair):
     if len(parts) != 2:
         return pair, None
     return parts[0], parts[1]
-

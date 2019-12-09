@@ -105,6 +105,6 @@ if __name__ == "__main__":
             obj_upload(bucket_name, src, dest_name, args.recursive,
                        args.multipart)
         if download:
-            obj_download(bucket_name, dest, key_name, args.force, args.recursive,
-                         args.multipart)
+            obj_download(bucket_name, dest, key_name, args.force,
+                         args.recursive, args.multipart)
     sys.exit(exit_status)
