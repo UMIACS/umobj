@@ -312,19 +312,14 @@ Error Key: error.html
 
 ## Requirements
 
-These utilties and libraries all work with Python 2.6+ (and are not tested
-under Python 3.x+).  They require the following modules:
+These utilties and libraries all work with Python 2.7+ and Python 3.6+
 
-- Boto > 2.5.x
+They require the following packages:
+
+- Boto > 2.49.0
 - FileChunkIO
 - Progressbar
 - qav
-
-When running on Python 2.6, you need to have the following backports:
-
-- argparse
-
-These are most easily going to be satisfied with a virtualenv.
 
 ## Report an issue
 

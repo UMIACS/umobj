@@ -18,17 +18,14 @@ install_requires = [
     'filechunkio',
     'progressbar',
     'qav',
-    'bagit',
+    'bagit >= 1.7.0',
     'certifi >= 2019.11.28',
 ]
 
-if sys.version_info <= (2, 5):
-    error = "ERROR: umobj requires Python Version 2.6 or above...exiting."
-    print >> sys.stderr, error
-    sys.exit(1)
-
 if sys.version_info <= (2, 6):
-    install_requires.append('argparse')
+    errormsg = "ERROR: umobj requires Python Version 2.7 or above... Exiting.\n"
+    sys.stderr.write(errormsg)
+    sys.exit(1)
 
 setup(name="umobj",
       version=__version__,
@@ -55,13 +52,14 @@ setup(name="umobj",
       install_requires=install_requires,
       license="LGPL v2.1",
       platforms="Posix; MacOS X; Windows",
-      classifiers=["Development Status :: 5 - Production/Stable",
-                   "Operating System :: OS Independent",
-                   "Topic :: Internet",
-                   "Programming Language :: Python :: 2",
-                   "Programming Language :: Python :: 2.6",
-                   "Programming Language :: Python :: 2.7",
-                   "Programming Language :: Python :: 3",
-                   "Programming Language :: Python :: 3.6",
+      classifiers=[
+          "Development Status :: 5 - Production/Stable",
+          "Operating System :: OS Independent",
+          "Topic :: Internet",
+          "Programming Language :: Python :: 2",
+          "Programming Language :: Python :: 2.7",
+          "Programming Language :: Python :: 3",
+          "Programming Language :: Python :: 3.6",
+          "Programming Language :: Python :: 3.7",
       ],
       )
