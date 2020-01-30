@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import boto
-from boto.s3.acl import ACL
 import sys
 import logging
 
@@ -10,8 +9,7 @@ from umobj.utils import umobj_logging, umobj_init, \
 from umobj.obj import Obj
 from umobj.acl import split_acl, make_private
 from umobj.options import umobj_parser, get_logging_level
-from umobj.key import add_metadata, set_metadata, \
-    remove_metadata_by_key_value_pair
+from umobj.key import add_metadata, remove_metadata_by_key_value_pair
 
 
 if __name__ == "__main__":
@@ -34,8 +32,7 @@ if __name__ == "__main__":
             'private',
             'clear'],
         help='Mode of operation.  Specifying "clear" will create an empty ' +
-             'ACL to be applied.  However, if you specify policies in the ' +
-             'same command, the ACL will contain those policies.')
+             'ACL to be applied.')
     parser.add_no_bucket_changes()
     parser.add_policy()
     parser.add_metadata()
@@ -159,18 +156,10 @@ if __name__ == "__main__":
                             object.name,
                             meta)
                 elif mode == 'clear':
-                    acl = ACL()
-                    for p in policies:
-                        u, g = split_acl(p)
-                        acl.add_user_grant(g, u)
-                    else:
-                        # clear shouldn't *fully* clear.  We still want the
-                        # object's owner to have FULL_CONTROL
-                        acl.add_user_grant('FULL_CONTROL', object.owner.id)
-                    policy.acl = acl
-                    set_metadata(bucket, object.name, {})
-                try:
-                    object.set_acl(policy)
-                except boto.exception.S3ResponseError:
-                    logging.warning('Unable to set policy (%s) on bucket %s' %
-                                    (policy, bucket_name))
+                    object.set_acl('private')
+                if mode != 'clear':
+                    try:
+                        object.set_acl(policy)
+                    except boto.exception.S3ResponseError:
+                        logging.warning('Unable to set policy (%s) on bucket %s' %
+                                        (policy, bucket_name))

@@ -140,12 +140,9 @@ def set_metadata(bucket, key_name, metadata):
 
     This will not merge the metadata passed in with the existing metadata.
     This will completely overwrite the metadata.
-
-    S3 makes it currently not possible to update metadata for an existing key,
-    so the only way to update metadata is through a copy operation.
     '''
     object = bucket.get_key(key_name)
-    object.copy(bucket.name, key_name, metadata, preserve_acl=True)
+    object.update_metadata(metadata)
 
 
 def add_metadata(bucket, key_name, key, val):
