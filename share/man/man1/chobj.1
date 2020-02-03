@@ -106,10 +106,10 @@ To add FULL_CONTROL permission for user \fBliam\fR and \fIREAD\fR permission for
 .PP
 The \fIremove\fR mode is much the same as \fIadd\fR.
 .PP
-The \fIclear\fR mode will create an empty policy with only the policies (zero or more) that you specify.  If I have a \fBsecret_files\fR folder that I want to now restrict access to only me, I can do the following:
+The \fIclear\fR mode will create an empty policy with the bucket owner having full control.  If I have a \fBsecret_files\fR folder that I want to reset access on, I can do the following:
 .RS
 .PP
-\f(CWchobj \-m clear \-p liam:FULL_CONTROL \-r mybucket:secret_files/\fP
+\f(CWchobj \-m clear \-r mybucket:secret_files/\fP
 .RE
 .PP
 Although the same end goal could be achieved with \fIremove\fR, the clear advantage of \fIclear\fR is that I don't have to enumerate all types of access that I am removing.
