@@ -7,7 +7,7 @@
 	 services/badges -->
 
 
-Command-line utilties for S3-compatible Object Storage
+Command-line utilities for S3-compatible Object Storage
 
 These utilities provide a command-line interface to an Amazon S3-compatible
 file/object storage services, also known as an Object Store.
@@ -41,7 +41,7 @@ You can optionally pass the <code>--access_key</code>,
 <code>--secret_key</code> and <code>--server</code> switches to the utilities
 to get the same behavior.
 
-## Utilties
+## Utilities
 
 These utilities use a common syntax for specifying the bucket and an optional
 key or path.  The bucket and key are separated by a ```:```.  For example,
@@ -312,7 +312,7 @@ Error Key: error.html
 
 ## Requirements
 
-These utilties and libraries all work with Python 2.7+ and Python 3.6+
+These utilities and libraries all work with Python 2.7+ and Python 3.6+
 
 They require the following packages:
 
@@ -327,7 +327,7 @@ The official repository for umobj is hosted in the [UMIACS Gitlab](https://gitla
 
 ## License
 
-    umobj - Command-line utilties for S3-compatible Object Storage
+    umobj - Command-line utilities for S3-compatible Object Storage
     Copyright (C) 2017  UMIACS
 
     This library is free software; you can redistribute it and/or

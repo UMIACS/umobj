@@ -10,7 +10,7 @@ Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}, python-boto, python-progressbar, python-filechunkio
 Description: UMIACS Object Storage Commands
  # umobj
- Command Line Utilties for UMIACS Object Storage Services
+ Command Line Utilities for UMIACS Object Storage Services
  .
  This is a collection of utilities written in Python using the
  standard Boto library.  They all support some common environment
@@ -23,7 +23,7 @@ Description: UMIACS Object Storage Commands
  .
  ## Requirements
  .
- These utilties and libraries are work with Python 2.6+ (and are not tested
+ These utilities and libraries are work with Python 2.6+ (and are not tested
      under Python 3.x+).  They require the following modules:
  .
  - Boto > 2.5.x

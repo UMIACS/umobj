@@ -27,7 +27,7 @@ Vendor: UMIACS Staff <github@umiacs.umd.edu>
 Url: https://github.com/UMIACS/umobj
 
 %description
-Command-line utilties for S3-compatible Object Storage
+Command-line utilities for S3-compatible Object Storage
 
 %prep
 %setup

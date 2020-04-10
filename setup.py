@@ -11,7 +11,7 @@ import sys
 
 from umobj import __version__
 
-long_description = "Command-line utilties for S3-compatible Object Storage"
+long_description = "Command-line utilities for S3-compatible Object Storage"
 
 install_requires = [
     'boto >= 2.49.0',

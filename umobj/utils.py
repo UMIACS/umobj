@@ -41,7 +41,7 @@ def umobj_set_excepthook():
 
 
 def umobj_logging(level, filename=None):
-    ''' Set up logging for the umobj utilties.  '''
+    ''' Set up logging for the umobj utilities.  '''
     if filename is None:
         home_directory = os.path.expanduser("~")
         log_file = home_directory + os.sep + ".umobj.log"
