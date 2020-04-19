@@ -35,12 +35,6 @@ tag:
 	$(GIT) commit -m "Tagging $(VERSION)"
 	$(GIT) tag -a $(VERSION) -m "Tagging $(VERSION)"
 
-.PHONY: sdist
-sdist:
-	/usr/bin/virtualenv /tmp/buildenv
-	/tmp/buildenv/bin/pip install --upgrade setuptools
-	/tmp/buildenv/bin/python setup.py sdist
-
 .PHONY: clean
 clean:
 	rm -rf dist/
