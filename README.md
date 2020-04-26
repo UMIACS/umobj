@@ -34,7 +34,7 @@ For example, if you use the ```bash``` shell, you can add the following to your
 ```bash
 export OBJ_ACCESS_KEY_ID="<YOUR_ACCESS_KEY>"
 export OBJ_SECRET_ACCESS_KEY="<YOUR_SECRET_KEY>"
-export OBJ_SERVER="s3.amazonaws.com"
+export OBJ_SERVER="obj.umiacs.umd.edu"
 ```
 
 You can optionally pass the <code>--access_key</code>,
