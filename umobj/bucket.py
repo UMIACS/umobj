@@ -19,7 +19,7 @@ def delete_bucket(connection, bucket):
         else:
             log.error('Unable to delete bucket %s (%s: %s)' %
                       (bucket, e.status, e.reason))
-    except:
+    except:  # noqa
         log.error('Unable to delete bucket %s' % bucket)
 
 
