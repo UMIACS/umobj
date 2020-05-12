@@ -201,6 +201,6 @@ def delete_key(bucket, key, check_exists=False):
         log.error('Unable to delete %s:%s (Reason: %s)' %
                   (bucket.name, key, e.reason))
         return False
-    except:
+    except:  # noqa
         log.error('Unable to delete %s:%s' % (bucket.name, key))
         return False
