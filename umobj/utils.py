@@ -174,3 +174,37 @@ def parse_key_value_pair(pair):
     if len(parts) != 2:
         return pair, None
     return parts[0], parts[1]
+
+
+def path_parts(filename):
+    '''
+    A generator of all the paths that make up a filename.
+
+    For example, if filename is /tmp/foo/bar/ then generate:
+        /tmp/foo/bar
+        /tmp/foo
+        /tmp
+        /
+    '''
+    if filename == '/':
+        yield filename
+        return
+    filename = filename.rstrip('/')
+    yield filename
+    # while condition handles both relative and absolute
+    while filename not in ['', '.', '..', '/']:
+        filename = os.path.dirname(filename)
+        if filename != '':
+            yield filename
+
+
+def ensure_no_files_in_path(filename):
+    for path in path_parts(filename):
+        if os.path.isdir(path):
+            # short circuit if the path is a directory.  Since path_paths()
+            # returns the deepest path first this is ok to do
+            return
+        if os.path.isfile(path):
+            logging.critical(
+                '%s is already a file. Can not create files/directories under it' % path)
+            sys.exit(1)

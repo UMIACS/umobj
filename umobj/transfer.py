@@ -5,7 +5,7 @@ import progressbar
 import signal
 from umobj.key import directory_file_exists, create_directory, check_key_upload
 from umobj.key import check_key_download
-from umobj.utils import umobj_add_handler, walk_path, lremove
+from umobj.utils import umobj_add_handler, walk_path, lremove, ensure_no_files_in_path
 from umobj.multipart import MultiPart, MultiPartStream
 from umobj.obj import Obj
 from boto.exception import S3ResponseError
@@ -95,15 +95,11 @@ def download_file(key, filename, progress=True):
             pbar.start()
         if filename.endswith('/'):
             if not os.path.isdir(filename):
-                if os.path.isfile(filename.rstrip('/')):
-                    logging.critical(
-                        '%s already a file can not make directory')
-                    sys.exit(1)
                 logging.info("Creating directory %s" % filename)
+                ensure_no_files_in_path(filename)
                 os.makedirs(filename)
             else:
-                logging.info("Directory %s already exists, skipping." %
-                             filename)
+                logging.info("Directory %s already exists, skipping." % filename)
         else:
             _create_needed_parent_directories(filename)
             key.get_contents_to_filename(filename)
